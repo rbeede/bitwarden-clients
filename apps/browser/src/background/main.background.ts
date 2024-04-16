@@ -609,6 +609,7 @@ export default class MainBackground {
       this.masterPasswordService,
       this.cryptoService,
       this.apiService,
+      this.stateProvider,
     );
 
     this.authService = new AuthService(
@@ -676,12 +677,12 @@ export default class MainBackground {
       this.encryptService,
       this.cipherFileUploadService,
       this.configService,
+      this.stateProvider,
     );
     this.folderService = new FolderService(
       this.cryptoService,
       this.i18nService,
       this.cipherService,
-      this.stateService,
       this.stateProvider,
     );
     this.folderApiService = new FolderApiService(this.folderService, this.apiService);
@@ -849,6 +850,7 @@ export default class MainBackground {
       logoutCallback,
       this.stateService,
       this.authService,
+      this.authRequestService,
       this.messagingService,
     );
 

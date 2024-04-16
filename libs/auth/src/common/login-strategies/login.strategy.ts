@@ -33,6 +33,7 @@ import {
   AccountProfile,
   AccountTokens,
 } from "@bitwarden/common/platform/models/domain/account";
+import { UserId } from "@bitwarden/common/types/guid";
 
 import { InternalUserDecryptionOptionsServiceAbstraction } from "../abstractions/user-decryption-options.service.abstraction";
 import {
@@ -162,13 +163,10 @@ export abstract class LoginStrategy {
    * @param {IdentityTokenResponse} tokenResponse - The response from the server containing the identity token.
    * @returns {Promise<void>} - A promise that resolves when the account information has been successfully saved.
    */
-  protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<void> {
+  protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
     const accountInformation = await this.tokenService.decodeAccessToken(tokenResponse.accessToken);
 
     const userId = accountInformation.sub;
-
-    // If you don't persist existing admin auth requests on login, they will get deleted.
-    const adminAuthRequest = await this.stateService.getAdminAuthRequest({ userId });
 
     const vaultTimeoutAction = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),
@@ -203,7 +201,6 @@ export abstract class LoginStrategy {
         tokens: {
           ...new AccountTokens(),
         },
-        adminAuthRequest: adminAuthRequest?.toJSON(),
       }),
     );
 
@@ -212,6 +209,7 @@ export abstract class LoginStrategy {
     );
 
     await this.billingAccountProfileStateService.setHasPremium(accountInformation.premium, false);
+    return userId as UserId;
   }
 
   protected async processTokenResponse(response: IdentityTokenResponse): Promise<AuthResult> {
@@ -234,7 +232,7 @@ export abstract class LoginStrategy {
     }
 
     // Must come before setting keys, user key needs email to update additional keys
-    await this.saveAccountInformation(response);
+    const userId = await this.saveAccountInformation(response);
 
     if (response.twoFactorToken != null) {
       // note: we can read email from access token b/c it was saved in saveAccountInformation
@@ -244,7 +242,7 @@ export abstract class LoginStrategy {
     }
 
     await this.setMasterKey(response);
-    await this.setUserKey(response);
+    await this.setUserKey(response, userId);
     await this.setPrivateKey(response);
 
     this.messagingService.send("loggedIn");
@@ -254,7 +252,7 @@ export abstract class LoginStrategy {
 
   // The keys comes from different sources depending on the login strategy
   protected abstract setMasterKey(response: IdentityTokenResponse): Promise<void>;
-  protected abstract setUserKey(response: IdentityTokenResponse): Promise<void>;
+  protected abstract setUserKey(response: IdentityTokenResponse, userId: UserId): Promise<void>;
   protected abstract setPrivateKey(response: IdentityTokenResponse): Promise<void>;
 
   // Old accounts used master key for encryption. We are forcing migrations but only need to

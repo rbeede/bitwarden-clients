@@ -322,7 +322,7 @@ describe("SsoLoginStrategy", () => {
           id: "1",
           privateKey: "PRIVATE" as any,
         } as AdminAuthRequestStorable;
-        stateService.getAdminAuthRequest.mockResolvedValue(
+        authRequestService.getAdminAuthRequest.mockResolvedValue(
           new AdminAuthRequestStorable(adminAuthRequest),
         );
       });
@@ -385,7 +385,7 @@ describe("SsoLoginStrategy", () => {
 
         await ssoLoginStrategy.logIn(credentials);
 
-        expect(stateService.setAdminAuthRequest).toHaveBeenCalledWith(null);
+        expect(authRequestService.clearAdminAuthRequest).toHaveBeenCalled();
         expect(
           authRequestService.setKeysAfterDecryptingSharedMasterKeyAndHash,
         ).not.toHaveBeenCalled();
