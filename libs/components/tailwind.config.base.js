@@ -86,6 +86,9 @@ module.exports = {
       ...theme("colors"),
     }),
     extend: {
+      fontSize: {
+        xxs: ["0.625rem", "0.875rem"],
+      },
       width: {
         "50vw": "50vw",
         "75vw": "75vw",
