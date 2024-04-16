@@ -3,7 +3,7 @@ import { FormBuilder } from "@angular/forms";
 import { concatMap, filter, firstValueFrom, map, Observable, Subject, takeUntil, tap } from "rxjs";
 
 import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
-import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
@@ -46,7 +46,7 @@ export class PreferencesComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private policyService: InternalPolicyService,
+    private policyService: PolicyService,
     private i18nService: I18nService,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
     private platformUtilsService: PlatformUtilsService,
