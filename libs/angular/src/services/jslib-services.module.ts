@@ -742,6 +742,7 @@ const safeProviders: SafeProvider[] = [
       LOGOUT_CALLBACK,
       StateServiceAbstraction,
       AuthServiceAbstraction,
+      AuthRequestServiceAbstraction,
       MessagingServiceAbstraction,
       TaskSchedulerService,
     ],
@@ -763,7 +764,7 @@ const safeProviders: SafeProvider[] = [
       ApiServiceAbstraction,
       StateProvider,
       LogService,
-      AccountServiceAbstraction,
+      AuthServiceAbstraction,
       TaskSchedulerService,
     ],
   }),
@@ -775,7 +776,7 @@ const safeProviders: SafeProvider[] = [
       StateProvider,
       OrganizationServiceAbstraction,
       EventUploadServiceAbstraction,
-      AccountServiceAbstraction,
+      AuthServiceAbstraction,
     ],
   }),
   safeProvider({
@@ -972,6 +973,7 @@ const safeProviders: SafeProvider[] = [
       InternalMasterPasswordServiceAbstraction,
       CryptoServiceAbstraction,
       ApiServiceAbstraction,
+      StateProvider,
     ],
   }),
   safeProvider({

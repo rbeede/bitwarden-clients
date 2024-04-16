@@ -603,6 +603,7 @@ export default class MainBackground {
       this.masterPasswordService,
       this.cryptoService,
       this.apiService,
+      this.stateProvider,
     );
 
     this.authService = new AuthService(
@@ -787,7 +788,7 @@ export default class MainBackground {
       this.apiService,
       this.stateProvider,
       this.logService,
-      this.accountService,
+      this.authService,
       this.taskSchedulerService,
     );
     this.eventCollectionService = new EventCollectionService(
@@ -795,7 +796,7 @@ export default class MainBackground {
       this.stateProvider,
       this.organizationService,
       this.eventUploadService,
-      this.accountService,
+      this.authService,
     );
     this.totpService = new TotpService(this.cryptoFunctionService, this.logService);
 
@@ -853,6 +854,7 @@ export default class MainBackground {
       logoutCallback,
       this.stateService,
       this.authService,
+      this.authRequestService,
       this.messagingService,
       this.taskSchedulerService,
     );
