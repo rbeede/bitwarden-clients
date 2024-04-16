@@ -126,11 +126,6 @@ export class UserApiLoginStrategy extends LoginStrategy {
   protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
     const userId = await super.saveAccountInformation(tokenResponse);
 
-    // TODO: investigate if there is a way to share user id from the base login strategy so we don't have
-    // to re-decode the access token
-    const decodedAccessToken = await this.tokenService.decodeAccessToken(tokenResponse.accessToken);
-    const userId = decodedAccessToken.sub;
-
     const vaultTimeoutAction = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),
     );
