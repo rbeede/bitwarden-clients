@@ -28,7 +28,7 @@ export const VAULT_TIMEOUT_ACTION: KeyDefinitionLike = {
   stateDefinition: VAULT_TIMEOUT_SETTINGS_STATE_DEF_LIKE,
 };
 
-export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<55, 56> {
+export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<57, 58> {
   async migrate(helper: MigrationHelper): Promise<void> {
     const globalData = await helper.get<ExpectedGlobalType>("global");
 

@@ -7,7 +7,7 @@ import {
   VAULT_TIMEOUT,
   VAULT_TIMEOUT_ACTION,
   VaultTimeoutSettingsServiceStateProviderMigrator,
-} from "./56-migrate-vault-timeout-settings-svc-to-state-provider";
+} from "./58-migrate-vault-timeout-settings-svc-to-state-provider";
 
 // Represents data in state service pre-migration
 function preMigrationJson() {
@@ -97,8 +97,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
 
   describe("migrate", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(preMigrationJson(), 55);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(55, 56);
+      helper = mockMigrationHelper(preMigrationJson(), 57);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(57, 58);
     });
 
     it("should remove state service data from all accounts that have it", async () => {
@@ -141,8 +141,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
 
   describe("rollback", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(rollbackJSON(), 56);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(55, 56);
+      helper = mockMigrationHelper(rollbackJSON(), 58);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(57, 58);
     });
 
     it("should null out newly migrated entries in state provider framework", async () => {
