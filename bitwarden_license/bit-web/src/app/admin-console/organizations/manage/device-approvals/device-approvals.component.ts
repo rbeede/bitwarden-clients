@@ -15,7 +15,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { TableDataSource } from "@bitwarden/components";
 import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 
-import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests";
+import { OrganizationAuthRequestApiService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests";
 import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/views/auth-requests/pending-auth-request.view";
 
 @Component({
@@ -34,7 +34,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
   private refresh$ = new BehaviorSubject<void>(null);
 
   constructor(
-    private organizationAuthRequestService: OrganizationAuthRequestService,
+    private organizationAuthRequestApiService: OrganizationAuthRequestApiService,
     private organizationUserService: OrganizationUserService,
     private cryptoService: CryptoService,
     private route: ActivatedRoute,
@@ -52,7 +52,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
           this.refresh$.pipe(
             tap(() => (this.loading = true)),
             switchMap(() =>
-              this.organizationAuthRequestService.listPendingRequests(this.organizationId),
+              this.organizationAuthRequestApiService.listPendingRequests(this.organizationId),
             ),
           ),
         ),
@@ -112,7 +112,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
 
       const encryptedKey = await this.getEncryptedUserKey(authRequest.publicKey, details);
 
-      await this.organizationAuthRequestService.approvePendingRequest(
+      await this.organizationAuthRequestApiService.approvePendingRequest(
         this.organizationId,
         authRequest.id,
         encryptedKey,
@@ -128,7 +128,10 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
 
   async denyRequest(requestId: string) {
     await this.performAsyncAction(async () => {
-      await this.organizationAuthRequestService.denyPendingRequests(this.organizationId, requestId);
+      await this.organizationAuthRequestApiService.denyPendingRequests(
+        this.organizationId,
+        requestId,
+      );
       this.platformUtilsService.showToast("error", null, this.i18nService.t("loginRequestDenied"));
     });
   }
@@ -139,7 +142,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
     }
 
     await this.performAsyncAction(async () => {
-      await this.organizationAuthRequestService.denyPendingRequests(
+      await this.organizationAuthRequestApiService.denyPendingRequests(
         this.organizationId,
         ...this.tableDataSource.data.map((r) => r.id),
       );

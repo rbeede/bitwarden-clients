@@ -11,7 +11,7 @@ import { BulkDenyAuthRequestsRequest } from "./bulk-deny-auth-requests.request";
 import { PendingOrganizationAuthRequestResponse } from "./pending-organization-auth-request.response";
 
 @Injectable()
-export class OrganizationAuthRequestService {
+export class OrganizationAuthRequestApiService {
   constructor(private apiService: ApiService) {}
 
   async listPendingRequests(organizationId: string): Promise<PendingAuthRequestView[]> {
