@@ -61,13 +61,6 @@ export type UserVerificationDialogOptions = {
    */
   confirmButtonOptions?: UserVerificationConfirmButtonOptions;
 
-  /**
-   * Indicates whether the verification is only performed client-side. Includes local MP verification, PIN, and Biometrics.
-   * Optional.
-   * **Important:** Only for use on desktop and browser platforms as when there are no client verification methods, the user is instructed to set a pin (which is not supported on web)
-   */
-  clientSideOnlyVerification?: boolean;
-
   /** The validation method used to verify the secret.
    *
    * Possible values:
