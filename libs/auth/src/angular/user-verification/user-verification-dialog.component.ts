@@ -201,6 +201,17 @@ export class UserVerificationDialogComponent {
       return;
     }
 
+    if (
+      typeof this.dialogOptions.verificationType === "object" &&
+      this.dialogOptions.verificationType.type === "custom"
+    ) {
+      const success = await this.dialogOptions.verificationType.verificationFn(this.secret.value);
+      this.close({
+        userAction: "confirm",
+        verificationSuccess: success,
+      });
+    }
+
     try {
       // TODO: once we migrate all user verification scenarios to use this new implementation,
       // we should consider refactoring the user verification service handling of the
