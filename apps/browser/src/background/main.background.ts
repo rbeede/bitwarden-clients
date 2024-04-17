@@ -216,6 +216,7 @@ import BrowserMemoryStorageService from "../platform/services/browser-memory-sto
 // import BrowserMessagingPrivateModeBackgroundService from "../platform/services/browser-messaging-private-mode-background.service";
 import BrowserMessagingPrivateModeBackgroundService from "../platform/services/browser-messaging-private-mode-background.service";
 import BrowserMessagingService from "../platform/services/browser-messaging.service";
+import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import { BrowserTaskSchedulerService } from "../platform/services/browser-task-scheduler.service";
 import { DefaultBrowserStateService } from "../platform/services/default-browser-state.service";
 import I18nService from "../platform/services/i18n.service";
@@ -227,7 +228,7 @@ import { BackgroundMemoryStorageService } from "../platform/storage/background-m
 import VaultTimeoutService from "../services/vault-timeout/vault-timeout.service";
 import FilelessImporterBackground from "../tools/background/fileless-importer.background";
 import { Fido2Background as Fido2BackgroundAbstraction } from "../vault/fido2/background/abstractions/fido2.background";
-import Fido2Background from "../vault/fido2/background/fido2.background";
+import { Fido2Background } from "../vault/fido2/background/fido2.background";
 import { BrowserFido2UserInterfaceService } from "../vault/fido2/browser-fido2-user-interface.service";
 import { VaultFilterService } from "../vault/services/vault-filter.service";
 
@@ -319,8 +320,8 @@ export default class MainBackground {
   activeUserStateProvider: ActiveUserStateProvider;
   derivedStateProvider: DerivedStateProvider;
   stateProvider: StateProvider;
-  taskSchedulerService: BrowserTaskSchedulerService;
   fido2Background: Fido2BackgroundAbstraction;
+  taskSchedulerService: BrowserTaskSchedulerService;
   individualVaultExportService: IndividualVaultExportServiceAbstraction;
   organizationVaultExportService: OrganizationVaultExportServiceAbstraction;
   vaultSettingsService: VaultSettingsServiceAbstraction;
@@ -328,6 +329,7 @@ export default class MainBackground {
   stateEventRunnerService: StateEventRunnerService;
   ssoLoginService: SsoLoginServiceAbstraction;
   billingAccountProfileStateService: BillingAccountProfileStateService;
+  scriptInjectorService: BrowserScriptInjectorService;
 
   onUpdatedRan: boolean;
   onReplacedRan: boolean;
@@ -800,6 +802,7 @@ export default class MainBackground {
     );
     this.totpService = new TotpService(this.cryptoFunctionService, this.logService);
 
+    this.scriptInjectorService = new BrowserScriptInjectorService();
     this.autofillService = new AutofillService(
       this.cipherService,
       this.autofillSettingsService,
@@ -809,6 +812,7 @@ export default class MainBackground {
       this.domainSettingsService,
       this.userVerificationService,
       this.billingAccountProfileStateService,
+      this.scriptInjectorService,
     );
     this.auditService = new AuditService(this.cryptoFunctionService, this.apiService);
 
@@ -908,6 +912,7 @@ export default class MainBackground {
         this.logService,
         this.fido2ClientService,
         this.vaultSettingsService,
+        this.scriptInjectorService,
       );
       this.runtimeBackground = new RuntimeBackground(
         this,
@@ -977,6 +982,7 @@ export default class MainBackground {
         this.notificationBackground,
         this.importService,
         this.syncService,
+        this.scriptInjectorService,
       );
       this.tabsBackground = new TabsBackground(
         this,

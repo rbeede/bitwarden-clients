@@ -1,3 +1,6 @@
+import { firstValueFrom, startWith } from "rxjs";
+import { pairwise } from "rxjs/operators";
+
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import {
   AssertCredentialParams,
@@ -9,6 +12,7 @@ import {
 import { VaultSettingsService } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
 
 import { BrowserApi } from "../../../platform/browser/browser-api";
+import { ScriptInjectorService } from "../../../platform/services/abstractions/script-injector.service";
 import { AbortManager } from "../../background/abort-manager";
 import { Fido2ContentScript, Fido2ContentScriptId } from "../enums/fido2-content-script.enum";
 import { Fido2PortName } from "../enums/fido2-port-name.enum";
@@ -21,18 +25,17 @@ import {
   SharedFido2ScriptRegistrationOptions,
 } from "./abstractions/fido2.background";
 
-export default class Fido2Background implements Fido2BackgroundInterface {
+export class Fido2Background implements Fido2BackgroundInterface {
   private abortManager = new AbortManager();
   private fido2ContentScriptPortsSet = new Set<chrome.runtime.Port>();
-  private currentEnablePasskeysSetting: boolean;
   private registeredContentScripts: browser.contentScripts.RegisteredContentScript;
   private readonly sharedInjectionDetails: SharedFido2ScriptInjectionDetails = {
-    allFrames: true,
     runAt: "document_start",
   };
   private readonly sharedRegistrationOptions: SharedFido2ScriptRegistrationOptions = {
     matches: ["https://*/*"],
     excludeMatches: ["https://*/*.xml*"],
+    allFrames: true,
     ...this.sharedInjectionDetails,
   };
   private readonly extensionMessageHandlers: Fido2BackgroundExtensionMessageHandlers = {
@@ -46,6 +49,7 @@ export default class Fido2Background implements Fido2BackgroundInterface {
     private logService: LogService,
     private fido2ClientService: Fido2ClientService,
     private vaultSettingsService: VaultSettingsService,
+    private scriptInjectorService: ScriptInjectorService,
   ) {}
 
   /**
@@ -56,7 +60,9 @@ export default class Fido2Background implements Fido2BackgroundInterface {
   init() {
     BrowserApi.messageListener("fido2.background", this.handleExtensionMessage);
     BrowserApi.addListener(chrome.runtime.onConnect, this.handleInjectedScriptPortConnection);
-    this.vaultSettingsService.enablePasskeys$.subscribe(this.handleEnablePasskeysUpdate.bind(this));
+    this.vaultSettingsService.enablePasskeys$
+      .pipe(startWith(undefined), pairwise())
+      .subscribe(([previous, current]) => this.handleEnablePasskeysUpdate(previous, current));
   }
 
   /**
@@ -80,14 +86,16 @@ export default class Fido2Background implements Fido2BackgroundInterface {
    * is disabled, the FIDO2 content scripts will be from all tabs. This logic will
    * not trigger until after the first setting update.
    *
+   * @param previousEnablePasskeysSetting - The previous value of the enablePasskeys setting.
    * @param enablePasskeys - The new value of the enablePasskeys setting.
    */
-  private async handleEnablePasskeysUpdate(enablePasskeys: boolean) {
-    const previousEnablePasskeysSetting = this.currentEnablePasskeysSetting;
-    this.currentEnablePasskeysSetting = enablePasskeys;
+  private async handleEnablePasskeysUpdate(
+    previousEnablePasskeysSetting: boolean,
+    enablePasskeys: boolean,
+  ) {
     await this.updateContentScriptRegistration();
 
-    if (typeof previousEnablePasskeysSetting === "undefined") {
+    if (previousEnablePasskeysSetting === undefined) {
       return;
     }
 
@@ -116,7 +124,7 @@ export default class Fido2Background implements Fido2BackgroundInterface {
    * scripts based on the enablePasskeys setting for manifest v2.
    */
   private async updateMv2ContentScriptsRegistration() {
-    if (!this.currentEnablePasskeysSetting) {
+    if (!(await this.isPasskeySettingEnabled())) {
       await this.registeredContentScripts?.unregister();
 
       return;
@@ -136,7 +144,7 @@ export default class Fido2Background implements Fido2BackgroundInterface {
    * scripts based on the enablePasskeys setting for manifest v3.
    */
   private async updateMv3ContentScriptsRegistration() {
-    if (this.currentEnablePasskeysSetting) {
+    if (await this.isPasskeySettingEnabled()) {
       void BrowserApi.registerContentScriptsMv3([
         {
           id: Fido2ContentScriptId.PageScript,
@@ -165,31 +173,20 @@ export default class Fido2Background implements Fido2BackgroundInterface {
    * @param tab - The current tab to inject the scripts into.
    */
   private async injectFido2ContentScripts(tab: chrome.tabs.Tab): Promise<void> {
-    this.injectFido2PageScript(tab);
-    void BrowserApi.executeScriptInTab(tab.id, {
-      file: Fido2ContentScript.ContentScript,
-      ...this.sharedInjectionDetails,
+    void this.scriptInjectorService.inject({
+      tabId: tab.id,
+      injectDetails: { frame: "all_frames", ...this.sharedInjectionDetails },
+      mv2Details: { file: Fido2ContentScript.PageScriptAppend },
+      mv3Details: { file: Fido2ContentScript.PageScript, world: "MAIN" },
     });
-  }
 
-  /**
-   * Injects the FIDO2 page script into the current tab.
-   *
-   * @param tab - The current tab to inject the script into.
-   */
-  private injectFido2PageScript(tab: chrome.tabs.Tab) {
-    if (BrowserApi.isManifestVersion(3)) {
-      void BrowserApi.executeScriptInTab(
-        tab.id,
-        { file: Fido2ContentScript.PageScript, ...this.sharedInjectionDetails },
-        { world: "MAIN" },
-      );
-      return;
-    }
-
-    void BrowserApi.executeScriptInTab(tab.id, {
-      file: Fido2ContentScript.PageScriptAppend,
-      ...this.sharedInjectionDetails,
+    void this.scriptInjectorService.inject({
+      tabId: tab.id,
+      injectDetails: {
+        file: Fido2ContentScript.ContentScript,
+        frame: "all_frames",
+        ...this.sharedInjectionDetails,
+      },
     });
   }
 
@@ -275,6 +272,13 @@ export default class Fido2Background implements Fido2BackgroundInterface {
       }
     });
   };
+
+  /**
+   * Checks if the enablePasskeys setting is enabled.
+   */
+  private async isPasskeySettingEnabled() {
+    return await firstValueFrom(this.vaultSettingsService.enablePasskeys$);
+  }
 
   /**
    * Handles the FIDO2 extension message by calling the

@@ -64,7 +64,7 @@ describe("Fido2 page script with native WebAuthn support", () => {
       }
     });
 
-    it("creates and returns a WebAuthn credential", async () => {
+    it("creates and returns a WebAuthn credential when the navigator API is called to create credentials", async () => {
       await navigator.credentials.create(mockCredentialCreationOptions);
 
       expect(WebauthnUtils.mapCredentialCreationOptions).toHaveBeenCalledWith(
@@ -85,16 +85,14 @@ describe("Fido2 page script with native WebAuthn support", () => {
       });
     });
 
-    it("falls back to the default browser credentials API if an error occurs", async () => {
+    it("falls back to the default browser credentials API when an error occurs", async () => {
       window.top.document.hasFocus = jest.fn().mockReturnValue(true);
       messenger.request = jest.fn().mockRejectedValue({ fallbackRequested: true });
 
-      try {
-        await navigator.credentials.get(mockCredentialRequestOptions);
-        expect("This will fail the test").toBe(true);
-      } catch {
-        expect(WebauthnUtils.mapCredentialAssertResult).not.toHaveBeenCalled();
-      }
+      const returnValue = await navigator.credentials.get(mockCredentialRequestOptions);
+
+      expect(returnValue).toBeDefined();
+      expect(WebauthnUtils.mapCredentialAssertResult).not.toHaveBeenCalled();
     });
 
     it("gets and returns the WebAuthn credentials", async () => {
@@ -111,7 +109,7 @@ describe("Fido2 page script with native WebAuthn support", () => {
   });
 
   describe("destroy", () => {
-    it("should ", async () => {
+    it("should destroy the message listener when receiving a disconnect request", async () => {
       jest.spyOn(globalThis.top, "removeEventListener");
       const SENDER = "bitwarden-webauthn";
       void messenger.handler({ type: MessageType.DisconnectRequest, SENDER, senderId: "1" });

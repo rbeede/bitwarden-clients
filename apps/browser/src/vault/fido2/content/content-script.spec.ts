@@ -1,4 +1,4 @@
-import { mock } from "jest-mock-extended";
+import { mock, MockProxy } from "jest-mock-extended";
 
 import { CreateCredentialResult } from "@bitwarden/common/vault/abstractions/fido2/fido2-client.service.abstraction";
 
@@ -30,7 +30,7 @@ describe("Fido2 Content Script", () => {
       messenger.destroy = jest.fn();
       return messenger;
     });
-  const portSpy: chrome.runtime.Port = createPortSpyMock(Fido2PortName.InjectedScript);
+  const portSpy: MockProxy<chrome.runtime.Port> = createPortSpyMock(Fido2PortName.InjectedScript);
   chrome.runtime.connect = jest.fn(() => portSpy);
 
   afterEach(() => {
@@ -51,7 +51,7 @@ describe("Fido2 Content Script", () => {
     expect(messenger.destroy).toHaveBeenCalled();
   });
 
-  it("handles a FIDO2 credential creation request message", async () => {
+  it("handles a FIDO2 credential creation request message from the window message listener, formats the message and sends the formatted message to the extension background", async () => {
     const message = mock<MessageWithMetadata>({
       type: MessageType.CredentialCreationRequest,
       data: mock<InsecureCreateCredentialParams>(),
@@ -77,7 +77,7 @@ describe("Fido2 Content Script", () => {
     });
   });
 
-  it("handles a FIDO2 credential get request message", async () => {
+  it("handles a FIDO2 credential get request message from the window message listener, formats the message and sends the formatted message to the extension background", async () => {
     const message = mock<MessageWithMetadata>({
       type: MessageType.CredentialGetRequest,
       data: mock<InsecureCreateCredentialParams>(),
@@ -146,13 +146,9 @@ describe("Fido2 Content Script", () => {
     jest.spyOn(chrome.runtime, "sendMessage").mockResolvedValue({ error: errorMessage });
 
     require("./content-script");
+    const result = messenger.handler!(message, abortController);
 
-    try {
-      await messenger.handler!(message, abortController);
-      expect(false).toBe("This test will fail if the promise resolves");
-    } catch (error) {
-      expect(error).toEqual(errorMessage);
-    }
+    await expect(result).rejects.toEqual(errorMessage);
   });
 
   it("skips initializing the content script if the document content type is not 'text/html'", () => {

@@ -659,8 +659,7 @@ export class BrowserApi {
   }
 
   /**
-   * Handles registration of static content
-   * scripts within manifest v2.
+   * Handles registration of static content scripts within manifest v2.
    *
    * @param contentScriptOptions - Details of the registered content scripts
    */
@@ -675,8 +674,7 @@ export class BrowserApi {
   }
 
   /**
-   * Handles registration of static content
-   * scripts within manifest v3.
+   * Handles registration of static content scripts within manifest v3.
    *
    * @param scripts - Details of the registered content scripts
    */
@@ -687,8 +685,7 @@ export class BrowserApi {
   }
 
   /**
-   * Handles unregistering of static content
-   * scripts within manifest v3.
+   * Handles unregistering of static content scripts within manifest v3.
    *
    * @param filter - Optional filter to unregister content scripts. Passing an empty object will unregister all content scripts.
    */
