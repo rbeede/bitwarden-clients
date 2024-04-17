@@ -1,3 +1,4 @@
+import { VerificationWithSecret } from "@bitwarden/common/auth/types/verification";
 import { ButtonType } from "@bitwarden/components";
 
 /**
@@ -66,6 +67,26 @@ export type UserVerificationDialogOptions = {
    * **Important:** Only for use on desktop and browser platforms as when there are no client verification methods, the user is instructed to set a pin (which is not supported on web)
    */
   clientSideOnlyVerification?: boolean;
+
+  /** The validation method used to verify the secret.
+   *
+   * Possible values:
+   *
+   * - "default": Perform the default validation operation for a given secret
+   *   type. This would, for example, validate master passwords locally but
+   *   OTPs on the server.
+   * - "client": Only do a client-side verification with no possible server
+   *   request. Includes local MP verification, PIN, and Biometrics.
+   *   **Important:** This option is only for use on desktop and browser
+   *   platforms. When there are no client verification methods the user is
+   *   instructed to set a pin, and this is not supported on web.
+   * - "custom": Custom validation is done to verify the secret. This is
+   *   passed in from callers when opening the dialog.
+   */
+  verificationType?:
+    | "default"
+    | "client"
+    | { type: "custom"; verificationFn: (secret: VerificationWithSecret) => Promise<boolean> };
 };
 
 /**
