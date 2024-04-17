@@ -7985,5 +7985,11 @@
   },
   "collectionAdminConsoleManaged": {
     "message": "This collection is only accessible from the admin console"
+  },
+  "secureYourInfrastructure": {
+    "message": "Secure your infrastructure"
+  },
+  "protectYourFamilyOrBusiness": {
+    "message": "Protect your family or business"
   }
 }

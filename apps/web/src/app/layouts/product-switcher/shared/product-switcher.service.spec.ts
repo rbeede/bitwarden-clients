@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, convertToParamMap } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
 import { firstValueFrom, of } from "rxjs";
 
+import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
@@ -43,6 +44,12 @@ describe("ProductSwitcherService", () => {
           provide: ActivatedRoute,
           useValue: {
             paramMap: of(activeRouteParams),
+          },
+        },
+        {
+          provide: I18nPipe,
+          useValue: {
+            transform: (key: string) => key,
           },
         },
       ],

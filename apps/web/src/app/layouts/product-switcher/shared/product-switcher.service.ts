@@ -2,13 +2,14 @@ import { Injectable } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest, concatMap, Observable } from "rxjs";
 
+import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import {
   canAccessOrgAdmin,
   OrganizationService,
 } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 
-type ProductSwitcherItem = {
+export type ProductSwitcherItem = {
   /**
    * Displayed name
    */
@@ -33,6 +34,17 @@ type ProductSwitcherItem = {
    * Used to apply css styles to show when a button is selected
    */
   isActive?: boolean;
+
+  /**
+   * A product switcher item can be shown in the left navigation menu
+   * with different content than the main product switcher.
+   */
+  navigationUIDetails?: {
+    /** Alternative navigation menu name */
+    name?: string;
+    /** Supporting text that is shown in the "more from bitwarden" section */
+    supportingText?: string;
+  };
 };
 
 @Injectable({
@@ -44,6 +56,7 @@ export class ProductSwitcherService {
     private providerService: ProviderService,
     private route: ActivatedRoute,
     private router: Router,
+    private i18n: I18nPipe,
   ) {}
 
   products$: Observable<{
@@ -89,6 +102,9 @@ export class ProductSwitcherService {
           appRoute: ["/sm", smOrg?.id],
           marketingRoute: "https://bitwarden.com/products/secrets-manager/",
           isActive: this.router.url.includes("/sm/"),
+          navigationUIDetails: {
+            supportingText: this.i18n.transform("secureYourInfrastructure"),
+          },
         },
         ac: {
           name: "Admin Console",
@@ -107,6 +123,10 @@ export class ProductSwitcherService {
           name: "Organizations",
           icon: "bwi-business",
           marketingRoute: "https://bitwarden.com/products/business/",
+          navigationUIDetails: {
+            name: "Share your passwords",
+            supportingText: this.i18n.transform("protectYourFamilyOrBusiness"),
+          },
         },
       };
 
