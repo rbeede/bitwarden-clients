@@ -15,8 +15,8 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { TableDataSource } from "@bitwarden/components";
 import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 
-import { OrganizationAuthRequestService } from "../../core/services/auth-requests";
-import { PendingAuthRequestView } from "../../core/views/pending-auth-request.view";
+import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests";
+import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/views/auth-requests/pending-auth-request.view";
 
 @Component({
   selector: "app-org-device-approvals",
