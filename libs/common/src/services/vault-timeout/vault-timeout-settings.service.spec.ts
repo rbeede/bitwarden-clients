@@ -146,6 +146,12 @@ describe("VaultTimeoutSettingsService", () => {
   });
 
   describe("getVaultTimeoutActionByUserId$", () => {
+    it("should throw an error if no user id is provided", async () => {
+      expect(() => vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(null)).toThrow(
+        "User id required. Cannot get vault timeout action.",
+      );
+    });
+
     describe("given the user has a master password", () => {
       it.each`
         policy                       | userPreference               | expected
@@ -216,6 +222,12 @@ describe("VaultTimeoutSettingsService", () => {
   });
 
   describe("getVaultTimeoutByUserId$", () => {
+    it("should throw an error if no user id is provided", async () => {
+      expect(() => vaultTimeoutSettingsService.getVaultTimeoutByUserId$(null)).toThrow(
+        "User id required. Cannot get vault timeout.",
+      );
+    });
+
     it.each([
       // policy, vaultTimeout, expected
       [null, null, null],
@@ -238,6 +250,64 @@ describe("VaultTimeoutSettingsService", () => {
         expect(result).toBe(expected);
       },
     );
+  });
+
+  describe("setVaultTimeoutOptions", () => {
+    const mockAccessToken = "mockAccessToken";
+    const mockRefreshToken = "mockRefreshToken";
+    const mockClientId = "mockClientId";
+    const mockClientSecret = "mockClientSecret";
+
+    it("should throw an error if no user id is provided", async () => {
+      expect(() => vaultTimeoutSettingsService.setVaultTimeoutOptions(null, null, null)).toThrow(
+        "User id required. Cannot set vault timeout settings.",
+      );
+    });
+
+    it("should set the vault timeout options for the given user", async () => {
+      // Arrange
+      tokenService.getAccessToken.mockResolvedValue(mockAccessToken);
+      tokenService.getRefreshToken.mockResolvedValue(mockRefreshToken);
+      tokenService.getClientId.mockResolvedValue(mockClientId);
+      tokenService.getClientSecret.mockResolvedValue(mockClientSecret);
+
+      const action = VaultTimeoutAction.Lock;
+      const timeout = 30;
+
+      // Act
+      await vaultTimeoutSettingsService.setVaultTimeoutOptions(mockUserId, timeout, action);
+
+      // Assert
+      expect(tokenService.setTokens).toHaveBeenCalledWith(
+        mockAccessToken,
+        action,
+        timeout,
+        mockRefreshToken,
+        [mockClientId, mockClientSecret],
+      );
+
+      expect(
+        await firstValueFrom(stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, mockUserId)),
+      ).toBe(action);
+
+      expect(await firstValueFrom(stateProvider.getUserState$(VAULT_TIMEOUT, mockUserId))).toBe(
+        action,
+      );
+
+      expect(cryptoService.refreshAdditionalKeys).toHaveBeenCalled();
+    });
+
+    it("should clear the tokens when the timeout is non-null and the action is log out", async () => {
+      // Arrange
+      const action = VaultTimeoutAction.LogOut;
+      const timeout = 30;
+
+      // Act
+      await vaultTimeoutSettingsService.setVaultTimeoutOptions(mockUserId, timeout, action);
+
+      // Assert
+      expect(tokenService.clearTokens).toHaveBeenCalled();
+    });
   });
 });
 
