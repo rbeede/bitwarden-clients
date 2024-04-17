@@ -51,9 +51,13 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
 
   async setVaultTimeoutOptions(
     userId: UserId,
-    timeout: number,
+    timeout: number | null,
     action: VaultTimeoutAction,
   ): Promise<void> {
+    if (!userId) {
+      throw new Error("User id required. Cannot set vault timeout settings.");
+    }
+
     // We swap these tokens from being on disk for lock actions, and in memory for logout actions
     // Get them here to set them to their new location after changing the timeout action and clearing if needed
     const accessToken = await this.tokenService.getAccessToken();
@@ -108,10 +112,18 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   }
 
   private async setVaultTimeout(userId: UserId, timeout: number): Promise<void> {
+    if (!userId) {
+      throw new Error("User id required. Cannot set vault timeout.");
+    }
+
     await this.stateProvider.setUserState(VAULT_TIMEOUT, timeout, userId);
   }
 
   getVaultTimeoutByUserId$(userId: UserId): Observable<number> {
+    if (!userId) {
+      throw new Error("User id required. Cannot get vault timeout.");
+    }
+
     return combineLatest([
       this.stateProvider.getUserState$(VAULT_TIMEOUT, userId),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
@@ -121,7 +133,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
           this.determineVaultTimeout(userId, currentVaultTimeout, maxVaultTimeoutPolicy),
         ).pipe(
           tap((vaultTimeout: number) => {
-            // As a side effect, set the new value in the state if it's different from the current
+            // As a side effect, set the new value determined by determineVaultTimeout into state if it's different from the current
             if (vaultTimeout !== currentVaultTimeout) {
               return this.stateProvider.setUserState(VAULT_TIMEOUT, vaultTimeout, userId);
             }
@@ -140,30 +152,38 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
 
   private async determineVaultTimeout(
     userId: UserId,
-    currentVaultTimeout: number,
+    currentVaultTimeout: number | null,
     maxVaultTimeoutPolicy: Policy | null,
-  ): Promise<number> {
-    if (maxVaultTimeoutPolicy) {
-      const maxVaultTimeoutPolicyData = maxVaultTimeoutPolicy.data;
-
-      // Remove negative values, and ensure it's smaller than maximum allowed value according to policy
-      let policyCompliantTimeout = Math.min(currentVaultTimeout, maxVaultTimeoutPolicyData.minutes);
-
-      if (currentVaultTimeout == null || policyCompliantTimeout < 0) {
-        policyCompliantTimeout = maxVaultTimeoutPolicyData.minutes;
-      }
-
-      return policyCompliantTimeout;
+  ): Promise<number | null> {
+    if (!maxVaultTimeoutPolicy) {
+      return currentVaultTimeout;
     }
 
-    return currentVaultTimeout;
+    const maxVaultTimeoutPolicyData = maxVaultTimeoutPolicy.data;
+
+    // Remove negative values, and ensure it's smaller than maximum allowed value according to policy
+    let policyCompliantTimeout = Math.min(currentVaultTimeout, maxVaultTimeoutPolicyData.minutes);
+
+    if (currentVaultTimeout == null || policyCompliantTimeout < 0) {
+      policyCompliantTimeout = maxVaultTimeoutPolicyData.minutes;
+    }
+
+    return policyCompliantTimeout;
   }
 
   private async setVaultTimeoutAction(userId: UserId, action: VaultTimeoutAction): Promise<void> {
+    if (!userId) {
+      throw new Error("User id required. Cannot set vault timeout action.");
+    }
+
     await this.stateProvider.setUserState(VAULT_TIMEOUT_ACTION, action, userId);
   }
 
   getVaultTimeoutActionByUserId$(userId: UserId): Observable<VaultTimeoutAction> {
+    if (!userId) {
+      throw new Error("User id required. Cannot get vault timeout action.");
+    }
+
     return combineLatest([
       this.stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, userId),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
@@ -177,7 +197,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
           ),
         ).pipe(
           tap((vaultTimeoutAction: VaultTimeoutAction) => {
-            // As a side effect, set the new value in the state if it's different from the current
+            // As a side effect, set the new value determined by determineVaultTimeout into state if it's different from the current
             // We want to avoid having a null timeout action always so we set it to the default if it is null
             // and if the user becomes subject to a policy that requires a specific action, we set it to that
             if (vaultTimeoutAction !== currentVaultTimeoutAction) {
@@ -232,6 +252,10 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   }
 
   private getMaxVaultTimeoutPolicyByUserId$(userId: UserId): Observable<Policy | null> {
+    if (!userId) {
+      throw new Error("User id required. Cannot get max vault timeout policy.");
+    }
+
     return this.policyService
       .getAll$(PolicyType.MaximumVaultTimeout, userId)
       .pipe(map((policies) => policies[0] ?? null));
