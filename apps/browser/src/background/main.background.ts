@@ -197,7 +197,7 @@ import ContextMenusBackground from "../autofill/background/context-menus.backgro
 import NotificationBackground from "../autofill/background/notification.background";
 import OverlayBackground from "../autofill/background/overlay.background";
 import TabsBackground from "../autofill/background/tabs.background";
-// import WebRequestBackground from "../autofill/background/web-request.background";
+import WebRequestBackground from "../autofill/background/web-request.background";
 import { CipherContextMenuHandler } from "../autofill/browser/cipher-context-menu-handler";
 import { ContextMenuClickedHandler } from "../autofill/browser/context-menu-clicked-handler";
 import { MainContextMenuHandler } from "../autofill/browser/main-context-menu-handler";
@@ -341,7 +341,7 @@ export default class MainBackground {
   private filelessImporterBackground: FilelessImporterBackground;
   private runtimeBackground: RuntimeBackground;
   private tabsBackground: TabsBackground;
-  // private webRequestBackground: WebRequestBackground;
+  private webRequestBackground: WebRequestBackground;
 
   private syncTimeout: any;
   private nativeMessagingBackground: NativeMessagingBackground;
@@ -983,6 +983,7 @@ export default class MainBackground {
         this.notificationBackground,
         this.overlayBackground,
       );
+
       const contextMenuClickedHandler = new ContextMenuClickedHandler(
         (options) => this.platformUtilsService.copyToClipboard(options.text),
         async (_tab) => {
@@ -1024,11 +1025,12 @@ export default class MainBackground {
       this.notificationsService,
       this.accountService,
     );
-    // this.webRequestBackground = new WebRequestBackground(
-    //   this.platformUtilsService,
-    //   this.cipherService,
-    //   this.authService,
-    // );
+
+    this.usernameGenerationService = new UsernameGenerationService(
+      this.cryptoService,
+      this.stateService,
+      this.apiService,
+    );
 
     if (!this.popupOnlyContext) {
       this.mainContextMenuHandler = new MainContextMenuHandler(
@@ -1044,21 +1046,29 @@ export default class MainBackground {
         this.authService,
         this.cipherService,
       );
+
+      if (BrowserApi.isManifestVersion(2)) {
+        this.webRequestBackground = new WebRequestBackground(
+          this.platformUtilsService,
+          this.cipherService,
+          this.authService,
+        );
+      }
     }
   }
 
   async bootstrap() {
     this.containerService.attachToGlobal(self);
 
-    await this.stateService.init({ runMigrations: !this.popupOnlyContext });
+    await this.stateService.init({ runMigrations: !this.isPrivateMode });
 
     await (this.i18nService as I18nService).init();
     await (this.eventUploadService as EventUploadService).init(true);
     this.twoFactorService.init();
 
     if (!this.popupOnlyContext) {
-      this.fido2Background.init();
       await this.vaultTimeoutService.init(true);
+      this.fido2Background.init();
       await this.runtimeBackground.init();
       await this.notificationBackground.init();
       this.filelessImporterBackground.init();
@@ -1067,7 +1077,9 @@ export default class MainBackground {
       await this.tabsBackground.init();
       this.contextMenusBackground?.init();
       await this.idleBackground.init();
-      // await this.webRequestBackground.init();
+      if (BrowserApi.isManifestVersion(2)) {
+        await this.webRequestBackground.init();
+      }
     }
 
     if (this.platformUtilsService.isFirefox() && !this.isPrivateMode) {
