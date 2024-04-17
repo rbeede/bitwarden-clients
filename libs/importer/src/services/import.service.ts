@@ -432,13 +432,15 @@ export class ImportService implements ImportServiceAbstraction {
 
     if (organizationId) {
       if (!(importTarget instanceof CollectionView)) {
-        throw new Error("Error assigning target collection");
+        throw new Error(this.i18nService.t("errorAssigningTargetCollection"));
       }
 
       const noCollectionRelationShips: [number, number][] = [];
       importResult.ciphers.forEach((c, index) => {
-        if (!Array.isArray(c.collectionIds) || c.collectionIds.length == 0) {
-          c.collectionIds = [importTarget.id];
+        if (
+          !Array.isArray(importResult.collectionRelationships) ||
+          !importResult.collectionRelationships.some(([cipherPos]) => cipherPos === index)
+        ) {
           noCollectionRelationShips.push([index, 0]);
         }
       });
@@ -461,7 +463,7 @@ export class ImportService implements ImportServiceAbstraction {
     }
 
     if (!(importTarget instanceof FolderView)) {
-      throw new Error("Error assigning target folder");
+      throw new Error(this.i18nService.t("errorAssigningTargetFolder"));
     }
 
     const noFolderRelationShips: [number, number][] = [];

@@ -12,12 +12,16 @@ import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/mode
 import { BillingSubscriptionItemResponse } from "@bitwarden/common/billing/models/response/subscription.response";
 import { ProductType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigServiceAbstraction as ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService } from "@bitwarden/components";
 
+import {
+  AdjustStorageDialogResult,
+  openAdjustStorageDialog,
+} from "../shared/adjust-storage.component";
 import {
   OffboardingSurveyDialogResultType,
   openOffboardingSurvey,
@@ -36,14 +40,13 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
   userOrg: Organization;
   showChangePlan = false;
   showDownloadLicense = false;
-  adjustStorageAdd = true;
-  showAdjustStorage = false;
   hasBillingSyncToken: boolean;
   showAdjustSecretsManager = false;
   showSecretsManagerSubscribe = false;
   firstLoaded = false;
   loading: boolean;
-  presentUserWithOffboardingSurvey$: Observable<boolean>;
+  locale: string;
+  showUpdatedSubscriptionStatusSection$: Observable<boolean>;
 
   protected readonly teamsStarter = ProductType.TeamsStarter;
 
@@ -79,8 +82,9 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
       )
       .subscribe();
 
-    this.presentUserWithOffboardingSurvey$ = this.configService.getFeatureFlag$<boolean>(
-      FeatureFlag.AC1607_PresentUserOffboardingSurvey,
+    this.showUpdatedSubscriptionStatusSection$ = this.configService.getFeatureFlag$(
+      FeatureFlag.AC1795_UpdatedSubscriptionStatusSection,
+      false,
     );
   }
 
@@ -94,6 +98,7 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
       return;
     }
     this.loading = true;
+    this.locale = await firstValueFrom(this.i18nService.locale$);
     this.userOrg = await this.organizationService.get(this.organizationId);
     if (this.userOrg.canViewSubscription) {
       this.sub = await this.organizationApiService.getSubscription(this.organizationId);
@@ -238,6 +243,8 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     return (
       this.sub.planType === PlanType.EnterpriseAnnually ||
       this.sub.planType === PlanType.EnterpriseMonthly ||
+      this.sub.planType === PlanType.EnterpriseAnnually2023 ||
+      this.sub.planType === PlanType.EnterpriseMonthly2023 ||
       this.sub.planType === PlanType.EnterpriseAnnually2020 ||
       this.sub.planType === PlanType.EnterpriseMonthly2020 ||
       this.sub.planType === PlanType.EnterpriseAnnually2019 ||
@@ -251,6 +258,7 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     } else if (
       this.sub.planType === PlanType.FamiliesAnnually ||
       this.sub.planType === PlanType.FamiliesAnnually2019 ||
+      this.sub.planType === PlanType.TeamsStarter2023 ||
       this.sub.planType === PlanType.TeamsStarter
     ) {
       if (this.isSponsoredSubscription) {
@@ -278,7 +286,7 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     );
   }
 
-  cancelWithOffboardingSurvey = async () => {
+  cancelSubscription = async () => {
     const reference = openOffboardingSurvey(this.dialogService, {
       data: {
         type: "Organization",
@@ -293,36 +301,6 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     }
 
     await this.load();
-  };
-
-  cancelWithWarning = async () => {
-    if (this.loading) {
-      return;
-    }
-
-    const confirmed = await this.dialogService.openSimpleDialog({
-      title: { key: "cancelSubscription" },
-      content: { key: "cancelConfirmation" },
-      type: "warning",
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      await this.organizationApiService.cancel(this.organizationId);
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("canceledSubscription"),
-      );
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.load();
-    } catch (e) {
-      this.logService.error(e);
-    }
   };
 
   reinstate = async () => {
@@ -385,19 +363,22 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     this.load();
   }
 
-  adjustStorage(add: boolean) {
-    this.adjustStorageAdd = add;
-    this.showAdjustStorage = true;
-  }
-
-  closeStorage(load: boolean) {
-    this.showAdjustStorage = false;
-    if (load) {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.load();
-    }
-  }
+  adjustStorage = (add: boolean) => {
+    return async () => {
+      const dialogRef = openAdjustStorageDialog(this.dialogService, {
+        data: {
+          storageGbPrice: this.storageGbPrice,
+          add: add,
+          organizationId: this.organizationId,
+          interval: this.billingInterval,
+        },
+      });
+      const result = await lastValueFrom(dialogRef.closed);
+      if (result === AdjustStorageDialogResult.Adjusted) {
+        await this.load();
+      }
+    };
+  };
 
   removeSponsorship = async () => {
     const confirmed = await this.dialogService.openSimpleDialog({
