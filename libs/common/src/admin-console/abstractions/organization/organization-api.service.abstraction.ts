@@ -55,7 +55,7 @@ export class OrganizationApiServiceAbstraction {
   reinstate: (id: string) => Promise<void>;
   leave: (id: string) => Promise<void>;
   delete: (id: string, request: SecretVerificationRequest) => Promise<void>;
-  recoverDeleteToken: (
+  deleteUsingToken: (
     organizationId: string,
     request: OrganizationVerifyDeleteRecoverRequest,
   ) => Promise<any>;

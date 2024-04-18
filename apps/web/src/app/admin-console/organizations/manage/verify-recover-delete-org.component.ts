@@ -50,7 +50,7 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
   submit = async () => {
     try {
       const request = new OrganizationVerifyDeleteRecoverRequest(this.token);
-      await this.apiService.recoverDeleteToken(this.orgId, request);
+      await this.apiService.deleteUsingToken(this.orgId, request);
       this.platformUtilsService.showToast(
         "success",
         this.i18nService.t("organizationDeleted"),

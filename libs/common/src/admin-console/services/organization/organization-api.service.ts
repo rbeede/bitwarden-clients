@@ -199,7 +199,7 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
     await this.syncService.fullSync(true);
   }
 
-  recoverDeleteToken(
+  deleteUsingToken(
     organizationId: string,
     request: OrganizationVerifyDeleteRecoverRequest,
   ): Promise<any> {
