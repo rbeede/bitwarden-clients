@@ -69,6 +69,7 @@ export function vaultTimeoutSettingsServiceFactory(
         await biometricStateServiceFactory(cache, opts),
         await stateProviderFactory(cache, opts),
         await logServiceFactory(cache, opts),
+        "onRestart", // default vault timeout
       ),
   );
 }

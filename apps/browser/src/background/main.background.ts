@@ -517,6 +517,7 @@ export default class MainBackground {
       this.biometricStateService,
       this.stateProvider,
       this.logService,
+      "onRestart", // default vault timeout
     );
 
     this.apiService = new ApiService(

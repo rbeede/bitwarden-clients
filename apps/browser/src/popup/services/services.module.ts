@@ -13,6 +13,7 @@ import {
   OBSERVABLE_MEMORY_STORAGE,
   SYSTEM_THEME_OBSERVABLE,
   SafeInjectionToken,
+  DEFAULT_VAULT_TIMEOUT,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import {
@@ -144,6 +145,10 @@ const safeProviders: SafeProvider[] = [
   safeProvider(DebounceNavigationService),
   safeProvider(DialogService),
   safeProvider(PopupCloseWarningService),
+  safeProvider({
+    provide: DEFAULT_VAULT_TIMEOUT,
+    useValue: "onRestart",
+  }),
   safeProvider({
     provide: APP_INITIALIZER as SafeInjectionToken<() => Promise<void>>,
     useFactory: (initService: InitService) => initService.init(),

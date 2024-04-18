@@ -268,6 +268,7 @@ import {
   SYSTEM_LANGUAGE,
   SYSTEM_THEME_OBSERVABLE,
   WINDOW,
+  DEFAULT_VAULT_TIMEOUT,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
 
@@ -637,6 +638,7 @@ const safeProviders: SafeProvider[] = [
       BiometricStateService,
       StateProvider,
       LogService,
+      DEFAULT_VAULT_TIMEOUT,
     ],
   }),
   safeProvider({

@@ -14,6 +14,7 @@ import {
   OBSERVABLE_DISK_LOCAL_STORAGE,
   WINDOW,
   SafeInjectionToken,
+  DEFAULT_VAULT_TIMEOUT,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { ModalService as ModalServiceAbstraction } from "@bitwarden/angular/services/modal.service";
@@ -41,6 +42,7 @@ import {
   DefaultThemeStateService,
   ThemeStateService,
 } from "@bitwarden/common/platform/theming/theme-state.service";
+import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
 
 import { PolicyListService } from "../admin-console/core/policy-list.service";
 import { HtmlStorageService } from "../core/html-storage.service";
@@ -70,6 +72,12 @@ const safeProviders: SafeProvider[] = [
   safeProvider(RouterService),
   safeProvider(EventService),
   safeProvider(PolicyListService),
+  safeProvider({
+    provide: DEFAULT_VAULT_TIMEOUT,
+    deps: [PlatformUtilsServiceAbstraction],
+    useFactory: (platformUtilsService: PlatformUtilsServiceAbstraction): VaultTimeout =>
+      platformUtilsService.isDev() ? "never" : 15,
+  }),
   safeProvider({
     provide: APP_INITIALIZER as SafeInjectionToken<() => void>,
     useFactory: (initService: InitService) => initService.init(),

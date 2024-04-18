@@ -14,6 +14,7 @@ import {
   SYSTEM_THEME_OBSERVABLE,
   SafeInjectionToken,
   STATE_FACTORY,
+  DEFAULT_VAULT_TIMEOUT,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
@@ -130,6 +131,10 @@ const safeProviders: SafeProvider[] = [
     // circular dependency on Desktop only.
     provide: SUPPORTS_SECURE_STORAGE,
     useValue: ELECTRON_SUPPORTS_SECURE_STORAGE,
+  }),
+  safeProvider({
+    provide: DEFAULT_VAULT_TIMEOUT,
+    useValue: "onRestart",
   }),
   safeProvider({
     provide: I18nServiceAbstraction,

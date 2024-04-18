@@ -395,6 +395,7 @@ export class Main {
       this.biometricStateService,
       this.stateProvider,
       this.logService,
+      null, // no default vault timeout since there is no vault timeout on the CLI
     );
 
     this.apiService = new NodeApiService(
