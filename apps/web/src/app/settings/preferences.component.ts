@@ -13,6 +13,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
+import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 @Component({
@@ -37,7 +38,7 @@ export class PreferencesComponent implements OnInit {
   private destroy$ = new Subject<void>();
 
   form = this.formBuilder.group({
-    vaultTimeout: [null as number | null],
+    vaultTimeout: [null as VaultTimeout | null],
     vaultTimeoutAction: [VaultTimeoutAction.Lock],
     enableFavicons: true,
     theme: [ThemeType.Light],
