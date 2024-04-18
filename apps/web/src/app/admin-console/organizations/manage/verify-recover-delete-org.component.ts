@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { FormBuilder } from "@angular/forms";
+import { FormBuilder, FormGroup } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
@@ -20,10 +20,7 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
   loading = true;
   name: string;
 
-  protected formGroup = this.formBuilder.group({});
-
-  private orgId: string;
-  private token: string;
+  protected formGroup: FormGroup;
 
   constructor(
     private router: Router,
@@ -38,8 +35,10 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
   async ngOnInit() {
     const qParams = await firstValueFrom(this.route.queryParams);
     if (qParams.orgId != null && qParams.token != null && qParams.name != null) {
-      this.orgId = qParams.orgId;
-      this.token = qParams.token;
+      this.formGroup = this.formBuilder.group({
+        orgId: [qParams.orgId],
+        token: [qParams.token],
+      });
       this.name = qParams.name;
       this.loading = false;
     } else {
@@ -49,8 +48,9 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
 
   submit = async () => {
     try {
-      const request = new OrganizationVerifyDeleteRecoverRequest(this.token);
-      await this.apiService.deleteUsingToken(this.orgId, request);
+      const { orgId, token } = this.formGroup.value;
+      const request = new OrganizationVerifyDeleteRecoverRequest(token);
+      await this.apiService.deleteUsingToken(orgId, request);
       this.platformUtilsService.showToast(
         "success",
         this.i18nService.t("organizationDeleted"),
