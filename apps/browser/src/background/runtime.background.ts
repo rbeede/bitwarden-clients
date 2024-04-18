@@ -79,7 +79,6 @@ export default class RuntimeBackground {
           `Error while processing message in RuntimeBackground '${msg?.command}'. Error: ${err?.message ?? "Unknown Error"}`,
         ),
       );
-      return false;
     };
 
     this.messageListener.allMessages$

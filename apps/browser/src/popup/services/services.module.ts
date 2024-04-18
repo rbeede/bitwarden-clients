@@ -331,6 +331,11 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: ScriptInjectorService,
+    useClass: BrowserScriptInjectorService,
+    deps: [],
+  }),
+  safeProvider({
     provide: KeyConnectorService,
     useFactory: getBgService<KeyConnectorService>("keyConnectorService"),
     deps: [],
