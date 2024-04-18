@@ -259,9 +259,10 @@ describe("VaultTimeoutSettingsService", () => {
     const mockClientSecret = "mockClientSecret";
 
     it("should throw an error if no user id is provided", async () => {
-      expect(() => vaultTimeoutSettingsService.setVaultTimeoutOptions(null, null, null)).toThrow(
-        "User id required. Cannot set vault timeout settings.",
-      );
+      // note: don't await here because we want to test the error
+      const result = vaultTimeoutSettingsService.setVaultTimeoutOptions(null, null, null);
+      // Assert
+      await expect(result).rejects.toThrow("User id required. Cannot set vault timeout settings.");
     });
 
     it("should set the vault timeout options for the given user", async () => {
