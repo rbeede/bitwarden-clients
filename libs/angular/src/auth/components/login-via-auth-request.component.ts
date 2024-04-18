@@ -1,6 +1,6 @@
 import { Directive, OnDestroy, OnInit } from "@angular/core";
 import { IsActiveMatchOptions, Router } from "@angular/router";
-import { Subject, takeUntil } from "rxjs";
+import { Subject, firstValueFrom, takeUntil } from "rxjs";
 
 import {
   AuthRequestLoginCredentials,
@@ -9,6 +9,7 @@ import {
   LoginEmailServiceAbstraction,
 } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AnonymousHubService } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
@@ -32,6 +33,7 @@ import { StateService } from "@bitwarden/common/platform/abstractions/state.serv
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
+import { UserId } from "@bitwarden/common/types/guid";
 
 import { CaptchaProtectedComponent } from "./captcha-protected.component";
 
@@ -87,6 +89,7 @@ export class LoginViaAuthRequestComponent
     private deviceTrustCryptoService: DeviceTrustCryptoServiceAbstraction,
     private authRequestService: AuthRequestServiceAbstraction,
     private loginStrategyService: LoginStrategyServiceAbstraction,
+    private accountService: AccountService,
   ) {
     super(environmentService, i18nService, platformUtilsService);
 
@@ -129,6 +132,7 @@ export class LoginViaAuthRequestComponent
       // This also prevents it from being lost on refresh as the
       // login service email does not persist.
       this.email = await this.stateService.getEmail();
+      const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
 
       if (!this.email) {
         this.platformUtilsService.showToast("error", null, this.i18nService.t("userEmailMissing"));
@@ -140,10 +144,10 @@ export class LoginViaAuthRequestComponent
 
       // We only allow a single admin approval request to be active at a time
       // so must check state to see if we have an existing one or not
-      const adminAuthReqStorable = await this.stateService.getAdminAuthRequest();
+      const adminAuthReqStorable = await this.authRequestService.getAdminAuthRequest(userId);
 
       if (adminAuthReqStorable) {
-        await this.handleExistingAdminAuthRequest(adminAuthReqStorable);
+        await this.handleExistingAdminAuthRequest(adminAuthReqStorable, userId);
       } else {
         // No existing admin auth request; so we need to create one
         await this.startAuthRequestLogin();
@@ -171,7 +175,10 @@ export class LoginViaAuthRequestComponent
     this.destroy$.complete();
   }
 
-  private async handleExistingAdminAuthRequest(adminAuthReqStorable: AdminAuthRequestStorable) {
+  private async handleExistingAdminAuthRequest(
+    adminAuthReqStorable: AdminAuthRequestStorable,
+    userId: UserId,
+  ) {
     // Note: on login, the SSOLoginStrategy will also call to see an existing admin auth req
     // has been approved and handle it if so.
 
@@ -181,13 +188,13 @@ export class LoginViaAuthRequestComponent
       adminAuthReqResponse = await this.apiService.getAuthRequest(adminAuthReqStorable.id);
     } catch (error) {
       if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
-        return await this.handleExistingAdminAuthReqDeletedOrDenied();
+        return await this.handleExistingAdminAuthReqDeletedOrDenied(userId);
       }
     }
 
     // Request doesn't exist anymore
     if (!adminAuthReqResponse) {
-      return await this.handleExistingAdminAuthReqDeletedOrDenied();
+      return await this.handleExistingAdminAuthReqDeletedOrDenied(userId);
     }
 
     // Re-derive the user's fingerprint phrase
@@ -201,7 +208,7 @@ export class LoginViaAuthRequestComponent
 
     // Request denied
     if (adminAuthReqResponse.isAnswered && !adminAuthReqResponse.requestApproved) {
-      return await this.handleExistingAdminAuthReqDeletedOrDenied();
+      return await this.handleExistingAdminAuthReqDeletedOrDenied(userId);
     }
 
     // Request approved
@@ -209,6 +216,7 @@ export class LoginViaAuthRequestComponent
       return await this.handleApprovedAdminAuthRequest(
         adminAuthReqResponse,
         adminAuthReqStorable.privateKey,
+        userId,
       );
     }
 
@@ -217,9 +225,9 @@ export class LoginViaAuthRequestComponent
     await this.anonymousHubService.createHubConnection(adminAuthReqStorable.id);
   }
 
-  private async handleExistingAdminAuthReqDeletedOrDenied() {
+  private async handleExistingAdminAuthReqDeletedOrDenied(userId: UserId) {
     // clear the admin auth request from state
-    await this.stateService.setAdminAuthRequest(null);
+    await this.authRequestService.clearAdminAuthRequest(userId);
 
     // start new auth request
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
@@ -267,7 +275,8 @@ export class LoginViaAuthRequestComponent
           privateKey: this.authRequestKeyPair.privateKey,
         });
 
-        await this.stateService.setAdminAuthRequest(adminAuthReqStorable);
+        const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+        await this.authRequestService.setAdminAuthRequest(adminAuthReqStorable, userId);
       } else {
         await this.buildAuthRequest(AuthRequestType.AuthenticateAndUnlock);
         reqResponse = await this.apiService.postAuthRequest(this.authRequest);
@@ -331,9 +340,11 @@ export class LoginViaAuthRequestComponent
 
       // if user has authenticated via SSO
       if (this.userAuthNStatus === AuthenticationStatus.Locked) {
+        const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
         return await this.handleApprovedAdminAuthRequest(
           authReqResponse,
           this.authRequestKeyPair.privateKey,
+          userId,
         );
       }
 
@@ -361,6 +372,7 @@ export class LoginViaAuthRequestComponent
   async handleApprovedAdminAuthRequest(
     adminAuthReqResponse: AuthRequestResponse,
     privateKey: ArrayBuffer,
+    userId: UserId,
   ) {
     // See verifyAndHandleApprovedAuthReq(...) for flow details
     // it's flow 2 or 3 based on presence of masterPasswordHash
@@ -382,13 +394,14 @@ export class LoginViaAuthRequestComponent
 
     // clear the admin auth request from state so it cannot be used again (it's a one time use)
     // TODO: this should eventually be enforced via deleting this on the server once it is used
-    await this.stateService.setAdminAuthRequest(null);
+    await this.authRequestService.clearAdminAuthRequest(userId);
 
     this.platformUtilsService.showToast("success", null, this.i18nService.t("loginApproved"));
 
     // Now that we have a decrypted user key in memory, we can check if we
     // need to establish trust on the current device
-    await this.deviceTrustCryptoService.trustDeviceIfRequired();
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    await this.deviceTrustCryptoService.trustDeviceIfRequired(activeAccount.id);
 
     // TODO: don't forget to use auto enrollment service everywhere we trust device
 
