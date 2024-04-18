@@ -23,6 +23,7 @@ import { ThemeType, KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { UserId } from "@bitwarden/common/types/guid";
+import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
@@ -70,14 +71,14 @@ export class SettingsComponent implements OnInit {
     timeout: { hours: number; minutes: number };
     action: "lock" | "logOut";
   }>;
-  previousVaultTimeout: number = null;
+  previousVaultTimeout: VaultTimeout = null;
 
   userHasMasterPassword: boolean;
   userHasPinSet: boolean;
 
   form = this.formBuilder.group({
     // Security
-    vaultTimeout: [null as number | null],
+    vaultTimeout: [null as VaultTimeout | null],
     vaultTimeoutAction: [VaultTimeoutAction.Lock],
     pin: [null as boolean | null],
     biometric: false,
@@ -357,7 +358,7 @@ export class SettingsComponent implements OnInit {
       });
   }
 
-  async saveVaultTimeout(newValue: number) {
+  async saveVaultTimeout(newValue: VaultTimeout) {
     if (newValue == null) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },

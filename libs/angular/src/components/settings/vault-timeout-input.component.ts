@@ -14,9 +14,10 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
 
 interface VaultTimeoutFormValue {
-  vaultTimeout: number | null;
+  vaultTimeout: VaultTimeout | null;
   custom: {
     hours: number | null;
     minutes: number | null;
@@ -55,7 +56,7 @@ export class VaultTimeoutInputComponent
 
   protected canLockVault$: Observable<boolean>;
 
-  private onChange: (vaultTimeout: number) => void;
+  private onChange: (vaultTimeout: VaultTimeout) => void;
   private validatorChange: () => void;
   private destroy$ = new Subject<void>();
 

@@ -139,7 +139,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
         return from(
           this.determineVaultTimeout(userId, currentVaultTimeout, maxVaultTimeoutPolicy),
         ).pipe(
-          tap((vaultTimeout: number) => {
+          tap((vaultTimeout: VaultTimeout) => {
             // As a side effect, set the new value determined by determineVaultTimeout into state if it's different from the current
             if (vaultTimeout !== currentVaultTimeout) {
               return this.stateProvider.setUserState(VAULT_TIMEOUT, vaultTimeout, userId);

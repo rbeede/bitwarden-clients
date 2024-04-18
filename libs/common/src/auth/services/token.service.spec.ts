@@ -10,6 +10,7 @@ import { AbstractStorageService } from "../../platform/abstractions/storage.serv
 import { StorageLocation } from "../../platform/enums";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
 import { DecodedAccessToken, TokenService } from "./token.service";
@@ -39,7 +40,7 @@ describe("TokenService", () => {
   const memoryVaultTimeout = 30;
 
   const diskVaultTimeoutAction = VaultTimeoutAction.Lock;
-  const diskVaultTimeout: number = null;
+  const diskVaultTimeout: VaultTimeout = null;
 
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwibmJmIjoxNzA5MzI0MTExLCJpYXQiOjE3MDkzMjQxMTEsImV4cCI6MTcwOTMyNzcxMSwic2NvcGUiOlsiYXBpIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbIkFwcGxpY2F0aW9uIl0sImNsaWVudF9pZCI6IndlYiIsInN1YiI6ImVjZTcwYTEzLTcyMTYtNDNjNC05OTc3LWIxMDMwMTQ2ZTFlNyIsImF1dGhfdGltZSI6MTcwOTMyNDEwNCwiaWRwIjoiYml0d2FyZGVuIiwicHJlbWl1bSI6ZmFsc2UsImVtYWlsIjoiZXhhbXBsZUBiaXR3YXJkZW4uY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJzc3RhbXAiOiJHWTdKQU82NENLS1RLQkI2WkVBVVlMMldPUVU3QVNUMiIsIm5hbWUiOiJUZXN0IFVzZXIiLCJvcmdvd25lciI6WyI5MmI0OTkwOC1iNTE0LTQ1YTgtYmFkYi1iMTAzMDE0OGZlNTMiLCIzOGVkZTMyMi1iNGI0LTRiZDgtOWUwOS1iMTA3MDExMmRjMTEiLCJiMmQwNzAyOC1hNTgzLTRjM2UtOGQ2MC1iMTA3MDExOThjMjkiLCJiZjkzNGJhMi0wZmQ0LTQ5ZjItYTk1ZS1iMTA3MDExZmM5ZTYiLCJjMGI3Zjc1ZC0wMTVmLTQyYzktYjNhNi1iMTA4MDE3NjA3Y2EiXSwiZGV2aWNlIjoiNGI4NzIzNjctMGRhNi00MWEwLWFkY2ItNzdmMmZlZWZjNGY0IiwianRpIjoiNzUxNjFCRTQxMzFGRjVBMkRFNTExQjhDNEUyRkY4OUEifQ.n7roP8sSbfwcYdvRxZNZds27IK32TW6anorE6BORx_Q";

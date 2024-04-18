@@ -19,6 +19,7 @@ import {
   UserKeyDefinition,
 } from "../../platform/state";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 import { TokenService as TokenServiceAbstraction } from "../abstractions/token.service";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
@@ -158,7 +159,7 @@ export class TokenService implements TokenServiceAbstraction {
   async setTokens(
     accessToken: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     refreshToken?: string,
     clientIdClientSecret?: [string, string],
   ): Promise<void> {
@@ -271,7 +272,7 @@ export class TokenService implements TokenServiceAbstraction {
   private async _setAccessToken(
     accessToken: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     userId: UserId,
   ): Promise<void> {
     const storageLocation = await this.determineStorageLocation(
@@ -318,7 +319,7 @@ export class TokenService implements TokenServiceAbstraction {
   async setAccessToken(
     accessToken: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
   ): Promise<void> {
     if (!accessToken) {
       throw new Error("Access token is required.");
@@ -412,7 +413,7 @@ export class TokenService implements TokenServiceAbstraction {
   private async setRefreshToken(
     refreshToken: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     userId: UserId,
   ): Promise<void> {
     // If we don't have a user id, we can't save the value
@@ -520,7 +521,7 @@ export class TokenService implements TokenServiceAbstraction {
   async setClientId(
     clientId: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     userId?: UserId,
   ): Promise<void> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
@@ -588,7 +589,7 @@ export class TokenService implements TokenServiceAbstraction {
   async setClientSecret(
     clientSecret: string,
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     userId?: UserId,
   ): Promise<void> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
@@ -860,7 +861,7 @@ export class TokenService implements TokenServiceAbstraction {
 
   private async determineStorageLocation(
     vaultTimeoutAction: VaultTimeoutAction,
-    vaultTimeout: number | null,
+    vaultTimeout: VaultTimeout | null,
     useSecureStorage: boolean,
   ): Promise<TokenStorageLocation> {
     if (vaultTimeoutAction === VaultTimeoutAction.LogOut && vaultTimeout != null) {
