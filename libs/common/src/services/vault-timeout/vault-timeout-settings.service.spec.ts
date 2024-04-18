@@ -287,12 +287,12 @@ describe("VaultTimeoutSettingsService", () => {
       );
 
       expect(
-        await firstValueFrom(stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, mockUserId)),
-      ).toBe(action);
+        stateProvider.singleUser.getFake(mockUserId, VAULT_TIMEOUT_ACTION).nextMock,
+      ).toHaveBeenCalledWith(action);
 
-      expect(await firstValueFrom(stateProvider.getUserState$(VAULT_TIMEOUT, mockUserId))).toBe(
-        action,
-      );
+      expect(
+        stateProvider.singleUser.getFake(mockUserId, VAULT_TIMEOUT).nextMock,
+      ).toHaveBeenCalledWith(timeout);
 
       expect(cryptoService.refreshAdditionalKeys).toHaveBeenCalled();
     });
