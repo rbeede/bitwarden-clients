@@ -3,21 +3,15 @@ import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject, Subject, switchMap, takeUntil, tap } from "rxjs";
 
 import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { TableDataSource } from "@bitwarden/components";
 import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 
-import { OrganizationAuthRequestApiService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests";
+import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests/organization-auth-request.service";
 import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/views/auth-requests/pending-auth-request.view";
-
 @Component({
   selector: "app-org-device-approvals",
   templateUrl: "./device-approvals.component.html",
@@ -34,9 +28,8 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
   private refresh$ = new BehaviorSubject<void>(null);
 
   constructor(
-    private organizationAuthRequestApiService: OrganizationAuthRequestApiService,
+    private organizationAuthRequestService: OrganizationAuthRequestService,
     private organizationUserService: OrganizationUserService,
-    private cryptoService: CryptoService,
     private route: ActivatedRoute,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
@@ -52,7 +45,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
           this.refresh$.pipe(
             tap(() => (this.loading = true)),
             switchMap(() =>
-              this.organizationAuthRequestApiService.listPendingRequests(this.organizationId),
+              this.organizationAuthRequestService.listPendingRequests(this.organizationId),
             ),
           ),
         ),
@@ -62,35 +55,6 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
         this.tableDataSource.data = r;
         this.loading = false;
       });
-  }
-
-  /**
-   * Creates a copy of the user key that has been encrypted with the provided device's public key.
-   * @param devicePublicKey
-   * @param resetPasswordDetails
-   * @private
-   */
-  private async getEncryptedUserKey(
-    devicePublicKey: string,
-    resetPasswordDetails: OrganizationUserResetPasswordDetailsResponse,
-  ): Promise<EncString> {
-    const encryptedUserKey = resetPasswordDetails.resetPasswordKey;
-    const encryptedOrgPrivateKey = resetPasswordDetails.encryptedPrivateKey;
-    const devicePubKey = Utils.fromB64ToArray(devicePublicKey);
-
-    // Decrypt Organization's encrypted Private Key with org key
-    const orgSymKey = await this.cryptoService.getOrgKey(this.organizationId);
-    const decOrgPrivateKey = await this.cryptoService.decryptToBytes(
-      new EncString(encryptedOrgPrivateKey),
-      orgSymKey,
-    );
-
-    // Decrypt user key with decrypted org private key
-    const decValue = await this.cryptoService.rsaDecrypt(encryptedUserKey, decOrgPrivateKey);
-    const userKey = new SymmetricCryptoKey(decValue);
-
-    // Re-encrypt user Key with the Device Public Key
-    return await this.cryptoService.rsaEncrypt(userKey.key, devicePubKey);
   }
 
   async approveRequest(authRequest: PendingAuthRequestView) {
@@ -110,12 +74,12 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const encryptedKey = await this.getEncryptedUserKey(authRequest.publicKey, details);
-
-      await this.organizationAuthRequestApiService.approvePendingRequest(
+      await this.organizationAuthRequestService.approvePendingRequest(
         this.organizationId,
+        details.resetPasswordKey,
+        details.encryptedPrivateKey,
+        authRequest.publicKey,
         authRequest.id,
-        encryptedKey,
       );
 
       this.platformUtilsService.showToast(
@@ -128,10 +92,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
 
   async denyRequest(requestId: string) {
     await this.performAsyncAction(async () => {
-      await this.organizationAuthRequestApiService.denyPendingRequests(
-        this.organizationId,
-        requestId,
-      );
+      await this.organizationAuthRequestService.denyPendingRequests(this.organizationId, requestId);
       this.platformUtilsService.showToast("error", null, this.i18nService.t("loginRequestDenied"));
     });
   }
@@ -142,7 +103,7 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
     }
 
     await this.performAsyncAction(async () => {
-      await this.organizationAuthRequestApiService.denyPendingRequests(
+      await this.organizationAuthRequestService.denyPendingRequests(
         this.organizationId,
         ...this.tableDataSource.data.map((r) => r.id),
       );
