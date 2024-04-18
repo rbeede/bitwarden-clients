@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { PinLockType } from "../../services/vault-timeout/vault-timeout-settings.service";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 
 export abstract class VaultTimeoutSettingsService {
   /**
@@ -13,7 +14,7 @@ export abstract class VaultTimeoutSettingsService {
    */
   setVaultTimeoutOptions: (
     userId: UserId,
-    vaultTimeout: number,
+    vaultTimeout: VaultTimeout,
     vaultTimeoutAction: VaultTimeoutAction,
   ) => Promise<void>;
 
@@ -42,7 +43,7 @@ export abstract class VaultTimeoutSettingsService {
    * A new timeout will be emitted if the current state changes or if the user's policy changes and the new policy affects the timeout.
    * @param userId The user id to get the vault timeout for
    */
-  getVaultTimeoutByUserId$: (userId: string) => Observable<number>;
+  getVaultTimeoutByUserId$: (userId: string) => Observable<VaultTimeout>;
 
   /**
    * Has the user enabled unlock with Pin.

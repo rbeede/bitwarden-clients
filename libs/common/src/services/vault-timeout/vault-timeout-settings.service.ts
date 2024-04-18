@@ -27,6 +27,7 @@ import { StateService } from "../../platform/abstractions/state.service";
 import { BiometricStateService } from "../../platform/biometrics/biometric-state.service";
 import { StateProvider } from "../../platform/state";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 
 import { VAULT_TIMEOUT, VAULT_TIMEOUT_ACTION } from "./vault-timeout-settings.state";
 
@@ -47,11 +48,12 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     private biometricStateService: BiometricStateService,
     private stateProvider: StateProvider,
     private logService: LogService,
+    private defaultVaultTimeout: VaultTimeout,
   ) {}
 
   async setVaultTimeoutOptions(
     userId: UserId,
-    timeout: number | null,
+    timeout: VaultTimeout | null,
     action: VaultTimeoutAction,
   ): Promise<void> {
     if (!userId) {
@@ -111,7 +113,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     return await biometricUnlockPromise;
   }
 
-  private async setVaultTimeout(userId: UserId, timeout: number): Promise<void> {
+  private async setVaultTimeout(userId: UserId, timeout: VaultTimeout): Promise<void> {
     if (!userId) {
       throw new Error("User id required. Cannot set vault timeout.");
     }
@@ -119,13 +121,18 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     await this.stateProvider.setUserState(VAULT_TIMEOUT, timeout, userId);
   }
 
-  getVaultTimeoutByUserId$(userId: UserId): Observable<number> {
+  getVaultTimeoutByUserId$(userId: UserId): Observable<VaultTimeout> {
     if (!userId) {
       throw new Error("User id required. Cannot get vault timeout.");
     }
 
     return combineLatest([
-      this.stateProvider.getUserState$(VAULT_TIMEOUT, userId),
+      this.stateProvider.getUserState$(VAULT_TIMEOUT, userId).pipe(
+        map(
+          // Apply client specific override if the current value is null
+          (currentVaultTimeout: VaultTimeout) => currentVaultTimeout ?? this.defaultVaultTimeout,
+        ),
+      ),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
     ]).pipe(
       switchMap(([currentVaultTimeout, maxVaultTimeoutPolicy]) => {
@@ -152,10 +159,16 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
 
   private async determineVaultTimeout(
     userId: UserId,
-    currentVaultTimeout: number | null,
+    currentVaultTimeout: VaultTimeout | null,
     maxVaultTimeoutPolicy: Policy | null,
-  ): Promise<number | null> {
+  ): Promise<VaultTimeout | null> {
     if (!maxVaultTimeoutPolicy) {
+      return currentVaultTimeout;
+    }
+
+    // If the current timeout is not a number, return it
+    // as the Policy vault timeout is always numeric
+    if (typeof currentVaultTimeout !== "number") {
       return currentVaultTimeout;
     }
 
