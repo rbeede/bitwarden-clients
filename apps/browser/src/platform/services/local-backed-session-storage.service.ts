@@ -26,6 +26,8 @@ export class LocalBackedSessionStorageService
   private updatesSubject = new Subject<StorageUpdate>();
 
   private commandName = `localBackedSessionStorage_${this.name}`;
+  private getCommandName = `${this.commandName}_get`;
+  private updateCommandName = `${this.commandName}_update`;
   private encKey = `localEncryptionKey_${this.name}`;
   private sessionKey = `session_${this.name}`;
 
@@ -40,8 +42,8 @@ export class LocalBackedSessionStorageService
   ) {
     super();
 
-    const remoteObservable = fromChromeEvent(chrome.runtime.onMessage).pipe(
-      filter(([msg]) => msg.command === this.commandName),
+    const remoteUpdatesObservable = fromChromeEvent(chrome.runtime.onMessage).pipe(
+      filter(([msg]) => msg.command === this.updateCommandName),
       map(([msg]) => msg.update as StorageUpdate),
       tap((update) => {
         if (update.updateType === "remove") {
@@ -53,22 +55,25 @@ export class LocalBackedSessionStorageService
       share(),
     );
 
-    remoteObservable.subscribe();
+    remoteUpdatesObservable.subscribe();
 
-    this.updates$ = merge(this.updatesSubject.asObservable(), remoteObservable);
+    this.updates$ = merge(this.updatesSubject.asObservable(), remoteUpdatesObservable);
 
-    BrowserApi.addListener(chrome.runtime.onMessage, (message, sender, sendResponse) => {
-      if (message.command !== `${this.commandName}_get` || !message.cacheKey) {
-        return;
-      }
+    const remoteGetCacheObservable = fromChromeEvent(chrome.runtime.onMessage).pipe(
+      filter(([msg]) => msg.command === this.getCommandName),
+      tap(([msg, _sender, sendResponse]) => {
+        const { cacheKey } = msg;
+        if (!cacheKey || !this.cache.has(cacheKey)) {
+          return;
+        }
 
-      if (!this.cache.has(message.cacheKey)) {
-        return;
-      }
+        sendResponse(this.cache.get(cacheKey));
+        return true;
+      }),
+      share(),
+    );
 
-      sendResponse(this.cache.get(message.cacheKey));
-      return true;
-    });
+    remoteGetCacheObservable.subscribe();
   }
 
   get valuesRequireDeserialization(): boolean {
@@ -144,7 +149,7 @@ export class LocalBackedSessionStorageService
   sendUpdate(storageUpdate: StorageUpdate) {
     this.updatesSubject.next(storageUpdate);
     void chrome.runtime.sendMessage({
-      command: this.commandName,
+      command: this.updateCommandName,
       update: storageUpdate,
     });
   }
@@ -231,7 +236,7 @@ export class LocalBackedSessionStorageService
   }
 
   private async getCachedValueFromExternalContext(cacheKey: string): Promise<string> {
-    return await BrowserApi.sendMessageWithResponse(`${this.commandName}_get`, { cacheKey });
+    return await BrowserApi.sendMessageWithResponse(this.getCommandName, { cacheKey });
   }
 
   private comparedExternalCacheToLocal<T>(externalCacheValue: string, localValue: T): boolean {
