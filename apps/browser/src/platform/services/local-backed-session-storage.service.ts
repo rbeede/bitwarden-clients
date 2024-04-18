@@ -13,6 +13,7 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { MemoryStorageOptions } from "@bitwarden/common/platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
+import { BrowserApi } from "../browser/browser-api";
 import { fromChromeEvent } from "../browser/from-chrome-event";
 import { devFlag } from "../decorators/dev-flag.decorator";
 import { devFlagEnabled } from "../flags";
@@ -55,6 +56,19 @@ export class LocalBackedSessionStorageService
     remoteObservable.subscribe();
 
     this.updates$ = merge(this.updatesSubject.asObservable(), remoteObservable);
+
+    BrowserApi.addListener(chrome.runtime.onMessage, (message, sender, sendResponse) => {
+      if (message.command !== `${this.commandName}_get` || !message.cacheKey) {
+        return;
+      }
+
+      if (!this.cache.has(message.cacheKey)) {
+        return;
+      }
+
+      sendResponse(this.cache.get(message.cacheKey));
+      return true;
+    });
   }
 
   get valuesRequireDeserialization(): boolean {
@@ -64,6 +78,12 @@ export class LocalBackedSessionStorageService
   async get<T>(key: string, options?: MemoryStorageOptions<T>): Promise<T> {
     if (this.cache.has(key)) {
       return JSON.parse(this.cache.get(key)) as T;
+    }
+
+    const externalContextCacheValue = await this.getCachedValueFromExternalContext(key);
+    if (externalContextCacheValue) {
+      this.cache.set(key, externalContextCacheValue);
+      return JSON.parse(externalContextCacheValue) as T;
     }
 
     return await this.getBypassCache(key, options);
@@ -93,12 +113,29 @@ export class LocalBackedSessionStorageService
       return await this.remove(key);
     }
 
+    const existingValue = this.cache.get(key);
+    if (this.comparedExternalCacheToLocal<T>(existingValue, obj)) {
+      return;
+    }
+
+    const externalContextCacheValue = await this.getCachedValueFromExternalContext(key);
+    if (this.comparedExternalCacheToLocal<T>(externalContextCacheValue, obj)) {
+      this.cache.set(key, externalContextCacheValue);
+      return;
+    }
+
     this.cache.set(key, JSON.stringify(obj));
     await this.updateLocalSessionValue(key, obj);
     this.sendUpdate({ key, updateType: "save" });
   }
 
   async remove(key: string): Promise<void> {
+    const externalContextCacheValue = await this.getCachedValueFromExternalContext(key);
+    const existingValue = this.cache.get(key);
+    if (existingValue == null && externalContextCacheValue == null) {
+      return;
+    }
+
     this.cache.set(key, null);
     await this.updateLocalSessionValue(key, null);
     this.sendUpdate({ key, updateType: "remove" });
@@ -191,5 +228,29 @@ export class LocalBackedSessionStorageService
     } else {
       await this.sessionStorage.save(this.encKey, input);
     }
+  }
+
+  private async getCachedValueFromExternalContext(cacheKey: string): Promise<string> {
+    return await BrowserApi.sendMessageWithResponse(`${this.commandName}_get`, { cacheKey });
+  }
+
+  private comparedExternalCacheToLocal<T>(externalCacheValue: string, localValue: T): boolean {
+    if (externalCacheValue == null) {
+      return false;
+    }
+
+    if (externalCacheValue === JSON.stringify(localValue)) {
+      return true;
+    }
+
+    const parsedExternalCacheValue = JSON.parse(externalCacheValue);
+    if (parsedExternalCacheValue == null) {
+      return false;
+    }
+
+    return (
+      Object.entries(parsedExternalCacheValue).sort().toString() ===
+      Object.entries(localValue).sort().toString()
+    );
   }
 }
