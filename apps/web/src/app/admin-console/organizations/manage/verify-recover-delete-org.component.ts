@@ -12,7 +12,6 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { SharedModule } from "../../../shared/shared.module";
 
 @Component({
-  selector: "app-verify-recover-delete-org",
   templateUrl: "verify-recover-delete-org.component.html",
   standalone: true,
   imports: [SharedModule],
