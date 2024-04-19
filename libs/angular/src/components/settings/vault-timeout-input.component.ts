@@ -213,6 +213,10 @@ export class VaultTimeoutInputComponent
         return false;
       }
     });
-    this.validatorChange();
+
+    // Only call validator change if it's been set
+    if (this.validatorChange) {
+      this.validatorChange();
+    }
   }
 }
