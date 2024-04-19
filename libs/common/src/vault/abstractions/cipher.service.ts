@@ -16,6 +16,7 @@ export abstract class CipherService {
    *  An observable monitoring the add/edit cipher info saved to memory.
    */
   addEditCipherInfo$: Observable<AddEditCipherInfo>;
+  lastCipherDetails: AddEditCipherInfo;
   clearCache: (userId?: string) => Promise<void>;
   encrypt: (
     model: CipherView,

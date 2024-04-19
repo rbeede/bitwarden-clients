@@ -59,7 +59,7 @@ export class GeneratorComponent extends BaseGeneratorComponent {
     await super.ngOnInit();
   }
 
-  select() {
+  async select() {
     super.select();
     if (this.type === "password") {
       this.cipherState.login.password = this.password;
@@ -67,9 +67,7 @@ export class GeneratorComponent extends BaseGeneratorComponent {
       this.cipherState.login.username = this.username;
     }
     this.addEditCipherInfo.cipher = this.cipherState;
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.cipherService.setAddEditCipherInfo(this.addEditCipherInfo);
+    await this.cipherService.setAddEditCipherInfo(this.addEditCipherInfo);
     this.close();
   }
 

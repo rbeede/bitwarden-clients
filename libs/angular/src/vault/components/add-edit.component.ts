@@ -1,6 +1,6 @@
 import { DatePipe } from "@angular/common";
 import { Directive, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angular/core";
-import { concatMap, firstValueFrom, Observable, Subject, takeUntil } from "rxjs";
+import { concatMap, Observable, Subject, takeUntil } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
@@ -687,7 +687,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
   }
 
   async loadAddEditCipherInfo(): Promise<boolean> {
-    const addEditCipherInfo: any = await firstValueFrom(this.cipherService.addEditCipherInfo$);
+    const addEditCipherInfo = this.cipherService.lastCipherDetails; // await firstValueFrom(this.cipherService.addEditCipherInfo$);
     const loadedSavedInfo = addEditCipherInfo != null;
 
     if (loadedSavedInfo) {

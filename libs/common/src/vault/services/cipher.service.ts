@@ -76,6 +76,7 @@ export class CipherService implements CipherServiceAbstraction {
   ciphers$: Observable<Record<CipherId, CipherData>>;
   cipherViews$: Observable<Record<CipherId, CipherView>>;
   addEditCipherInfo$: Observable<AddEditCipherInfo>;
+  lastCipherDetails: AddEditCipherInfo;
 
   private localDataState: ActiveUserState<Record<CipherId, LocalData>>;
   private encryptedCiphersState: ActiveUserState<Record<CipherId, CipherData>>;
@@ -1094,6 +1095,7 @@ export class CipherService implements CipherServiceAbstraction {
 
   async setAddEditCipherInfo(value: AddEditCipherInfo) {
     await this.addEditCipherInfoState.update(() => value);
+    this.lastCipherDetails = value;
   }
 
   // Helpers
