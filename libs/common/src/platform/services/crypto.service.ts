@@ -869,7 +869,7 @@ export class CryptoService implements CryptoServiceAbstraction {
           this.stateProvider.getUserState$(VAULT_TIMEOUT, userId),
         );
 
-        shouldStoreKey = vaultTimeout == null;
+        shouldStoreKey = vaultTimeout == "never";
         break;
       }
       case KeySuffixOptions.Pin: {

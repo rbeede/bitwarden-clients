@@ -1225,7 +1225,7 @@ export default class MainBackground {
     const currentVaultTimeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(activeAccount.id),
     );
-    return currentVaultTimeout == null ? false : true;
+    return currentVaultTimeout == "never" ? false : true;
   }
 
   async collectPageDetailsForContentScript(tab: any, sender: string, frameId: number = null) {
