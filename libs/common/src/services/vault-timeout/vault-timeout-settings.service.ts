@@ -166,20 +166,16 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
       return currentVaultTimeout;
     }
 
-    // If the current timeout is not a number, return it
-    // as the Policy vault timeout is always numeric
-    if (typeof currentVaultTimeout !== "number") {
-      return currentVaultTimeout;
-    }
-
+    // User is subject to a max vault timeout policy
     const maxVaultTimeoutPolicyData = maxVaultTimeoutPolicy.data;
 
-    // Remove negative values, and ensure it's smaller than maximum allowed value according to policy
-    let policyCompliantTimeout = Math.min(currentVaultTimeout, maxVaultTimeoutPolicyData.minutes);
-
-    if (currentVaultTimeout == null || policyCompliantTimeout < 0) {
-      policyCompliantTimeout = maxVaultTimeoutPolicyData.minutes;
+    // If the current vault timeout is not numeric, change it to the policy compliant value
+    if (typeof currentVaultTimeout === "string") {
+      return maxVaultTimeoutPolicyData.minutes;
     }
+
+    // For numeric vault timeouts, ensure they are smaller than maximum allowed value according to policy
+    const policyCompliantTimeout = Math.min(currentVaultTimeout, maxVaultTimeoutPolicyData.minutes);
 
     return policyCompliantTimeout;
   }
