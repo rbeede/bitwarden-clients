@@ -23,8 +23,11 @@ import {
   VAULT_TIMEOUT_ACTION,
 } from "../../services/vault-timeout/vault-timeout-settings.state";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 
 import { VaultTimeoutSettingsService } from "./vault-timeout-settings.service";
+
+// TODO: update tests
 
 describe("VaultTimeoutSettingsService", () => {
   let userDecryptionOptionsService: MockProxy<UserDecryptionOptionsServiceAbstraction>;
@@ -64,16 +67,8 @@ describe("VaultTimeoutSettingsService", () => {
 
     logService = mock<LogService>();
 
-    vaultTimeoutSettingsService = new VaultTimeoutSettingsService(
-      userDecryptionOptionsService,
-      cryptoService,
-      tokenService,
-      policyService,
-      stateService,
-      biometricStateService,
-      stateProvider,
-      logService,
-    );
+    const defaultVaultTimeout: VaultTimeout = 15; // default web vault timeout
+    vaultTimeoutSettingsService = createVaultTimeoutSettingsService(defaultVaultTimeout);
 
     biometricStateService.biometricUnlockEnabled$ = of(false);
   });
@@ -230,9 +225,15 @@ describe("VaultTimeoutSettingsService", () => {
 
     it.each([
       // policy, vaultTimeout, expected
-      [null, null, null],
+      [null, null, 15], // no policy, no vault timeout, falls back to default
       [30, 90, 30], // policy overrides vault timeout
       [30, 15, 15], // policy doesn't override vault timeout when it's within acceptable range
+      [90, "never", 90], // policy overrides vault timeout when it's "never"
+      [90, "immediately", 90], // policy overrides vault timeout when it's "immediately"
+      [90, "onRestart", 90], // policy overrides vault timeout when it's "onRestart"
+      [90, "onLocked", 90], // policy overrides vault timeout when it's "onLocked"
+      [90, "onSleep", 90], // policy overrides vault timeout when it's "onSleep"
+      [90, "onIdle", 90], // policy overrides vault timeout when it's "onIdle"
     ])(
       "when policy is %s, and vault timeout is %s, returns %s",
       async (policy, vaultTimeout, expected) => {
@@ -310,6 +311,22 @@ describe("VaultTimeoutSettingsService", () => {
       expect(tokenService.clearTokens).toHaveBeenCalled();
     });
   });
+
+  function createVaultTimeoutSettingsService(
+    defaultVaultTimeout: VaultTimeout,
+  ): VaultTimeoutSettingsService {
+    return new VaultTimeoutSettingsService(
+      userDecryptionOptionsService,
+      cryptoService,
+      tokenService,
+      policyService,
+      stateService,
+      biometricStateService,
+      stateProvider,
+      logService,
+      defaultVaultTimeout,
+    );
+  }
 });
 
 function createEncString() {
