@@ -1,3 +1,5 @@
+<app-vault-banners></app-vault-banners>
+
 <app-vault-header
   [filter]="filter"
   [loading]="refreshing && !performingInitialLoad"
@@ -105,17 +107,6 @@
           rel="noreferrer"
         >
           {{ "updateBrowser" | i18n }}
-        </a>
-      </div>
-    </div>
-    <div class="card border-success mb-4" *ngIf="showPremiumCallout">
-      <div class="card-header bg-success text-white">
-        <i class="bwi bwi-star-f bwi-fw" aria-hidden="true"></i> {{ "goPremium" | i18n }}
-      </div>
-      <div class="card-body">
-        <p>{{ "premiumUpgradeUnlockFeatures" | i18n }}</p>
-        <a class="btn btn-block btn-outline-secondary" routerLink="/settings/subscription/premium">
-          {{ "goPremium" | i18n }}
         </a>
       </div>
     </div>

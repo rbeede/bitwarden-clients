@@ -1,0 +1,11 @@
+<bit-banner
+  class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
+  bannerType="premium"
+  *ngIf="visibleBanner === VisibleVaultBanner.Premium"
+  (onClose)="dismissBanner()"
+>
+  {{ "premiumUpgradeUnlockFeatures" | i18n }}
+  <a class="text-white tw-font-bold" routerLink="/settings/subscription/premium">
+    {{ "goPremium" | i18n }}
+  </a>
+</bit-banner>

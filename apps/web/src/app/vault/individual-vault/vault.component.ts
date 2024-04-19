@@ -124,7 +124,6 @@ export class VaultComponent implements OnInit, OnDestroy {
 
   showVerifyEmail = false;
   showBrowserOutdated = false;
-  showPremiumCallout = false;
   showLowKdf = false;
   trashCleanupWarning: string = null;
   kdfIterations: number;
@@ -202,12 +201,6 @@ export class VaultComponent implements OnInit, OnDestroy {
           ? await this.isLowKdfIteration()
           : false;
         await this.syncService.fullSync(false);
-
-        const canAccessPremium = await firstValueFrom(
-          this.billingAccountProfileStateService.hasPremiumFromAnySource$,
-        );
-        this.showPremiumCallout =
-          !this.showVerifyEmail && !canAccessPremium && !this.platformUtilsService.isSelfHost();
 
         const cipherId = getCipherIdFromParams(params);
         if (!cipherId) {
@@ -413,9 +406,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   get isShowingCards() {
-    return (
-      this.showBrowserOutdated || this.showPremiumCallout || this.showVerifyEmail || this.showLowKdf
-    );
+    return this.showBrowserOutdated || this.showVerifyEmail || this.showLowKdf;
   }
 
   emailVerified(verified: boolean) {
