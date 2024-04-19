@@ -145,7 +145,8 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
     const vaultTimeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
     );
-    if (vaultTimeout == null || typeof vaultTimeout !== "number") {
+
+    if (typeof vaultTimeout === "string") {
       return false;
     }
 
