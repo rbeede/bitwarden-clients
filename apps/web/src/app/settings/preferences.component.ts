@@ -13,7 +13,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
-import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 @Component({
@@ -30,7 +30,7 @@ export class PreferencesComponent implements OnInit {
     timeout: { hours: number; minutes: number };
     action: VaultTimeoutAction;
   }>;
-  vaultTimeoutOptions: { name: string; value: number }[];
+  vaultTimeoutOptions: VaultTimeoutOption[];
   localeOptions: any[];
   themeOptions: any[];
 
@@ -63,10 +63,10 @@ export class PreferencesComponent implements OnInit {
       { name: i18nService.t("thirtyMinutes"), value: 30 },
       { name: i18nService.t("oneHour"), value: 60 },
       { name: i18nService.t("fourHours"), value: 240 },
-      { name: i18nService.t("onRefresh"), value: -1 },
+      { name: i18nService.t("onRefresh"), value: "onRestart" },
     ];
     if (this.platformUtilsService.isDev()) {
-      this.vaultTimeoutOptions.push({ name: i18nService.t("never"), value: null });
+      this.vaultTimeoutOptions.push({ name: i18nService.t("never"), value: "never" });
     }
 
     const localeOptions: any[] = [];

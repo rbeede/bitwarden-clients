@@ -32,6 +32,7 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
+import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 import { SetPinComponent } from "../../auth/popup/components/set-pin.component";
@@ -66,7 +67,7 @@ export class SettingsComponent implements OnInit {
   protected readonly VaultTimeoutAction = VaultTimeoutAction;
 
   availableVaultTimeoutActions: VaultTimeoutAction[] = [];
-  vaultTimeoutOptions: any[];
+  vaultTimeoutOptions: VaultTimeoutOption[];
   vaultTimeoutPolicyCallout: Observable<{
     timeout: { hours: number; minutes: number };
     action: VaultTimeoutAction;
@@ -76,7 +77,7 @@ export class SettingsComponent implements OnInit {
   accountSwitcherEnabled = false;
 
   form = this.formBuilder.group({
-    vaultTimeout: [null as number | null],
+    vaultTimeout: [null as VaultTimeout | null],
     vaultTimeoutAction: [VaultTimeoutAction.Lock],
     pin: [null as boolean | null],
     biometric: false,
@@ -134,24 +135,24 @@ export class SettingsComponent implements OnInit {
       { name: this.i18nService.t("thirtyMinutes"), value: 30 },
       { name: this.i18nService.t("oneHour"), value: 60 },
       { name: this.i18nService.t("fourHours"), value: 240 },
-      // { name: i18nService.t('onIdle'), value: -4 },
-      // { name: i18nService.t('onSleep'), value: -3 },
+      // { name: i18nService.t('onIdle'), value: "onIdle" },
+      // { name: i18nService.t('onSleep'), value: "onSleep" },
     ];
 
     if (showOnLocked) {
-      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: -2 });
+      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: "onLocked" });
     }
 
-    this.vaultTimeoutOptions.push({ name: this.i18nService.t("onRestart"), value: -1 });
-    this.vaultTimeoutOptions.push({ name: this.i18nService.t("never"), value: null });
+    this.vaultTimeoutOptions.push({ name: this.i18nService.t("onRestart"), value: "onRestart" });
+    this.vaultTimeoutOptions.push({ name: this.i18nService.t("never"), value: "never" });
 
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
 
     let timeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(activeAccount.id),
     );
-    if (timeout === -2 && !showOnLocked) {
-      timeout = -1;
+    if (timeout === "onLocked" && !showOnLocked) {
+      timeout = "onRestart";
     }
     const pinStatus = await this.vaultTimeoutSettingsService.isPinLockSet();
 
@@ -256,7 +257,7 @@ export class SettingsComponent implements OnInit {
       });
   }
 
-  async saveVaultTimeout(previousValue: number, newValue: number) {
+  async saveVaultTimeout(previousValue: VaultTimeout, newValue: VaultTimeout) {
     if (newValue == null) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },

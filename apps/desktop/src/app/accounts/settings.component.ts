@@ -23,7 +23,7 @@ import { ThemeType, KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
@@ -40,7 +40,7 @@ export class SettingsComponent implements OnInit {
   protected readonly VaultTimeoutAction = VaultTimeoutAction;
 
   showMinToTray = false;
-  vaultTimeoutOptions: any[];
+  vaultTimeoutOptions: VaultTimeoutOption[];
   localeOptions: any[];
   themeOptions: any[];
   clearClipboardOptions: any[];
@@ -162,17 +162,17 @@ export class SettingsComponent implements OnInit {
       { name: this.i18nService.t("thirtyMinutes"), value: 30 },
       { name: this.i18nService.t("oneHour"), value: 60 },
       { name: this.i18nService.t("fourHours"), value: 240 },
-      { name: this.i18nService.t("onIdle"), value: -4 },
-      { name: this.i18nService.t("onSleep"), value: -3 },
+      { name: this.i18nService.t("onIdle"), value: "onIdle" },
+      { name: this.i18nService.t("onSleep"), value: "onSleep" },
     ];
 
     if (this.platformUtilsService.getDevice() !== DeviceType.LinuxDesktop) {
-      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: -2 });
+      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: "onLocked" });
     }
 
     this.vaultTimeoutOptions = this.vaultTimeoutOptions.concat([
-      { name: this.i18nService.t("onRestart"), value: -1 },
-      { name: this.i18nService.t("never"), value: null },
+      { name: this.i18nService.t("onRestart"), value: "onRestart" },
+      { name: this.i18nService.t("never"), value: "never" },
     ]);
 
     const localeOptions: any[] = [];
