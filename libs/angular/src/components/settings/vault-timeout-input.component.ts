@@ -14,7 +14,7 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
 
 interface VaultTimeoutFormValue {
   vaultTimeout: VaultTimeout | null;
@@ -49,7 +49,7 @@ export class VaultTimeoutInputComponent
     }),
   });
 
-  @Input() vaultTimeoutOptions: { name: string; value: number }[];
+  @Input() vaultTimeoutOptions: VaultTimeoutOption[];
   vaultTimeoutPolicy: Policy;
   vaultTimeoutPolicyHours: number;
   vaultTimeoutPolicyMinutes: number;
@@ -199,12 +199,20 @@ export class VaultTimeoutInputComponent
     this.vaultTimeoutPolicyHours = Math.floor(this.vaultTimeoutPolicy.data.minutes / 60);
     this.vaultTimeoutPolicyMinutes = this.vaultTimeoutPolicy.data.minutes % 60;
 
-    this.vaultTimeoutOptions = this.vaultTimeoutOptions.filter(
-      (t) =>
-        t.value <= this.vaultTimeoutPolicy.data.minutes &&
-        (t.value > 0 || t.value === VaultTimeoutInputComponent.CUSTOM_VALUE) &&
-        t.value != null,
-    );
+    this.vaultTimeoutOptions = this.vaultTimeoutOptions.filter((vaultTimeoutOption) => {
+      // Always include the custom option
+      if (vaultTimeoutOption.value === VaultTimeoutInputComponent.CUSTOM_VALUE) {
+        return true;
+      }
+
+      if (typeof vaultTimeoutOption.value === "number") {
+        // Include numeric values that are less than or equal to the policy minutes
+        return vaultTimeoutOption.value <= this.vaultTimeoutPolicy.data.minutes;
+      } else {
+        // Exclude all string cases when there's a numeric policy defined
+        return false;
+      }
+    });
     this.validatorChange();
   }
 }
