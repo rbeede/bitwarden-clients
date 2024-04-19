@@ -28,6 +28,33 @@ export const VAULT_TIMEOUT_ACTION: KeyDefinitionLike = {
   stateDefinition: VAULT_TIMEOUT_SETTINGS_STATE_DEF_LIKE,
 };
 
+// Migrations are supposed to be frozen so we have to copy the type here.
+export type VaultTimeout =
+  | number // 0 for immediately; otherwise positive numbers
+  | "never" // null
+  | "onRestart" // -1
+  | "onLocked" // -2
+  | "onSleep" // -3
+  | "onIdle"; // -4
+
+// Define mapping of old values to new values for migration purposes
+const vaultTimeoutTypeMigrateRecord: Record<any, VaultTimeout> = {
+  null: "never",
+  "-1": "onRestart",
+  "-2": "onLocked",
+  "-3": "onSleep",
+  "-4": "onIdle",
+};
+
+// define mapping of new values to old values for rollback purposes
+const vaultTimeoutTypeRollbackRecord: Record<VaultTimeout, any> = {
+  never: null,
+  onRestart: -1,
+  onLocked: -2,
+  onSleep: -3,
+  onIdle: -4,
+};
+
 export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<58, 59> {
   async migrate(helper: MigrationHelper): Promise<void> {
     const globalData = await helper.get<ExpectedGlobalType>("global");
@@ -43,9 +70,17 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<5
       const existingVaultTimeout = account?.settings?.vaultTimeout;
 
       if (existingVaultTimeout !== undefined) {
-        // check undefined so that we persist null values
+        // check undefined so that we allow null values (previously meant never timeout)
         // Only migrate data that exists
-        await helper.setToUser(userId, VAULT_TIMEOUT, existingVaultTimeout);
+
+        if (existingVaultTimeout === null || existingVaultTimeout < 0) {
+          // Map null or negative values to new string values
+          const newVaultTimeout = vaultTimeoutTypeMigrateRecord[existingVaultTimeout];
+          await helper.setToUser(userId, VAULT_TIMEOUT, newVaultTimeout);
+        } else {
+          // Persist positive numbers as is
+          await helper.setToUser(userId, VAULT_TIMEOUT, existingVaultTimeout);
+        }
 
         delete account?.settings?.vaultTimeout;
         updatedAccount = true;
@@ -90,7 +125,14 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<5
       const migratedVaultTimeout = await helper.getFromUser<number>(userId, VAULT_TIMEOUT);
 
       if (account?.settings && migratedVaultTimeout != null) {
-        account.settings.vaultTimeout = migratedVaultTimeout;
+        if (typeof migratedVaultTimeout === "string") {
+          // Map new string values back to old values
+          account.settings.vaultTimeout = vaultTimeoutTypeRollbackRecord[migratedVaultTimeout];
+        } else {
+          // persist numbers as is
+          account.settings.vaultTimeout = migratedVaultTimeout;
+        }
+
         updatedLegacyAccount = true;
       }
 
