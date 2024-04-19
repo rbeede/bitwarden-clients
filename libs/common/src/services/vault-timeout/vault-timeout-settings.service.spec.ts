@@ -229,11 +229,17 @@ describe("VaultTimeoutSettingsService", () => {
       [30, 90, 30], // policy overrides vault timeout
       [30, 15, 15], // policy doesn't override vault timeout when it's within acceptable range
       [90, "never", 90], // policy overrides vault timeout when it's "never"
+      [null, "never", "never"], // no policy, persist "never" vault timeout
       [90, "immediately", 90], // policy overrides vault timeout when it's "immediately"
+      [null, "immediately", "immediately"], // no policy, persist "immediately" vault timeout
       [90, "onRestart", 90], // policy overrides vault timeout when it's "onRestart"
+      [null, "onRestart", "onRestart"], // no policy, persist "onRestart" vault timeout
       [90, "onLocked", 90], // policy overrides vault timeout when it's "onLocked"
+      [null, "onLocked", "onLocked"], // no policy, persist "onLocked" vault timeout
       [90, "onSleep", 90], // policy overrides vault timeout when it's "onSleep"
+      [null, "onSleep", "onSleep"], // no policy, persist "onSleep" vault timeout
       [90, "onIdle", 90], // policy overrides vault timeout when it's "onIdle"
+      [null, "onIdle", "onIdle"], // no policy, persist "onIdle" vault timeout
     ])(
       "when policy is %s, and vault timeout is %s, returns %s",
       async (policy, vaultTimeout, expected) => {
