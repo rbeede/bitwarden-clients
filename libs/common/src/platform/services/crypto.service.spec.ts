@@ -215,8 +215,8 @@ describe("cryptoService", () => {
     });
 
     describe("Auto Key refresh", () => {
-      it("sets an Auto key if vault timeout is set to null", async () => {
-        await stateProvider.setUserState(VAULT_TIMEOUT, null, mockUserId);
+      it("sets an Auto key if vault timeout is set to 'never'", async () => {
+        await stateProvider.setUserState(VAULT_TIMEOUT, "never", mockUserId);
 
         await cryptoService.setUserKey(mockUserKey, mockUserId);
 
