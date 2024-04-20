@@ -1,5 +1,6 @@
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { UserKeyDefinition } from "../../platform/state";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 
 import { VAULT_TIMEOUT, VAULT_TIMEOUT_ACTION } from "./vault-timeout-settings.state";
 
@@ -9,8 +10,8 @@ describe.each([
 ])(
   "deserializes state key definitions",
   (
-    keyDefinition: UserKeyDefinition<VaultTimeoutAction> | UserKeyDefinition<number>,
-    state: VaultTimeoutAction | number | boolean,
+    keyDefinition: UserKeyDefinition<VaultTimeoutAction> | UserKeyDefinition<VaultTimeout>,
+    state: VaultTimeoutAction | VaultTimeout | boolean,
   ) => {
     function getTypeDescription(value: any): string {
       if (Array.isArray(value)) {
