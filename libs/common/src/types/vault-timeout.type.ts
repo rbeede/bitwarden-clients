@@ -1,3 +1,4 @@
+// Note: the below comments are just for documenting what they used to be.
 export type VaultTimeout =
   | number // 0 for immediately; otherwise positive numbers
   | "never" // null
