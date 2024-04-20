@@ -77,7 +77,6 @@ import {
   GlobalStateProvider,
   StateProvider,
 } from "@bitwarden/common/platform/state";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService as FolderServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -274,11 +273,6 @@ const safeProviders: SafeProvider[] = [
       );
     },
     deps: [ToastService],
-  }),
-  safeProvider({
-    provide: PasswordGenerationServiceAbstraction,
-    useFactory: getBgService<PasswordGenerationServiceAbstraction>("passwordGenerationService"),
-    deps: [],
   }),
   safeProvider({
     provide: SyncService,
