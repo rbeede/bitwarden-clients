@@ -122,7 +122,7 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<5
       let updatedLegacyAccount = false;
 
       // Rollback vault timeout
-      const migratedVaultTimeout = await helper.getFromUser<number>(userId, VAULT_TIMEOUT);
+      const migratedVaultTimeout = await helper.getFromUser<VaultTimeout>(userId, VAULT_TIMEOUT);
 
       if (account?.settings && migratedVaultTimeout != null) {
         if (typeof migratedVaultTimeout === "string") {

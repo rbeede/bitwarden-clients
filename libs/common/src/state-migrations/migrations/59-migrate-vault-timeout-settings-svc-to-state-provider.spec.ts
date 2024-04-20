@@ -30,7 +30,7 @@ function preMigrationJson() {
       settings: {
         vaultTimeout: null as any,
         vaultTimeoutAction: "logOut",
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
@@ -38,7 +38,7 @@ function preMigrationJson() {
       settings: {
         vaultTimeout: -1, // onRestart
         vaultTimeoutAction: "lock",
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
@@ -46,7 +46,7 @@ function preMigrationJson() {
       settings: {
         vaultTimeout: -2, // onLocked
         vaultTimeoutAction: "logOut",
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
@@ -54,7 +54,7 @@ function preMigrationJson() {
       settings: {
         vaultTimeout: -3, // onSleep
         vaultTimeoutAction: "lock",
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
@@ -62,14 +62,14 @@ function preMigrationJson() {
       settings: {
         vaultTimeout: -4, // onIdle
         vaultTimeoutAction: "logOut",
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
     user7: {
       settings: {
         // no vault timeout data to migrate
-        otherStuff: "overStuff",
+        otherStuff: "otherStuff",
       },
       otherStuff: "otherStuff",
     },
@@ -86,23 +86,23 @@ function rollbackJSON() {
     user_user1_vaultTimeoutSettings_vaultTimeoutAction: "lock",
 
     // User2 migrated data
-    user_user2_vaultTimeoutSettings_vaultTimeou: null as any,
+    user_user2_vaultTimeoutSettings_vaultTimeout: "never",
     user_user2_vaultTimeoutSettings_vaultTimeoutAction: "logOut",
 
     // User3 migrated data
-    user_user3_vaultTimeoutSettings_vaultTimeou: "onRestart",
+    user_user3_vaultTimeoutSettings_vaultTimeout: "onRestart",
     user_user3_vaultTimeoutSettings_vaultTimeoutAction: "lock",
 
     // User4 migrated data
-    user_user4_vaultTimeoutSettings_vaultTimeou: "onLocked",
+    user_user4_vaultTimeoutSettings_vaultTimeout: "onLocked",
     user_user4_vaultTimeoutSettings_vaultTimeoutAction: "logOut",
 
     // User5 migrated data
-    user_user5_vaultTimeoutSettings_vaultTimeou: "onSleep",
+    user_user5_vaultTimeoutSettings_vaultTimeout: "onSleep",
     user_user5_vaultTimeoutSettings_vaultTimeoutAction: "lock",
 
     // User6 migrated data
-    user_user6_vaultTimeoutSettings_vaultTimeou: "onIdle",
+    user_user6_vaultTimeoutSettings_vaultTimeout: "onIdle",
     user_user6_vaultTimeoutSettings_vaultTimeoutAction: "logOut",
 
     // User7 migrated data
@@ -117,7 +117,7 @@ function rollbackJSON() {
       // no longer has vault timeout data
       otherStuff: "otherStuff",
     },
-    authenticatedAccounts: ["user1", "user2", "user3"],
+    authenticatedAccounts: ["user1", "user2", "user3", "user4", "user5", "user6", "user7"],
     user1: {
       settings: {
         otherStuff: "otherStuff",
@@ -192,35 +192,35 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
 
       expect(helper.set).toHaveBeenCalledWith("user2", {
         settings: {
-          otherStuff: "overStuff",
+          otherStuff: "otherStuff",
         },
         otherStuff: "otherStuff",
       });
 
       expect(helper.set).toHaveBeenCalledWith("user3", {
         settings: {
-          otherStuff: "overStuff",
+          otherStuff: "otherStuff",
         },
         otherStuff: "otherStuff",
       });
 
       expect(helper.set).toHaveBeenCalledWith("user4", {
         settings: {
-          otherStuff: "overStuff",
+          otherStuff: "otherStuff",
         },
         otherStuff: "otherStuff",
       });
 
       expect(helper.set).toHaveBeenCalledWith("user5", {
         settings: {
-          otherStuff: "overStuff",
+          otherStuff: "otherStuff",
         },
         otherStuff: "otherStuff",
       });
 
       expect(helper.set).toHaveBeenCalledWith("user6", {
         settings: {
-          otherStuff: "overStuff",
+          otherStuff: "otherStuff",
         },
         otherStuff: "otherStuff",
       });
@@ -301,14 +301,50 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
         otherStuff: "otherStuff",
       });
 
-      // expect(helper.set).toHaveBeenCalledWith("user2", {
-      //   settings: {
-      //     vaultTimeout: null as any,
-      //     vaultTimeoutAction: "logOut",
-      //     otherStuff: "overStuff",
-      //   },
-      //   otherStuff: "otherStuff",
-      // });
+      expect(helper.set).toHaveBeenCalledWith("user2", {
+        settings: {
+          vaultTimeout: null,
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user3", {
+        settings: {
+          vaultTimeout: -1, // onRestart
+          vaultTimeoutAction: "lock",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user4", {
+        settings: {
+          vaultTimeout: -2, // onLocked
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user5", {
+        settings: {
+          vaultTimeout: -3, // onSleep
+          vaultTimeoutAction: "lock",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user6", {
+        settings: {
+          vaultTimeout: -4, // onIdle
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
     });
 
     it("should not add back the global vault timeout data", async () => {
@@ -320,9 +356,9 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
     it("should not add data back if data wasn't migrated or acct doesn't exist", async () => {
       await sut.rollback(helper);
 
-      // no data to add back for user3 (acct exists but no migrated data) and user4 (no acct)
-      expect(helper.set).not.toHaveBeenCalledWith("user3", any());
-      expect(helper.set).not.toHaveBeenCalledWith("user4", any());
+      // no data to add back for user7 (acct exists but no migrated data) and user8 (no acct)
+      expect(helper.set).not.toHaveBeenCalledWith("user7", any());
+      expect(helper.set).not.toHaveBeenCalledWith("user8", any());
     });
   });
 });
