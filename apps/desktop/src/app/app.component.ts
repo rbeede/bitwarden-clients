@@ -41,6 +41,7 @@ import { BiometricStateService } from "@bitwarden/common/platform/biometrics/bio
 import { StateEventRunnerService } from "@bitwarden/common/platform/state";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { UserId } from "@bitwarden/common/types/guid";
+import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -63,12 +64,6 @@ import { PasswordGeneratorHistoryComponent } from "./tools/password-generator-hi
 const BroadcasterSubscriptionId = "AppComponent";
 const IdleTimeout = 60000 * 10; // 10 minutes
 const SyncInterval = 6 * 60 * 60 * 1000; // 6 hours
-
-const systemTimeoutOptions = {
-  onLock: -2,
-  onSuspend: -3,
-  onIdle: -4,
-};
 
 @Component({
   selector: "app-root",
@@ -427,13 +422,13 @@ export class AppComponent implements OnInit, OnDestroy {
             break;
           }
           case "systemSuspended":
-            await this.checkForSystemTimeout(systemTimeoutOptions.onSuspend);
+            await this.checkForSystemTimeout("onSleep");
             break;
           case "systemLocked":
-            await this.checkForSystemTimeout(systemTimeoutOptions.onLock);
+            await this.checkForSystemTimeout("onLocked");
             break;
           case "systemIdle":
-            await this.checkForSystemTimeout(systemTimeoutOptions.onIdle);
+            await this.checkForSystemTimeout("onIdle");
             break;
           case "openLoginApproval":
             if (message.notificationId != null) {
@@ -684,7 +679,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async checkForSystemTimeout(timeout: number): Promise<void> {
+  private async checkForSystemTimeout(timeout: VaultTimeout): Promise<void> {
     const accounts = await firstValueFrom(this.stateService.accounts$);
     for (const userId in accounts) {
       if (userId == null) {
@@ -701,7 +696,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async getVaultTimeoutOptions(userId: string): Promise<[number, string]> {
+  private async getVaultTimeoutOptions(userId: string): Promise<[VaultTimeout, string]> {
     const timeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
     );
