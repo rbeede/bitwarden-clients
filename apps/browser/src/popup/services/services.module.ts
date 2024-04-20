@@ -78,7 +78,6 @@ import {
   StateProvider,
 } from "@bitwarden/common/platform/state";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
-import { UsernameGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/username";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService as FolderServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -425,11 +424,6 @@ const safeProviders: SafeProvider[] = [
       TokenService,
       MigrationRunner,
     ],
-  }),
-  safeProvider({
-    provide: UsernameGenerationServiceAbstraction,
-    useFactory: getBgService<UsernameGenerationServiceAbstraction>("usernameGenerationService"),
-    deps: [],
   }),
   safeProvider({
     provide: BaseStateServiceAbstraction,
