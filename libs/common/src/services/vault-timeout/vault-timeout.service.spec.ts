@@ -16,6 +16,7 @@ import { Utils } from "../../platform/misc/utils";
 import { Account } from "../../platform/models/domain/account";
 import { StateEventRunnerService } from "../../platform/state";
 import { UserId } from "../../types/guid";
+import { VaultTimeout } from "../../types/vault-timeout.type";
 import { CipherService } from "../../vault/abstractions/cipher.service";
 import { CollectionService } from "../../vault/abstractions/collection.service";
 import { FolderService } from "../../vault/abstractions/folder/folder.service.abstraction";
@@ -104,7 +105,7 @@ describe("VaultTimeoutService", () => {
         authStatus?: AuthenticationStatus;
         isAuthenticated?: boolean;
         lastActive?: number;
-        vaultTimeout?: number;
+        vaultTimeout?: VaultTimeout;
         timeoutAction?: VaultTimeoutAction;
         availableTimeoutActions?: VaultTimeoutAction[];
       }
@@ -126,7 +127,7 @@ describe("VaultTimeoutService", () => {
     });
 
     vaultTimeoutSettingsService.getVaultTimeoutByUserId$.mockImplementation((userId) => {
-      return new BehaviorSubject<number>(accounts[userId]?.vaultTimeout);
+      return new BehaviorSubject<VaultTimeout>(accounts[userId]?.vaultTimeout);
     });
 
     stateService.getLastActive.mockImplementation((options) => {
@@ -207,19 +208,13 @@ describe("VaultTimeoutService", () => {
       },
     );
 
-    it.each([
-      null, // never
-      -1, // onRestart
-      -2, // onLocked
-      -3, // onSleep
-      -4, // onIdle
-    ])(
+    it.each(["never", "onRestart", "onLocked", "onSleep", "onIdle"])(
       "does not log out or lock a user who has %s as their vault timeout",
       async (vaultTimeout) => {
         setupAccounts({
           1: {
             authStatus: AuthenticationStatus.Unlocked,
-            vaultTimeout: vaultTimeout,
+            vaultTimeout: vaultTimeout as VaultTimeout,
             isAuthenticated: true,
           },
         });
