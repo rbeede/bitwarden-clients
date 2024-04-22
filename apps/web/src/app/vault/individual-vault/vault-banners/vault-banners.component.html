@@ -1,5 +1,22 @@
 <bit-banner
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
+  bannerType="warning"
+  *ngIf="visibleBanner === VisibleVaultBanner.OutdatedBrowser"
+  (onClose)="dismissBanner()"
+>
+  {{ "updateBrowserDesc" | i18n }}
+  <a
+    class="text-white tw-font-bold"
+    target="_blank"
+    href="https://browser-update.org/update-browser.html"
+    rel="noreferrer noopener"
+  >
+    {{ "updateBrowser" | i18n }}
+  </a>
+</bit-banner>
+
+<bit-banner
+  class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
   bannerType="premium"
   *ngIf="visibleBanner === VisibleVaultBanner.Premium"
   (onClose)="dismissBanner()"

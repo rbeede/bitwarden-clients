@@ -6,6 +6,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 
 export enum VisibleVaultBanner {
   Premium = "premium",
+  OutdatedBrowser = "outdated-browser",
 }
 
 @Component({
@@ -27,6 +28,8 @@ export class VaultBannersComponent implements OnInit {
   }
 
   private async determineVisibleBanner(): Promise<void> {
+    const showBrowserOutdated = window.navigator.userAgent.indexOf("MSIE") !== -1;
+
     const canAccessPremium = await firstValueFrom(
       this.billingAccountProfileStateService.hasPremiumFromAnySource$,
     );
@@ -34,6 +37,9 @@ export class VaultBannersComponent implements OnInit {
     const showPremiumBanner = !canAccessPremium && !this.platformUtilsService.isSelfHost();
 
     switch (true) {
+      case showBrowserOutdated:
+        this.visibleBanner = VisibleVaultBanner.OutdatedBrowser;
+        break;
       case showPremiumBanner:
         this.visibleBanner = VisibleVaultBanner.Premium;
         break;

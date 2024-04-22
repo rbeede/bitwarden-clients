@@ -123,7 +123,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   collectionsModalRef: ViewContainerRef;
 
   showVerifyEmail = false;
-  showBrowserOutdated = false;
   showLowKdf = false;
   trashCleanupWarning: string = null;
   kdfIterations: number;
@@ -186,7 +185,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    this.showBrowserOutdated = window.navigator.userAgent.indexOf("MSIE") !== -1;
     this.trashCleanupWarning = this.i18nService.t(
       this.platformUtilsService.isSelfHost()
         ? "trashCleanupWarningSelfHosted"
@@ -406,7 +404,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   get isShowingCards() {
-    return this.showBrowserOutdated || this.showVerifyEmail || this.showLowKdf;
+    return this.showVerifyEmail || this.showLowKdf;
   }
 
   emailVerified(verified: boolean) {

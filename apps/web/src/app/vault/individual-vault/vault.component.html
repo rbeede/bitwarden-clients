@@ -92,24 +92,6 @@
       class="d-block mb-4"
       (onVerified)="emailVerified($event)"
     ></app-verify-email>
-
-    <div class="card border-warning mb-4" *ngIf="showBrowserOutdated">
-      <div class="card-header bg-warning text-white">
-        <i class="bwi bwi-exclamation-triangle bwi-fw" aria-hidden="true"></i>
-        {{ "updateBrowser" | i18n }}
-      </div>
-      <div class="card-body">
-        <p>{{ "updateBrowserDesc" | i18n }}</p>
-        <a
-          class="btn btn-block btn-outline-secondary"
-          target="_blank"
-          href="https://browser-update.org/update-browser.html"
-          rel="noreferrer"
-        >
-          {{ "updateBrowser" | i18n }}
-        </a>
-      </div>
-    </div>
   </div>
 </div>
 
