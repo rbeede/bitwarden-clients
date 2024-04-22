@@ -1,7 +1,7 @@
 import { NgModule } from "@angular/core";
 
 import { PasswordCalloutComponent } from "@bitwarden/auth/angular";
-import { LayoutComponent, NavigationModule } from "@bitwarden/components";
+import { BannerModule, LayoutComponent, NavigationModule } from "@bitwarden/components";
 
 import { OrganizationLayoutComponent } from "../admin-console/organizations/layouts/organization-layout.component";
 import { EventsComponent as OrgEventsComponent } from "../admin-console/organizations/manage/events.component";
@@ -113,6 +113,7 @@ import { SharedModule } from "./shared.module";
     OrganizationLayoutComponent,
     UserLayoutComponent,
     PaymentMethodWarningsModule,
+    BannerModule,
   ],
   declarations: [
     AcceptFamilySponsorshipComponent,
