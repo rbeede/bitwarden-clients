@@ -20,7 +20,7 @@ export enum VisibleVaultBanner {
   templateUrl: "./vault-banners.component.html",
 })
 export class VaultBannersComponent implements OnInit {
-  visibleBanner: VisibleVaultBanner | null;
+  visibleBanners: VisibleVaultBanner[] = [];
 
   VisibleVaultBanner = VisibleVaultBanner;
 
@@ -36,8 +36,8 @@ export class VaultBannersComponent implements OnInit {
     await this.determineVisibleBanner();
   }
 
-  dismissBanner(): void {
-    this.visibleBanner = null;
+  dismissBanner(banner: VisibleVaultBanner): void {
+    this.visibleBanners = this.visibleBanners.filter((b) => b !== banner);
   }
 
   private async determineVisibleBanner(): Promise<void> {
@@ -53,22 +53,12 @@ export class VaultBannersComponent implements OnInit {
 
     const showPremiumBanner = !canAccessPremium && !this.platformUtilsService.isSelfHost();
 
-    switch (true) {
-      case showBrowserOutdated:
-        this.visibleBanner = VisibleVaultBanner.OutdatedBrowser;
-        break;
-      case showLowKdf:
-        this.visibleBanner = VisibleVaultBanner.KDFSettings;
-        break;
-      case showVerifyEmail:
-        this.visibleBanner = VisibleVaultBanner.VerifyEmail;
-        break;
-      case showPremiumBanner:
-        this.visibleBanner = VisibleVaultBanner.Premium;
-        break;
-      default:
-        this.visibleBanner = null;
-    }
+    this.visibleBanners = [
+      showBrowserOutdated ? VisibleVaultBanner.OutdatedBrowser : null,
+      showVerifyEmail ? VisibleVaultBanner.VerifyEmail : null,
+      showLowKdf ? VisibleVaultBanner.KDFSettings : null,
+      showPremiumBanner ? VisibleVaultBanner.Premium : null,
+    ].filter(Boolean); // remove all falsy values, i.e. null
   }
 
   private async isLowKdfIteration() {

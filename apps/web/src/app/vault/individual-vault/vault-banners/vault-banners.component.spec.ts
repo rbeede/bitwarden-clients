@@ -94,7 +94,7 @@ describe("VaultBannersComponent", () => {
       });
 
       it("shows premium banner", async () => {
-        expect(component.visibleBanner).toBe(VisibleVaultBanner.Premium);
+        expect(component.visibleBanners).toEqual([VisibleVaultBanner.Premium]);
       });
 
       it("dismisses premium banner", async () => {
@@ -104,7 +104,7 @@ describe("VaultBannersComponent", () => {
 
         dismissButton.dispatchEvent(new Event("click"));
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
     });
 
@@ -117,7 +117,7 @@ describe("VaultBannersComponent", () => {
       });
 
       it("shows verify email banner", async () => {
-        expect(component.visibleBanner).toBe(VisibleVaultBanner.VerifyEmail);
+        expect(component.visibleBanners).toEqual([VisibleVaultBanner.VerifyEmail]);
       });
 
       it("dismisses verify email banner", async () => {
@@ -127,7 +127,7 @@ describe("VaultBannersComponent", () => {
 
         dismissButton.dispatchEvent(new Event("click"));
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
     });
 
@@ -145,7 +145,7 @@ describe("VaultBannersComponent", () => {
       });
 
       it("shows outdated browser banner", async () => {
-        expect(component.visibleBanner).toBe(VisibleVaultBanner.OutdatedBrowser);
+        expect(component.visibleBanners).toEqual([VisibleVaultBanner.OutdatedBrowser]);
       });
 
       it("dismisses outdated browser banner", async () => {
@@ -155,7 +155,7 @@ describe("VaultBannersComponent", () => {
 
         dismissButton.dispatchEvent(new Event("click"));
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
     });
 
@@ -170,7 +170,7 @@ describe("VaultBannersComponent", () => {
       });
 
       it("shows low KDF iteration banner", async () => {
-        expect(component.visibleBanner).toBe(VisibleVaultBanner.KDFSettings);
+        expect(component.visibleBanners).toEqual([VisibleVaultBanner.KDFSettings]);
       });
 
       it("does not show low KDF iteration banner if KDF type is not PBKDF2_SHA256", async () => {
@@ -179,7 +179,7 @@ describe("VaultBannersComponent", () => {
         await component.ngOnInit();
         fixture.detectChanges();
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
 
       it("does not show low KDF for iterations about 600,000", async () => {
@@ -188,7 +188,7 @@ describe("VaultBannersComponent", () => {
         await component.ngOnInit();
         fixture.detectChanges();
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
 
       it("dismisses low KDF iteration banner", async () => {
@@ -198,7 +198,7 @@ describe("VaultBannersComponent", () => {
 
         dismissButton.dispatchEvent(new Event("click"));
 
-        expect(component.visibleBanner).toBe(null);
+        expect(component.visibleBanners).toEqual([]);
       });
     });
   });

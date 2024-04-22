@@ -1,8 +1,8 @@
 <bit-banner
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
   bannerType="warning"
-  *ngIf="visibleBanner === VisibleVaultBanner.OutdatedBrowser"
-  (onClose)="dismissBanner()"
+  *ngIf="visibleBanners.includes(VisibleVaultBanner.OutdatedBrowser)"
+  (onClose)="dismissBanner(VisibleVaultBanner.OutdatedBrowser)"
 >
   {{ "updateBrowserDesc" | i18n }}
   <a
@@ -18,8 +18,8 @@
 <bit-banner
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
   bannerType="warning"
-  *ngIf="visibleBanner === VisibleVaultBanner.KDFSettings"
-  (onClose)="dismissBanner()"
+  *ngIf="visibleBanners.includes(VisibleVaultBanner.KDFSettings)"
+  (onClose)="dismissBanner(VisibleVaultBanner.KDFSettings)"
 >
   {{ "lowKDFIterationsBanner" | i18n }}
   <a class="text-white tw-font-bold" routerLink="/settings/security/security-keys">
@@ -28,17 +28,17 @@
 </bit-banner>
 
 <app-verify-email
-  *ngIf="visibleBanner === VisibleVaultBanner.VerifyEmail"
+  *ngIf="visibleBanners.includes(VisibleVaultBanner.VerifyEmail)"
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
-  (onDismiss)="dismissBanner()"
-  (onVerified)="dismissBanner()"
+  (onDismiss)="dismissBanner(VisibleVaultBanner.VerifyEmail)"
+  (onVerified)="dismissBanner(VisibleVaultBanner.VerifyEmail)"
 ></app-verify-email>
 
 <bit-banner
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
   bannerType="premium"
-  *ngIf="visibleBanner === VisibleVaultBanner.Premium"
-  (onClose)="dismissBanner()"
+  *ngIf="visibleBanners.includes(VisibleVaultBanner.Premium)"
+  (onClose)="dismissBanner(VisibleVaultBanner.Premium)"
 >
   {{ "premiumUpgradeUnlockFeatures" | i18n }}
   <a class="text-white tw-font-bold" routerLink="/settings/subscription/premium">
