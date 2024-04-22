@@ -67,7 +67,6 @@ import { HeaderModule } from "../layouts/header/header.module";
 import { ProductSwitcherModule } from "../layouts/product-switcher/product-switcher.module";
 import { UserLayoutComponent } from "../layouts/user-layout.component";
 import { DomainRulesComponent } from "../settings/domain-rules.component";
-import { LowKdfComponent } from "../settings/low-kdf.component";
 import { PreferencesComponent } from "../settings/preferences.component";
 import { VaultTimeoutInputComponent } from "../settings/vault-timeout-input.component";
 import { GeneratorComponent } from "../tools/generator.component";
@@ -187,7 +186,6 @@ import { SharedModule } from "./shared.module";
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
     VerifyRecoverDeleteProviderComponent,
-    LowKdfComponent,
   ],
   exports: [
     UserVerificationModule,
@@ -265,7 +263,6 @@ import { SharedModule } from "./shared.module";
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
     VerifyRecoverDeleteProviderComponent,
-    LowKdfComponent,
     HeaderModule,
     DangerZoneComponent,
   ],
