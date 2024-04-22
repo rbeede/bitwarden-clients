@@ -44,17 +44,13 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
   }
 
   submit = async () => {
-    try {
-      const request = new OrganizationVerifyDeleteRecoverRequest(this.token);
-      await this.apiService.deleteUsingToken(this.orgId, request);
-      this.platformUtilsService.showToast(
-        "success",
-        this.i18nService.t("organizationDeleted"),
-        this.i18nService.t("organizationDeletedDesc"),
-      );
-      await this.router.navigate(["/"]);
-    } catch (e) {
-      this.logService.error(e);
-    }
+    const request = new OrganizationVerifyDeleteRecoverRequest(this.token);
+    await this.apiService.deleteUsingToken(this.orgId, request);
+    this.platformUtilsService.showToast(
+      "success",
+      this.i18nService.t("organizationDeleted"),
+      this.i18nService.t("organizationDeletedDesc"),
+    );
+    await this.router.navigate(["/"]);
   };
 }
