@@ -225,7 +225,6 @@ export class ImportComponent implements OnInit, OnDestroy {
   private handleOrganizationImportInit() {
     this.formGroup.controls.vaultSelector.patchValue(this.organizationId);
     this.formGroup.controls.vaultSelector.disable();
-    this.formGroup.controls.vaultSelector.disable();
 
     this.collections$ = Utils.asyncToObservable(() =>
       this.importCollectionService
