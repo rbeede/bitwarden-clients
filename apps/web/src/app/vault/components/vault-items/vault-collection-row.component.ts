@@ -86,12 +86,7 @@ export class VaultCollectionRowComponent implements OnInit {
   }
 
   get permissionTooltip() {
-    if (
-      this.collection.id == Unassigned &&
-      (this.organization.isAdmin ||
-        (this.flexibleCollectionsV1Enabled &&
-          this.organization.canEditAnyCollection(this._flexibleCollectionsV1FlagEnabled)))
-    ) {
+    if (this.collection.id == Unassigned) {
       return this.i18nService.t("collectionAdminConsoleManaged");
     }
     return "";
