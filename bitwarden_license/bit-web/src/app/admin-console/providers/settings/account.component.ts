@@ -1,5 +1,7 @@
 import { Component } from "@angular/core";
+import { FormBuilder, Validators } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
+import { Subject, takeUntil } from "rxjs";
 
 import { UserVerificationDialogComponent } from "@bitwarden/auth/angular";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -23,11 +25,14 @@ export class AccountComponent {
   selfHosted = false;
   loading = true;
   provider: ProviderResponse;
-  formPromise: Promise<any>;
   taxFormPromise: Promise<any>;
 
+  private destroy$ = new Subject<void>();
   private providerId: string;
-
+  protected formGroup = this.formBuilder.group({
+    providerName: ["" as ProviderResponse["name"]],
+    providerBillingEmail: ["" as ProviderResponse["billingEmail"], Validators.email],
+  });
   protected enableDeleteProvider$ = this.configService.getFeatureFlag$(
     FeatureFlag.EnableDeleteProvider,
     false,
@@ -43,6 +48,7 @@ export class AccountComponent {
     private dialogService: DialogService,
     private configService: ConfigService,
     private providerApiService: ProviderApiServiceAbstraction,
+    private formBuilder: FormBuilder,
   ) {}
 
   async ngOnInit() {
@@ -52,29 +58,35 @@ export class AccountComponent {
       this.providerId = params.providerId;
       try {
         this.provider = await this.providerApiService.getProvider(this.providerId);
+        this.formGroup.patchValue({
+          providerName: this.provider.name,
+          providerBillingEmail: this.provider.billingEmail,
+        });
       } catch (e) {
         this.logService.error(`Handled exception: ${e}`);
       }
     });
     this.loading = false;
+    this.formGroup.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((v) => {
+      this.provider.name = v.providerName;
+      this.provider.billingEmail = v.providerBillingEmail;
+    });
   }
-
-  async submit() {
-    try {
-      const request = new ProviderUpdateRequest();
-      request.name = this.provider.name;
-      request.businessName = this.provider.businessName;
-      request.billingEmail = this.provider.billingEmail;
-
-      this.formPromise = this.providerApiService.putProvider(this.providerId, request).then(() => {
-        return this.syncService.fullSync(true);
-      });
-      await this.formPromise;
-      this.platformUtilsService.showToast("success", null, this.i18nService.t("providerUpdated"));
-    } catch (e) {
-      this.logService.error(`Handled exception: ${e}`);
-    }
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
+  submit = async () => {
+    const request = new ProviderUpdateRequest();
+    request.name = this.provider.name;
+    request.businessName = this.provider.businessName;
+    request.billingEmail = this.provider.billingEmail;
+
+    await this.providerApiService.putProvider(this.providerId, request).then(() => {
+      return this.syncService.fullSync(true);
+    });
+    this.platformUtilsService.showToast("success", null, this.i18nService.t("providerUpdated"));
+  };
 
   async deleteProvider() {
     const providerClients = await this.apiService.getProviderClients(this.providerId);
@@ -94,9 +106,8 @@ export class AccountComponent {
       return;
     }
 
-    this.formPromise = this.providerApiService.deleteProvider(this.providerId);
     try {
-      await this.formPromise;
+      await this.providerApiService.deleteProvider(this.providerId);
       this.platformUtilsService.showToast(
         "success",
         this.i18nService.t("providerDeleted"),
@@ -105,7 +116,6 @@ export class AccountComponent {
     } catch (e) {
       this.logService.error(e);
     }
-    this.formPromise = null;
   }
 
   private async verifyUser(): Promise<boolean> {
