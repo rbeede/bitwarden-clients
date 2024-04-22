@@ -86,12 +86,6 @@
   </div>
   <div class="col-3">
     <app-low-kdf class="d-block mb-4" *ngIf="showLowKdf"> </app-low-kdf>
-
-    <app-verify-email
-      *ngIf="showVerifyEmail"
-      class="d-block mb-4"
-      (onVerified)="emailVerified($event)"
-    ></app-verify-email>
   </div>
 </div>
 

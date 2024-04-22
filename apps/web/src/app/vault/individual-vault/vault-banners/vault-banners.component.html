@@ -15,6 +15,13 @@
   </a>
 </bit-banner>
 
+<app-verify-email
+  *ngIf="visibleBanner === VisibleVaultBanner.VerifyEmail"
+  class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
+  (onDismiss)="dismissBanner()"
+  (onVerified)="dismissBanner()"
+></app-verify-email>
+
 <bit-banner
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
   bannerType="premium"

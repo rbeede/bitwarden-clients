@@ -92,6 +92,29 @@ describe("VaultBannersComponent", () => {
       });
     });
 
+    describe("verify email banner", () => {
+      beforeEach(async () => {
+        getEmailVerified.mockResolvedValue(false);
+
+        await component.ngOnInit();
+        fixture.detectChanges();
+      });
+
+      it("shows verify email banner", async () => {
+        expect(component.visibleBanner).toBe(VisibleVaultBanner.VerifyEmail);
+      });
+
+      it("dismisses verify email banner", async () => {
+        const dismissButton = fixture.debugElement.nativeElement.querySelector(
+          'button[biticonbutton="bwi-close"]',
+        );
+
+        dismissButton.dispatchEvent(new Event("click"));
+
+        expect(component.visibleBanner).toBe(null);
+      });
+    });
+
     describe("outdated browser banner", () => {
       beforeEach(async () => {
         // Hardcode `MSIE` in userAgent string

@@ -35,7 +35,6 @@ import { EventCollectionService } from "@bitwarden/common/abstractions/event/eve
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EventType } from "@bitwarden/common/enums";
@@ -122,7 +121,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   @ViewChild("collectionsModal", { read: ViewContainerRef, static: true })
   collectionsModalRef: ViewContainerRef;
 
-  showVerifyEmail = false;
+  showBrowserOutdated = false;
   showLowKdf = false;
   trashCleanupWarning: string = null;
   kdfIterations: number;
@@ -160,7 +159,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     private i18nService: I18nService,
     private modalService: ModalService,
     private dialogService: DialogService,
-    private tokenService: TokenService,
     private messagingService: MessagingService,
     private platformUtilsService: PlatformUtilsService,
     private broadcasterService: BroadcasterService,
@@ -194,7 +192,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     const firstSetup$ = this.route.queryParams.pipe(
       first(),
       switchMap(async (params: Params) => {
-        this.showVerifyEmail = !(await this.tokenService.getEmailVerified());
         this.showLowKdf = (await this.userVerificationService.hasMasterPassword())
           ? await this.isLowKdfIteration()
           : false;
@@ -404,11 +401,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   get isShowingCards() {
-    return this.showVerifyEmail || this.showLowKdf;
-  }
-
-  emailVerified(verified: boolean) {
-    this.showVerifyEmail = !verified;
+    return this.showLowKdf;
   }
 
   ngOnDestroy() {
