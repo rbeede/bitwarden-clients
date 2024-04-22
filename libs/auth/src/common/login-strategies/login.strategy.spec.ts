@@ -146,6 +146,9 @@ describe("LoginStrategy", () => {
     // The base class is abstract so we test it via PasswordLoginStrategy
     passwordLoginStrategy = new PasswordLoginStrategy(
       cache,
+      passwordStrengthService,
+      policyService,
+      loginStrategyService,
       accountService,
       masterPasswordService,
       cryptoService,
@@ -158,9 +161,6 @@ describe("LoginStrategy", () => {
       stateService,
       twoFactorService,
       userDecryptionOptionsService,
-      passwordStrengthService,
-      policyService,
-      loginStrategyService,
       billingAccountProfileStateService,
     );
     credentials = new PasswordLoginCredentials(email, masterPassword);
@@ -388,6 +388,9 @@ describe("LoginStrategy", () => {
 
       passwordLoginStrategy = new PasswordLoginStrategy(
         cache,
+        passwordStrengthService,
+        policyService,
+        loginStrategyService,
         accountService,
         masterPasswordService,
         cryptoService,
@@ -400,9 +403,6 @@ describe("LoginStrategy", () => {
         stateService,
         twoFactorService,
         userDecryptionOptionsService,
-        passwordStrengthService,
-        policyService,
-        loginStrategyService,
         billingAccountProfileStateService,
       );
 

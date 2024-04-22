@@ -93,6 +93,10 @@ describe("SsoLoginStrategy", () => {
 
     ssoLoginStrategy = new SsoLoginStrategy(
       null,
+      keyConnectorService,
+      deviceTrustCryptoService,
+      authRequestService,
+      i18nService,
       accountService,
       masterPasswordService,
       cryptoService,
@@ -105,10 +109,6 @@ describe("SsoLoginStrategy", () => {
       stateService,
       twoFactorService,
       userDecryptionOptionsService,
-      keyConnectorService,
-      deviceTrustCryptoService,
-      authRequestService,
-      i18nService,
       billingAccountProfileStateService,
     );
     credentials = new SsoLoginCredentials(ssoCode, ssoCodeVerifier, ssoRedirectUrl, ssoOrgId);

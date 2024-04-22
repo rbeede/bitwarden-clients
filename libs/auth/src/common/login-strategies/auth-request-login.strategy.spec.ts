@@ -87,6 +87,7 @@ describe("AuthRequestLoginStrategy", () => {
 
     authRequestLoginStrategy = new AuthRequestLoginStrategy(
       cache,
+      deviceTrustCryptoService,
       accountService,
       masterPasswordService,
       cryptoService,
@@ -99,7 +100,6 @@ describe("AuthRequestLoginStrategy", () => {
       stateService,
       twoFactorService,
       userDecryptionOptions,
-      deviceTrustCryptoService,
       billingAccountProfileStateService,
     );
 
