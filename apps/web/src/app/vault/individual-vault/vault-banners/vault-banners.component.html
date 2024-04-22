@@ -15,6 +15,18 @@
   </a>
 </bit-banner>
 
+<bit-banner
+  class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
+  bannerType="warning"
+  *ngIf="visibleBanner === VisibleVaultBanner.KDFSettings"
+  (onClose)="dismissBanner()"
+>
+  {{ "lowKDFIterationsBanner" | i18n }}
+  <a class="text-white tw-font-bold" routerLink="/settings/security/security-keys">
+    {{ "changeKDFSettings" | i18n }}
+  </a>
+</bit-banner>
+
 <app-verify-email
   *ngIf="visibleBanner === VisibleVaultBanner.VerifyEmail"
   class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"

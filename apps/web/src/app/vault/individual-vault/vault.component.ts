@@ -35,7 +35,6 @@ import { EventCollectionService } from "@bitwarden/common/abstractions/event/eve
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
@@ -45,8 +44,6 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { KdfType, PBKDF2_ITERATIONS } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
@@ -122,7 +119,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   collectionsModalRef: ViewContainerRef;
 
   showBrowserOutdated = false;
-  showLowKdf = false;
   trashCleanupWarning: string = null;
   kdfIterations: number;
   activeFilter: VaultFilter = new VaultFilter();
@@ -163,7 +159,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     private platformUtilsService: PlatformUtilsService,
     private broadcasterService: BroadcasterService,
     private ngZone: NgZone,
-    private stateService: StateService,
     private organizationService: OrganizationService,
     private vaultFilterService: VaultFilterService,
     private routedVaultFilterService: RoutedVaultFilterService,
@@ -178,7 +173,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     private searchPipe: SearchPipe,
     private configService: ConfigService,
     private apiService: ApiService,
-    private userVerificationService: UserVerificationService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
   ) {}
 
@@ -192,9 +186,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     const firstSetup$ = this.route.queryParams.pipe(
       first(),
       switchMap(async (params: Params) => {
-        this.showLowKdf = (await this.userVerificationService.hasMasterPassword())
-          ? await this.isLowKdfIteration()
-          : false;
         await this.syncService.fullSync(false);
 
         const cipherId = getCipherIdFromParams(params);
@@ -398,10 +389,6 @@ export class VaultComponent implements OnInit, OnDestroy {
           this.refreshing = false;
         },
       );
-  }
-
-  get isShowingCards() {
-    return this.showLowKdf;
   }
 
   ngOnDestroy() {
@@ -951,14 +938,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     return permanent
       ? this.cipherService.deleteWithServer(id)
       : this.cipherService.softDeleteWithServer(id);
-  }
-
-  async isLowKdfIteration() {
-    const kdfType = await this.stateService.getKdfType();
-    const kdfOptions = await this.stateService.getKdfConfig();
-    return (
-      kdfType === KdfType.PBKDF2_SHA256 && kdfOptions.iterations < PBKDF2_ITERATIONS.defaultValue
-    );
   }
 
   protected async repromptCipher(ciphers: CipherView[]) {

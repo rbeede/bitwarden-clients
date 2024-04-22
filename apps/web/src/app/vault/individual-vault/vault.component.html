@@ -32,7 +32,7 @@
       </div>
     </div>
   </div>
-  <div [ngClass]="{ 'col-6': isShowingCards, 'col-9': !isShowingCards }">
+  <div class="col-9">
     <app-callout type="warning" *ngIf="activeFilter.isDeleted" icon="bwi-exclamation-triangle">
       {{ trashCleanupWarning }}
     </app-callout>
@@ -83,9 +83,6 @@
         {{ "newItem" | i18n }}
       </button>
     </div>
-  </div>
-  <div class="col-3">
-    <app-low-kdf class="d-block mb-4" *ngIf="showLowKdf"> </app-low-kdf>
   </div>
 </div>
 
