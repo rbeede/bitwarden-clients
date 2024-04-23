@@ -133,16 +133,6 @@ export class SponsoredFamiliesComponent implements OnInit, OnDestroy {
     return this.sponsorshipForm.controls.sponsorshipEmail;
   }
 
-  setCustomErrors() {
-    if (this.sponsorshipEmailControl.hasError("email")) {
-      this.sponsorshipEmailControl.setErrors([{ message: this.i18nService.t("invalidEmail") }]);
-    } else if (this.sponsorshipEmailControl.hasError("notAllowedValue")) {
-      this.sponsorshipEmailControl.setErrors([
-        { message: this.i18nService.t("cannotSponsorSelf") },
-      ]);
-    }
-  }
-
   private async resetForm() {
     this.sponsorshipForm.reset();
   }
