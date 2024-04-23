@@ -27,8 +27,6 @@ import { VaultTimeout } from "../../types/vault-timeout.type";
 
 import { VaultTimeoutSettingsService } from "./vault-timeout-settings.service";
 
-// TODO: update tests
-
 describe("VaultTimeoutSettingsService", () => {
   let userDecryptionOptionsService: MockProxy<UserDecryptionOptionsServiceAbstraction>;
   let cryptoService: MockProxy<CryptoService>;
@@ -179,11 +177,11 @@ describe("VaultTimeoutSettingsService", () => {
         ${false}     | ${false}           | ${null}                    | ${null}                      | ${VaultTimeoutAction.LogOut}
         ${false}     | ${false}           | ${null}                    | ${VaultTimeoutAction.Lock}   | ${VaultTimeoutAction.LogOut}
         ${false}     | ${false}           | ${VaultTimeoutAction.Lock} | ${null}                      | ${VaultTimeoutAction.LogOut}
-        ${false}     | ${true}            | ${null}                    | ${null}                      | ${VaultTimeoutAction.LogOut}
+        ${false}     | ${true}            | ${null}                    | ${null}                      | ${VaultTimeoutAction.Lock}
         ${false}     | ${true}            | ${null}                    | ${VaultTimeoutAction.Lock}   | ${VaultTimeoutAction.Lock}
         ${false}     | ${true}            | ${VaultTimeoutAction.Lock} | ${null}                      | ${VaultTimeoutAction.Lock}
         ${false}     | ${true}            | ${VaultTimeoutAction.Lock} | ${VaultTimeoutAction.LogOut} | ${VaultTimeoutAction.Lock}
-        ${true}      | ${false}           | ${null}                    | ${null}                      | ${VaultTimeoutAction.LogOut}
+        ${true}      | ${false}           | ${null}                    | ${null}                      | ${VaultTimeoutAction.Lock}
         ${true}      | ${false}           | ${null}                    | ${VaultTimeoutAction.Lock}   | ${VaultTimeoutAction.Lock}
         ${true}      | ${false}           | ${VaultTimeoutAction.Lock} | ${null}                      | ${VaultTimeoutAction.Lock}
         ${true}      | ${false}           | ${VaultTimeoutAction.Lock} | ${VaultTimeoutAction.LogOut} | ${VaultTimeoutAction.Lock}
