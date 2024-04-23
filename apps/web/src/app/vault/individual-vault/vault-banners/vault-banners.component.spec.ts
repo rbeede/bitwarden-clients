@@ -1,12 +1,10 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { mock } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
-import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
@@ -15,33 +13,33 @@ import { BannerModule } from "@bitwarden/components";
 
 import { LooseComponentsModule } from "../../../shared";
 
+import { VaultBannersService } from "./services/vault-banners.service";
 import { VaultBannersComponent, VisibleVaultBanner } from "./vault-banners.component";
 
 describe("VaultBannersComponent", () => {
   let component: VaultBannersComponent;
   let fixture: ComponentFixture<VaultBannersComponent>;
 
-  const hasPremiumFromAnySource$ = new BehaviorSubject<boolean>(false);
   const isSelfHost = jest.fn().mockReturnValue(false);
   const getEmailVerified = jest.fn().mockResolvedValue(true);
   const hasMasterPassword = jest.fn().mockResolvedValue(true);
   const getKdfType = jest.fn().mockResolvedValue(KdfType.PBKDF2_SHA256);
   const getKdfConfig = jest.fn().mockResolvedValue({ iterations: 600000 });
+  const bannerService = mock<VaultBannersService>({
+    shouldShowPremiumBanner: jest.fn(),
+    dismissPremiumBanner: jest.fn(),
+  });
 
   beforeEach(async () => {
+    bannerService.shouldShowPremiumBanner.mockResolvedValue(false);
     isSelfHost.mockClear();
     getEmailVerified.mockClear();
-    hasPremiumFromAnySource$.next(true);
     getEmailVerified.mockResolvedValue(true);
 
     await TestBed.configureTestingModule({
       imports: [BannerModule, LooseComponentsModule],
       declarations: [VaultBannersComponent, I18nPipe],
       providers: [
-        {
-          provide: BillingAccountProfileStateService,
-          useValue: { hasPremiumFromAnySource$: hasPremiumFromAnySource$ },
-        },
         {
           provide: PlatformUtilsService,
           useValue: { isSelfHost },
@@ -66,6 +64,10 @@ describe("VaultBannersComponent", () => {
           provide: StateService,
           useValue: { getKdfType, getKdfConfig },
         },
+        {
+          provide: VaultBannersService,
+          useValue: bannerService,
+        },
       ],
     }).compileComponents();
   });
@@ -86,8 +88,7 @@ describe("VaultBannersComponent", () => {
   describe("determineVisibleBanner", () => {
     describe("premium banner", () => {
       beforeEach(async () => {
-        hasPremiumFromAnySource$.next(false);
-        isSelfHost.mockReturnValue(false);
+        bannerService.shouldShowPremiumBanner.mockResolvedValue(true);
 
         await component.ngOnInit();
         fixture.detectChanges();
@@ -102,7 +103,12 @@ describe("VaultBannersComponent", () => {
           'button[biticonbutton="bwi-close"]',
         );
 
+        // Mock out the banner service returning false after dismissing
+        bannerService.shouldShowPremiumBanner.mockResolvedValue(false);
+
         dismissButton.dispatchEvent(new Event("click"));
+
+        expect(bannerService.dismissPremiumBanner).toHaveBeenCalled();
 
         expect(component.visibleBanners).toEqual([]);
       });

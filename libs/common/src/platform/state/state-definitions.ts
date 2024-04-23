@@ -148,3 +148,6 @@ export const CIPHERS_DISK_LOCAL = new StateDefinition("ciphersLocal", "disk", {
 export const CIPHERS_MEMORY = new StateDefinition("ciphersMemory", "memory", {
   browser: "memory-large-object",
 });
+export const PREMIUM_BANNER_DISK_LOCAL = new StateDefinition("premiumBannerReprompt", "disk", {
+  web: "disk-local",
+});

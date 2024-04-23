@@ -1,12 +1,11 @@
 import { Component, OnInit } from "@angular/core";
-import { firstValueFrom } from "rxjs";
 
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
-import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { KdfType, PBKDF2_ITERATIONS } from "@bitwarden/common/platform/enums";
+
+import { VaultBannersService } from "./services/vault-banners.service";
 
 export enum VisibleVaultBanner {
   KDFSettings = "kdf-settings",
@@ -21,25 +20,28 @@ export enum VisibleVaultBanner {
 })
 export class VaultBannersComponent implements OnInit {
   visibleBanners: VisibleVaultBanner[] = [];
-
   VisibleVaultBanner = VisibleVaultBanner;
 
   constructor(
-    private billingAccountProfileStateService: BillingAccountProfileStateService,
-    private platformUtilsService: PlatformUtilsService,
     private tokenService: TokenService,
     private userVerificationService: UserVerificationService,
     private stateService: StateService,
+    private vaultBannerService: VaultBannersService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.determineVisibleBanner();
   }
 
-  dismissBanner(banner: VisibleVaultBanner): void {
-    this.visibleBanners = this.visibleBanners.filter((b) => b !== banner);
+  async dismissBanner(banner: VisibleVaultBanner): Promise<void> {
+    if (banner === VisibleVaultBanner.Premium) {
+      await this.vaultBannerService.dismissPremiumBanner();
+    }
+
+    await this.determineVisibleBanner();
   }
 
+  /** Determine which banners should be present */
   private async determineVisibleBanner(): Promise<void> {
     const showBrowserOutdated = window.navigator.userAgent.indexOf("MSIE") !== -1;
     const showVerifyEmail = !(await this.tokenService.getEmailVerified());
@@ -47,11 +49,7 @@ export class VaultBannersComponent implements OnInit {
       ? await this.isLowKdfIteration()
       : false;
 
-    const canAccessPremium = await firstValueFrom(
-      this.billingAccountProfileStateService.hasPremiumFromAnySource$,
-    );
-
-    const showPremiumBanner = !canAccessPremium && !this.platformUtilsService.isSelfHost();
+    const showPremiumBanner = await this.vaultBannerService.shouldShowPremiumBanner();
 
     this.visibleBanners = [
       showBrowserOutdated ? VisibleVaultBanner.OutdatedBrowser : null,
