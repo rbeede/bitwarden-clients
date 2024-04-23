@@ -194,7 +194,13 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     }
 
     return combineLatest([
-      this.stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, userId),
+      this.stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, userId).pipe(
+        // Persist default action of lock if the current value is null
+        map(
+          (currentVaultTimeoutAction: VaultTimeoutAction | null) =>
+            currentVaultTimeoutAction ?? VaultTimeoutAction.Lock,
+        ),
+      ),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
     ]).pipe(
       switchMap(([currentVaultTimeoutAction, maxVaultTimeoutPolicy]) => {
@@ -298,7 +304,8 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
       if (decryptionOptions?.hasMasterPassword != undefined) {
         return decryptionOptions.hasMasterPassword;
       }
+    } else {
+      return await firstValueFrom(this.userDecryptionOptionsService.hasMasterPassword$);
     }
-    return await firstValueFrom(this.userDecryptionOptionsService.hasMasterPassword$);
   }
 }
