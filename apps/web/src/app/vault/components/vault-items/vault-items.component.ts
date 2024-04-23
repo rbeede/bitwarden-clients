@@ -236,7 +236,6 @@ export class VaultItemsComponent {
 
       if (s.collection != null) {
         const org = this.getOrganization(s.collection.organizationId);
-        // Check we can delete the collection
         return s.collection.canDelete(org);
       }
     });
@@ -244,7 +243,7 @@ export class VaultItemsComponent {
 
   private canEditItem(cipher: CipherView): boolean {
     const org = this.getOrganization(cipher.organizationId);
-    // Check if we can edit the items of at least 1 collection the cipher is in - then we can delete the cipher
+    // If we Can Edit at least 1 collection the cipher is in, we can edit/delete the cipher
     return cipher.collectionIds.some((cId) => {
       const collection = this.getCollection(cId);
       if (collection.id === Unassigned) {
