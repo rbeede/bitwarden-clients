@@ -29,6 +29,7 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import {
   Account,
   AccountProfile,
+  AccountTokens,
   AccountKeys,
 } from "@bitwarden/common/platform/models/domain/account";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
@@ -241,6 +242,9 @@ describe("LoginStrategy", () => {
               kdfIterations: kdfIterations,
               kdfType: kdf,
             },
+          },
+          tokens: {
+            ...new AccountTokens(),
           },
           keys: new AccountKeys(),
         }),
