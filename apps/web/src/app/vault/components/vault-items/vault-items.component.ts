@@ -85,23 +85,13 @@ export class VaultItemsComponent {
     return this.dataSource.data.length === 0;
   }
 
-  get bulkMoveAllowed() {
-    return (
-      this.showBulkMove && this.selection.selected.filter((item) => item.collection).length === 0
-    );
-  }
-
-  get bulkAssignToCollectionsAllowed() {
-    return this.showBulkAddToCollections && this.ciphers.length > 0;
-  }
-
   protected canEditCollection(collection: CollectionView): boolean {
     // Only allow allow deletion if collection editing is enabled and not deleting "Unassigned"
     if (collection.id === Unassigned) {
       return false;
     }
 
-    const organization = this.allOrganizations.find((o) => o.id === collection.organizationId);
+    const organization = this.getOrganization(collection.organizationId);
     return collection.canEdit(organization, this.flexibleCollectionsV1Enabled);
   }
 
@@ -111,7 +101,7 @@ export class VaultItemsComponent {
       return false;
     }
 
-    const organization = this.allOrganizations.find((o) => o.id === collection.organizationId);
+    const organization = this.getOrganization(collection.organizationId);
     return collection.canDelete(organization);
   }
 
@@ -196,5 +186,73 @@ export class VaultItemsComponent {
         .filter((item) => item.cipher !== undefined)
         .map((item) => item.cipher),
     });
+  }
+
+  get bulkMoveAllowed() {
+    return (
+      this.showBulkMove && this.selection.selected.filter((item) => item.collection).length === 0
+    );
+  }
+
+  get bulkAssignToCollectionsAllowed() {
+    if (this.selection.isEmpty()) {
+      return false;
+    }
+
+    return this.showBulkAddToCollections && this.selection.selected.every((s) => s.cipher != null);
+  }
+
+  protected get bulkEditCollectionAccessAllowed() {
+    if (this.selection.isEmpty()) {
+      return false;
+    }
+
+    return (
+      this.showAdminActions &&
+      this.showBulkEditCollectionAccess &&
+      this.selection.selected.every(
+        (s) =>
+          s.collection != null &&
+          s.collection.canEdit(
+            this.getOrganization(s.collection.organizationId),
+            this.flexibleCollectionsV1Enabled,
+          ),
+      )
+    );
+  }
+
+  protected get bulkDeleteAllowed() {
+    if (this.selection.isEmpty()) {
+      return false;
+    }
+
+    return this.selection.selected.every((s) => {
+      if (s.cipher != null) {
+        const org = this.getOrganization(s.cipher.organizationId);
+        // Check if we can edit the items of at least 1 collection the cipher is in - then we can delete the cipher
+        return s.cipher.collectionIds.some((cId) => {
+          const collection = this.getCollection(cId);
+          if (collection.id === Unassigned) {
+            return org.canEditUnassignedCiphers();
+          }
+
+          return collection.canEditItems(org, this.flexibleCollectionsV1Enabled);
+        });
+      }
+
+      if (s.collection != null) {
+        const org = this.getOrganization(s.collection.organizationId);
+        // Check we can delete the collection
+        return s.collection.canDelete(org);
+      }
+    });
+  }
+
+  private getOrganization(id: string) {
+    return this.allOrganizations.find((o) => o.id === id);
+  }
+
+  private getCollection(id: string) {
+    return this.allCollections.find((c) => c.id === id);
   }
 }

@@ -32,13 +32,14 @@
             type="button"
             appA11yTitle="{{ 'options' | i18n }}"
           ></button>
+          <!-- Bulk actions menu -->
           <bit-menu #headerMenu>
             <button *ngIf="bulkMoveAllowed" type="button" bitMenuItem (click)="bulkMoveToFolder()">
               <i class="bwi bwi-fw bwi-folder" aria-hidden="true"></i>
               {{ "moveSelected" | i18n }}
             </button>
             <button
-              *ngIf="showAdminActions && showBulkEditCollectionAccess"
+              *ngIf="bulkEditCollectionAccessAllowed"
               type="button"
               bitMenuItem
               (click)="bulkEditCollectionAccess()"
@@ -64,16 +65,32 @@
               <i class="bwi bwi-fw bwi-arrow-circle-right" aria-hidden="true"></i>
               {{ "moveSelectedToOrg" | i18n }}
             </button>
-            <button *ngIf="showBulkTrashOptions" type="button" bitMenuItem (click)="bulkRestore()">
-              <i class="bwi bwi-fw bwi-undo" aria-hidden="true"></i>
-              {{ "restoreSelected" | i18n }}
-            </button>
-            <button type="button" bitMenuItem (click)="bulkDelete()">
+
+            <button
+              *ngIf="!showBulkTrashOptions && bulkDeleteAllowed"
+              type="button"
+              bitMenuItem
+              (click)="bulkDelete()"
+            >
               <span class="tw-text-danger">
                 <i class="bwi bwi-fw bwi-trash" aria-hidden="true"></i>
-                {{ (showBulkTrashOptions ? "permanentlyDeleteSelected" : "deleteSelected") | i18n }}
+                {{ "deleteSelected" | i18n }}
               </span>
             </button>
+
+            <!-- Bulk options for the Trash filter - restore/permanently delete -->
+            <ng-container *ngIf="showBulkTrashOptions">
+              <button type="button" bitMenuItem (click)="bulkRestore()">
+                <i class="bwi bwi-fw bwi-undo" aria-hidden="true"></i>
+                {{ "restoreSelected" | i18n }}
+              </button>
+              <button type="button" bitMenuItem (click)="bulkDelete()">
+                <span class="tw-text-danger">
+                  <i class="bwi bwi-fw bwi-trash" aria-hidden="true"></i>
+                  {{ "permanentlyDeleteSelected" | i18n }}
+                </span>
+              </button>
+            </ng-container>
           </bit-menu>
         </th>
       </tr>
