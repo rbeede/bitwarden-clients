@@ -199,7 +199,10 @@ export class VaultItemsComponent {
       return false;
     }
 
-    return this.showBulkAddToCollections && this.selection.selected.every((s) => s.cipher != null);
+    return (
+      this.showBulkAddToCollections &&
+      this.selection.selected.every((s) => s.cipher != null && this.canEditItem(s.cipher))
+    );
   }
 
   protected get bulkEditCollectionAccessAllowed() {
@@ -228,16 +231,7 @@ export class VaultItemsComponent {
 
     return this.selection.selected.every((s) => {
       if (s.cipher != null) {
-        const org = this.getOrganization(s.cipher.organizationId);
-        // Check if we can edit the items of at least 1 collection the cipher is in - then we can delete the cipher
-        return s.cipher.collectionIds.some((cId) => {
-          const collection = this.getCollection(cId);
-          if (collection.id === Unassigned) {
-            return org.canEditUnassignedCiphers();
-          }
-
-          return collection.canEditItems(org, this.flexibleCollectionsV1Enabled);
-        });
+        return this.canEditItem(s.cipher);
       }
 
       if (s.collection != null) {
@@ -245,6 +239,19 @@ export class VaultItemsComponent {
         // Check we can delete the collection
         return s.collection.canDelete(org);
       }
+    });
+  }
+
+  private canEditItem(cipher: CipherView): boolean {
+    const org = this.getOrganization(cipher.organizationId);
+    // Check if we can edit the items of at least 1 collection the cipher is in - then we can delete the cipher
+    return cipher.collectionIds.some((cId) => {
+      const collection = this.getCollection(cId);
+      if (collection.id === Unassigned) {
+        return org.canEditUnassignedCiphers();
+      }
+
+      return collection.canEditItems(org, this.flexibleCollectionsV1Enabled);
     });
   }
 
