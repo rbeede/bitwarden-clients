@@ -1,20 +1,35 @@
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
+import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
+import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+import { KdfType, PBKDF2_ITERATIONS } from "@bitwarden/common/platform/enums";
 import {
   StateProvider,
   ActiveUserState,
   KeyDefinition,
   PREMIUM_BANNER_DISK_LOCAL,
+  BANNERS_DISMISSED_DISK,
 } from "@bitwarden/common/platform/state";
+
+export enum VisibleVaultBanner {
+  KDFSettings = "kdf-settings",
+  OutdatedBrowser = "outdated-browser",
+  Premium = "premium",
+  VerifyEmail = "verify-email",
+}
 
 type PremiumBannerReprompt = {
   numberOfDismissals: number;
   /** Timestamp representing when to show the prompt next */
   nextPromptDate: number;
 };
+
+/** Banners that will be re-shown on a new session */
+type SessionBanners = Omit<VisibleVaultBanner, VisibleVaultBanner.Premium>;
 
 export const PREMIUM_BANNER_REPROMPT_KEY = new KeyDefinition<PremiumBannerReprompt>(
   PREMIUM_BANNER_DISK_LOCAL,
@@ -24,19 +39,66 @@ export const PREMIUM_BANNER_REPROMPT_KEY = new KeyDefinition<PremiumBannerReprom
   },
 );
 
+export const BANNERS_DISMISSED_DISK_KEY = new KeyDefinition<SessionBanners[]>(
+  BANNERS_DISMISSED_DISK,
+  "bannersDismissed",
+  {
+    deserializer: (bannersDismissed) => bannersDismissed,
+  },
+);
+
 @Injectable()
 export class VaultBannersService {
   private premiumBannerState: ActiveUserState<PremiumBannerReprompt>;
+  private sessionBannerState: ActiveUserState<SessionBanners[]>;
 
   constructor(
-    protected stateProvider: StateProvider,
+    private tokenService: TokenService,
+    private userVerificationService: UserVerificationService,
+    private stateProvider: StateProvider,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private platformUtilsService: PlatformUtilsService,
+    private stateService: StateService,
   ) {
     this.premiumBannerState = this.stateProvider.getActive(PREMIUM_BANNER_REPROMPT_KEY);
+    this.sessionBannerState = this.stateProvider.getActive(BANNERS_DISMISSED_DISK_KEY);
   }
 
-  /** Determine if the premium banner should be shown */
+  /** Returns true when the update browser banner should be shown */
+  async shouldShowUpdateBrowserBanner(): Promise<boolean> {
+    const outdatedBrowser = window.navigator.userAgent.indexOf("MSIE") !== -1;
+    const alreadyDismissed = (await this.getBannerDismissedState()).includes(
+      VisibleVaultBanner.OutdatedBrowser,
+    );
+
+    return outdatedBrowser && !alreadyDismissed;
+  }
+
+  /** Returns true when the verify email banner should be shown */
+  async shouldShowVerifyEmailBanner(): Promise<boolean> {
+    const needsVerification = !(await this.tokenService.getEmailVerified());
+
+    const alreadyDismissed = (await this.getBannerDismissedState()).includes(
+      VisibleVaultBanner.VerifyEmail,
+    );
+
+    return needsVerification && !alreadyDismissed;
+  }
+
+  /** Returns true when the low KDF iteration banner should be shown */
+  async shouldShowLowKDFBanner(): Promise<boolean> {
+    const hasLowKDF = (await this.userVerificationService.hasMasterPassword())
+      ? await this.isLowKdfIteration()
+      : false;
+
+    const alreadyDismissed = (await this.getBannerDismissedState()).includes(
+      VisibleVaultBanner.KDFSettings,
+    );
+
+    return hasLowKDF && !alreadyDismissed;
+  }
+
+  /** Returns true when the premium banner should be shown */
   async shouldShowPremiumBanner(): Promise<boolean> {
     const canAccessPremium = await firstValueFrom(
       this.billingAccountProfileStateService.hasPremiumFromAnySource$,
@@ -57,8 +119,28 @@ export class VaultBannersService {
     return shouldShowPremiumBanner;
   }
 
+  /** Add dismissed banner to session storage */
+  async bannerDismissed(banner: SessionBanners): Promise<void> {
+    if (banner === VisibleVaultBanner.Premium) {
+      await this.dismissPremiumBanner();
+    } else {
+      await this.sessionBannerState.update((current) => {
+        const bannersDismissed = current ?? [];
+
+        return [...bannersDismissed, banner];
+      });
+    }
+  }
+
+  /** Returns banners that have already been dismissed */
+  private async getBannerDismissedState(): Promise<SessionBanners[]> {
+    // `state$` can emit null when a value has not been set yet,
+    // use nullish coalescing to default to an empty array
+    return (await firstValueFrom(this.sessionBannerState.state$)) ?? [];
+  }
+
   /** Increment dismissal state of the premium banner  */
-  async dismissPremiumBanner(): Promise<void> {
+  private async dismissPremiumBanner(): Promise<void> {
     await this.premiumBannerState.update((current) => {
       const numberOfDismissals = current?.numberOfDismissals ?? 0;
       const now = new Date();
@@ -93,5 +175,13 @@ export class VaultBannersService {
         nextPromptDate: nextYear.getTime(),
       };
     });
+  }
+
+  private async isLowKdfIteration() {
+    const kdfType = await this.stateService.getKdfType();
+    const kdfOptions = await this.stateService.getKdfConfig();
+    return (
+      kdfType === KdfType.PBKDF2_SHA256 && kdfOptions.iterations < PBKDF2_ITERATIONS.defaultValue
+    );
   }
 }

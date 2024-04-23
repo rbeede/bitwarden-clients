@@ -151,3 +151,4 @@ export const CIPHERS_MEMORY = new StateDefinition("ciphersMemory", "memory", {
 export const PREMIUM_BANNER_DISK_LOCAL = new StateDefinition("premiumBannerReprompt", "disk", {
   web: "disk-local",
 });
+export const BANNERS_DISMISSED_DISK = new StateDefinition("bannersDismissed", "disk");
