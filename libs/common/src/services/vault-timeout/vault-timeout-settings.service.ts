@@ -127,18 +127,11 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     }
 
     return combineLatest([
-      this.stateProvider.getUserState$(VAULT_TIMEOUT, userId).pipe(
-        map(
-          // Apply client specific override if the current value is null
-          (currentVaultTimeout: VaultTimeout) => currentVaultTimeout ?? this.defaultVaultTimeout,
-        ),
-      ),
+      this.stateProvider.getUserState$(VAULT_TIMEOUT, userId),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
     ]).pipe(
       switchMap(([currentVaultTimeout, maxVaultTimeoutPolicy]) => {
-        return from(
-          this.determineVaultTimeout(userId, currentVaultTimeout, maxVaultTimeoutPolicy),
-        ).pipe(
+        return from(this.determineVaultTimeout(currentVaultTimeout, maxVaultTimeoutPolicy)).pipe(
           tap((vaultTimeout: VaultTimeout) => {
             // As a side effect, set the new value determined by determineVaultTimeout into state if it's different from the current
             if (vaultTimeout !== currentVaultTimeout) {
@@ -158,10 +151,13 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   }
 
   private async determineVaultTimeout(
-    userId: UserId,
     currentVaultTimeout: VaultTimeout | null,
     maxVaultTimeoutPolicy: Policy | null,
   ): Promise<VaultTimeout | null> {
+    // if current vault timeout is null, apply the client specific default
+    currentVaultTimeout = currentVaultTimeout ?? this.defaultVaultTimeout;
+
+    // If no policy applies, return the current vault timeout
     if (!maxVaultTimeoutPolicy) {
       return currentVaultTimeout;
     }
@@ -194,13 +190,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     }
 
     return combineLatest([
-      this.stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, userId).pipe(
-        // Persist default action of lock if the current value is null
-        map(
-          (currentVaultTimeoutAction: VaultTimeoutAction | null) =>
-            currentVaultTimeoutAction ?? VaultTimeoutAction.Lock,
-        ),
-      ),
+      this.stateProvider.getUserState$(VAULT_TIMEOUT_ACTION, userId),
       this.getMaxVaultTimeoutPolicyByUserId$(userId),
     ]).pipe(
       switchMap(([currentVaultTimeoutAction, maxVaultTimeoutPolicy]) => {
@@ -253,14 +243,13 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
       return maxVaultTimeoutPolicy.data.action;
     }
 
-    // No policy applies, default based on master password if no action is set
-    if (currentVaultTimeoutAction == null) {
-      // Depends on whether or not the user has a master password
-      const defaultVaultTimeoutAction = (await this.userHasMasterPassword(userId))
-        ? VaultTimeoutAction.Lock
-        : VaultTimeoutAction.LogOut;
-
-      return defaultVaultTimeoutAction;
+    // No policy applies from here on
+    // If the current vault timeout is null and lock is an option, set it as the default
+    if (
+      currentVaultTimeoutAction == null &&
+      availableVaultTimeoutActions.includes(VaultTimeoutAction.Lock)
+    ) {
+      return VaultTimeoutAction.Lock;
     }
 
     return currentVaultTimeoutAction;
