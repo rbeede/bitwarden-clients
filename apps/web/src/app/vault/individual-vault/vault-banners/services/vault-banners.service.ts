@@ -26,14 +26,14 @@ export const PREMIUM_BANNER_REPROMPT_KEY = new KeyDefinition<PremiumBannerReprom
 
 @Injectable()
 export class VaultBannersService {
-  private bannerState: ActiveUserState<PremiumBannerReprompt>;
+  private premiumBannerState: ActiveUserState<PremiumBannerReprompt>;
 
   constructor(
     protected stateProvider: StateProvider,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private platformUtilsService: PlatformUtilsService,
   ) {
-    this.bannerState = this.stateProvider.getActive(PREMIUM_BANNER_REPROMPT_KEY);
+    this.premiumBannerState = this.stateProvider.getActive(PREMIUM_BANNER_REPROMPT_KEY);
   }
 
   /** Determine if the premium banner should be shown */
@@ -44,7 +44,7 @@ export class VaultBannersService {
 
     const shouldShowPremiumBanner = !canAccessPremium && !this.platformUtilsService.isSelfHost();
 
-    const dismissedState = await firstValueFrom(this.bannerState.state$);
+    const dismissedState = await firstValueFrom(this.premiumBannerState.state$);
 
     // Check if nextPromptDate is in the past passed
     if (shouldShowPremiumBanner && dismissedState?.nextPromptDate) {
@@ -59,7 +59,7 @@ export class VaultBannersService {
 
   /** Increment dismissal state of the premium banner  */
   async dismissPremiumBanner(): Promise<void> {
-    await this.bannerState.update((current) => {
+    await this.premiumBannerState.update((current) => {
       const numberOfDismissals = current?.numberOfDismissals ?? 0;
       const now = new Date();
 
