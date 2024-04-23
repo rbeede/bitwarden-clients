@@ -15,6 +15,7 @@ import { SharedModule } from "../../../shared/shared.module";
   imports: [SharedModule],
 })
 export class VerifyRecoverDeleteOrgComponent implements OnInit {
+  loading = true;
   name: string;
 
   private orgId: string;
@@ -34,6 +35,7 @@ export class VerifyRecoverDeleteOrgComponent implements OnInit {
       this.orgId = qParams.orgId;
       this.token = qParams.token;
       this.name = qParams.name;
+      this.loading = false;
     } else {
       await this.router.navigate(["/"]);
     }

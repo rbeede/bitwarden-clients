@@ -19,6 +19,7 @@
             buttonType="primary"
             class="btn-danger"
             [bitAction]="submit"
+            [disabled]="loading"
             [block]="true"
           >
             {{ "deleteOrganization" | i18n }}
