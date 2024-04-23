@@ -164,22 +164,6 @@ export abstract class LoginStrategy {
 
     const userId = accountInformation.sub;
 
-    const vaultTimeoutAction = await firstValueFrom(
-      this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),
-    );
-    const vaultTimeout = await firstValueFrom(
-      this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
-    );
-
-    // set access token and refresh token before account initialization so authN status can be accurate
-    // User id will be derived from the access token.
-    await this.tokenService.setTokens(
-      tokenResponse.accessToken,
-      vaultTimeoutAction as VaultTimeoutAction,
-      vaultTimeout,
-      tokenResponse.refreshToken, // Note: CLI login via API key sends undefined for refresh token.
-    );
-
     await this.stateService.addAccount(
       new Account({
         profile: {
@@ -197,8 +181,26 @@ export abstract class LoginStrategy {
       }),
     );
 
+    // We must set user decryption options before retrieving vault timeout settings
+    // as the user decryption options help determine the available timeout actions.
     await this.userDecryptionOptionsService.setUserDecryptionOptions(
       UserDecryptionOptions.fromResponse(tokenResponse),
+    );
+
+    const vaultTimeoutAction = await firstValueFrom(
+      this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),
+    );
+    const vaultTimeout = await firstValueFrom(
+      this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
+    );
+
+    // set access token and refresh token before account initialization so authN status can be accurate
+    // User id will be derived from the access token.
+    await this.tokenService.setTokens(
+      tokenResponse.accessToken,
+      vaultTimeoutAction as VaultTimeoutAction,
+      vaultTimeout,
+      tokenResponse.refreshToken, // Note: CLI login via API key sends undefined for refresh token.
     );
 
     await this.billingAccountProfileStateService.setHasPremium(accountInformation.premium, false);
