@@ -159,7 +159,6 @@ export class SettingsComponent implements OnInit {
     this.showDuckDuckGoIntegrationOption = isMac;
 
     this.vaultTimeoutOptions = [
-      // { name: i18nService.t('immediately'), value: 0 },
       { name: this.i18nService.t("oneMinute"), value: 1 },
       { name: this.i18nService.t("fiveMinutes"), value: 5 },
       { name: this.i18nService.t("fifteenMinutes"), value: 15 },
