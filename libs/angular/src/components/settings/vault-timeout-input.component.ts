@@ -209,7 +209,7 @@ export class VaultTimeoutInputComponent
         // Include numeric values that are less than or equal to the policy minutes
         return vaultTimeoutOption.value <= this.vaultTimeoutPolicy.data.minutes;
       }
-        
+
       // Exclude all string cases when there's a numeric policy defined
       return false;
     });
