@@ -1,24 +1,39 @@
-<td>
+<td bitCell alignContent="middle">
   {{ sponsoringOrg.familySponsorshipFriendlyName }}
 </td>
-<td>{{ sponsoringOrg.name }}</td>
-<td>
+<td bitCell alignContent="middle">{{ sponsoringOrg.name }}</td>
+<td bitCell alignContent="middle">
   <span [ngClass]="statusClass">{{ statusMessage }}</span>
 </td>
-<td class="table-action-right">
-  <div class="dropdown" appListDropdown>
+<td bitCell alignContent="middle">
+  <button
+    *ngIf="!sponsoringOrg.familySponsorshipToDelete"
+    type="button"
+    bitIconButton="bwi-cog"
+    buttonType="secondary"
+    [bitMenuTriggerFor]="appListDropdown"
+    class="tw-border-0 tw-bg-transparent tw-p-0"
+  ></button>
+  <bit-menu #appListDropdown>
     <button
-      *ngIf="!sponsoringOrg.familySponsorshipToDelete"
-      class="btn btn-outline-secondary dropdown-toggle"
       type="button"
-      id="dropdownMenuButton"
-      data-toggle="dropdown"
-      aria-haspopup="true"
-      aria-expanded="false"
-      appA11yTitle="{{ 'options' | i18n }}"
+      bitMenuItem
+      *ngIf="!isSelfHosted && !sponsoringOrg.familySponsorshipValidUntil"
+      (click)="resendEmail()"
+      [attr.aria-label]="'resendEmailLabel' | i18n: sponsoringOrg.familySponsorshipFriendlyName"
     >
-      <i class="bwi bwi-cog bwi-lg" aria-hidden="true"></i>
+      {{ "resendEmail" | i18n }}
     </button>
+    <button
+      type="button"
+      bitMenuItem
+      (click)="revokeSponsorship()"
+      [attr.aria-label]="'revokeAccount' | i18n: sponsoringOrg.familySponsorshipFriendlyName"
+    >
+      <span class="tw-text-danger">{{ "remove" | i18n }}</span>
+    </button>
+  </bit-menu>
+  <!--<div class="dropdown" appListDropdown>
     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
       <button
         type="button"
@@ -46,5 +61,5 @@
         <span>{{ "remove" | i18n }}</span>
       </button>
     </div>
-  </div>
+  </div>-->
 </td>

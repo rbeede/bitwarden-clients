@@ -22,9 +22,6 @@ export class SponsoringOrgRowComponent implements OnInit {
   statusMessage = "loading";
   statusClass: "text-success" | "text-danger" = "text-success";
 
-  revokeSponsorshipPromise: Promise<any>;
-  resendEmailPromise: Promise<any>;
-
   private locale = "";
 
   constructor(
@@ -48,20 +45,15 @@ export class SponsoringOrgRowComponent implements OnInit {
 
   async revokeSponsorship() {
     try {
-      this.revokeSponsorshipPromise = this.doRevokeSponsorship();
-      await this.revokeSponsorshipPromise;
+      await this.doRevokeSponsorship();
     } catch (e) {
       this.logService.error(e);
     }
-
-    this.revokeSponsorshipPromise = null;
   }
 
   async resendEmail() {
-    this.resendEmailPromise = this.apiService.postResendSponsorshipOffer(this.sponsoringOrg.id);
-    await this.resendEmailPromise;
+    await this.apiService.postResendSponsorshipOffer(this.sponsoringOrg.id);
     this.platformUtilsService.showToast("success", null, this.i18nService.t("emailSent"));
-    this.resendEmailPromise = null;
   }
 
   get isSentAwaitingSync() {
