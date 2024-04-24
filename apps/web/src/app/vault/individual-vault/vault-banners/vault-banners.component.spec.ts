@@ -22,7 +22,7 @@ describe("VaultBannersComponent", () => {
     shouldShowUpdateBrowserBanner: jest.fn(),
     shouldShowVerifyEmailBanner: jest.fn(),
     shouldShowLowKDFBanner: jest.fn(),
-    bannerDismissed: jest.fn(),
+    dismissBanner: jest.fn(),
   });
 
   beforeEach(async () => {
@@ -111,7 +111,7 @@ describe("VaultBannersComponent", () => {
 
           dismissButton.dispatchEvent(new Event("click"));
 
-          expect(bannerService.bannerDismissed).toHaveBeenCalledWith(banner);
+          expect(bannerService.dismissBanner).toHaveBeenCalledWith(banner);
 
           expect(component.visibleBanners).toEqual([]);
         });

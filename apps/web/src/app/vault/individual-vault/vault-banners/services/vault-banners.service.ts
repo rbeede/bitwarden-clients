@@ -119,8 +119,8 @@ export class VaultBannersService {
     return shouldShowPremiumBanner;
   }
 
-  /** Add dismissed banner to session storage */
-  async bannerDismissed(banner: SessionBanners): Promise<void> {
+  /** Dismiss the given banner and perform any respective side effects */
+  async dismissBanner(banner: SessionBanners): Promise<void> {
     if (banner === VisibleVaultBanner.Premium) {
       await this.dismissPremiumBanner();
     } else {

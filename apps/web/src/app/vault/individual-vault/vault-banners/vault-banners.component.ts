@@ -13,17 +13,17 @@ export class VaultBannersComponent implements OnInit {
   constructor(private vaultBannerService: VaultBannersService) {}
 
   async ngOnInit(): Promise<void> {
-    await this.determineVisibleBanner();
+    await this.determineVisibleBanners();
   }
 
   async dismissBanner(banner: VisibleVaultBanner): Promise<void> {
-    await this.vaultBannerService.bannerDismissed(banner);
+    await this.vaultBannerService.dismissBanner(banner);
 
-    await this.determineVisibleBanner();
+    await this.determineVisibleBanners();
   }
 
   /** Determine which banners should be present */
-  private async determineVisibleBanner(): Promise<void> {
+  private async determineVisibleBanners(): Promise<void> {
     const showBrowserOutdated = await this.vaultBannerService.shouldShowUpdateBrowserBanner();
     const showVerifyEmail = await this.vaultBannerService.shouldShowVerifyEmailBanner();
     const showLowKdf = await this.vaultBannerService.shouldShowLowKDFBanner();

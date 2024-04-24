@@ -85,7 +85,7 @@ describe("VaultBannersService", () => {
         jest.setSystemTime(date.getTime());
 
         service = TestBed.inject(VaultBannersService);
-        await service.bannerDismissed(VisibleVaultBanner.Premium);
+        await service.dismissBanner(VisibleVaultBanner.Premium);
       });
 
       afterEach(() => {
@@ -170,7 +170,7 @@ describe("VaultBannersService", () => {
 
       expect(await service.shouldShowLowKDFBanner()).toBe(true);
 
-      await service.bannerDismissed(VisibleVaultBanner.KDFSettings);
+      await service.dismissBanner(VisibleVaultBanner.KDFSettings);
 
       expect(await service.shouldShowLowKDFBanner()).toBe(false);
     });
@@ -197,7 +197,7 @@ describe("VaultBannersService", () => {
 
       expect(await service.shouldShowUpdateBrowserBanner()).toBe(true);
 
-      await service.bannerDismissed(VisibleVaultBanner.OutdatedBrowser);
+      await service.dismissBanner(VisibleVaultBanner.OutdatedBrowser);
 
       expect(await service.shouldShowUpdateBrowserBanner()).toBe(false);
     });
@@ -219,7 +219,7 @@ describe("VaultBannersService", () => {
 
       expect(await service.shouldShowVerifyEmailBanner()).toBe(true);
 
-      await service.bannerDismissed(VisibleVaultBanner.VerifyEmail);
+      await service.dismissBanner(VisibleVaultBanner.VerifyEmail);
 
       expect(await service.shouldShowVerifyEmailBanner()).toBe(false);
     });
