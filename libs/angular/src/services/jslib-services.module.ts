@@ -60,7 +60,7 @@ import {
 import { AnonymousHubService as AnonymousHubServiceAbstraction } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
 import { KeyConnectorService as KeyConnectorServiceAbstraction } from "@bitwarden/common/auth/abstractions/key-connector.service";
@@ -82,7 +82,7 @@ import { AccountServiceImplementation } from "@bitwarden/common/auth/services/ac
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
-import { DeviceTrustCryptoService } from "@bitwarden/common/auth/services/device-trust-crypto.service.implementation";
+import { DeviceTrustService } from "@bitwarden/common/auth/services/device-trust.service.implementation";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { KeyConnectorService } from "@bitwarden/common/auth/services/key-connector.service";
@@ -269,7 +269,6 @@ import {
   SafeInjectionToken,
   SECURE_STORAGE,
   STATE_FACTORY,
-  STATE_SERVICE_USE_CACHE,
   SUPPORTS_SECURE_STORAGE,
   SYSTEM_LANGUAGE,
   SYSTEM_THEME_OBSERVABLE,
@@ -313,10 +312,6 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: STATE_FACTORY,
     useValue: new StateFactory(GlobalState, Account),
-  }),
-  safeProvider({
-    provide: STATE_SERVICE_USE_CACHE,
-    useValue: true,
   }),
   safeProvider({
     provide: LOGOUT_CALLBACK,
@@ -391,7 +386,7 @@ const safeProviders: SafeProvider[] = [
       EncryptService,
       PasswordStrengthServiceAbstraction,
       PolicyServiceAbstraction,
-      DeviceTrustCryptoServiceAbstraction,
+      DeviceTrustServiceAbstraction,
       AuthRequestServiceAbstraction,
       InternalUserDecryptionOptionsServiceAbstraction,
       GlobalStateProvider,
@@ -630,6 +625,7 @@ const safeProviders: SafeProvider[] = [
       AvatarServiceAbstraction,
       LOGOUT_CALLBACK,
       BillingAccountProfileStateService,
+      TokenServiceAbstraction,
     ],
   }),
   safeProvider({
@@ -695,7 +691,6 @@ const safeProviders: SafeProvider[] = [
       EnvironmentService,
       TokenServiceAbstraction,
       MigrationRunner,
-      STATE_SERVICE_USE_CACHE,
     ],
   }),
   safeProvider({
@@ -959,8 +954,8 @@ const safeProviders: SafeProvider[] = [
     deps: [DevicesApiServiceAbstraction],
   }),
   safeProvider({
-    provide: DeviceTrustCryptoServiceAbstraction,
-    useClass: DeviceTrustCryptoService,
+    provide: DeviceTrustServiceAbstraction,
+    useClass: DeviceTrustService,
     deps: [
       KeyGenerationServiceAbstraction,
       CryptoFunctionServiceAbstraction,
@@ -1068,7 +1063,6 @@ const safeProviders: SafeProvider[] = [
     useClass: OrganizationBillingService,
     deps: [
       ApiServiceAbstraction,
-      BillingApiServiceAbstraction,
       CryptoServiceAbstraction,
       EncryptService,
       I18nServiceAbstraction,
