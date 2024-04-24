@@ -9,6 +9,7 @@ import { VAULT_TIMEOUT } from "../../services/vault-timeout/vault-timeout-settin
 import { CsprngArray } from "../../types/csprng";
 import { UserId } from "../../types/guid";
 import { UserKey, MasterKey, PinKey } from "../../types/key";
+import { VaultTimeoutStringType } from "../../types/vault-timeout.type";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { EncryptService } from "../abstractions/encrypt.service";
 import { KeyGenerationService } from "../abstractions/key-generation.service";
@@ -216,7 +217,7 @@ describe("cryptoService", () => {
 
     describe("Auto Key refresh", () => {
       it("sets an Auto key if vault timeout is set to 'never'", async () => {
-        await stateProvider.setUserState(VAULT_TIMEOUT, "never", mockUserId);
+        await stateProvider.setUserState(VAULT_TIMEOUT, VaultTimeoutStringType.Never, mockUserId);
 
         await cryptoService.setUserKey(mockUserKey, mockUserId);
 

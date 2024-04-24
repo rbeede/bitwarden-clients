@@ -41,7 +41,7 @@ import {
   DefaultThemeStateService,
   ThemeStateService,
 } from "@bitwarden/common/platform/theming/theme-state.service";
-import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 
 import { PolicyListService } from "../admin-console/core/policy-list.service";
 import { HtmlStorageService } from "../core/html-storage.service";
@@ -74,7 +74,7 @@ const safeProviders: SafeProvider[] = [
     provide: DEFAULT_VAULT_TIMEOUT,
     deps: [PlatformUtilsServiceAbstraction],
     useFactory: (platformUtilsService: PlatformUtilsServiceAbstraction): VaultTimeout =>
-      platformUtilsService.isDev() ? "never" : 15,
+      platformUtilsService.isDev() ? VaultTimeoutStringType.Never : 15,
   }),
   safeProvider({
     provide: APP_INITIALIZER as SafeInjectionToken<() => void>,

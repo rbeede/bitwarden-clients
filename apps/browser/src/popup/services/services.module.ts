@@ -81,6 +81,7 @@ import {
 } from "@bitwarden/common/platform/state";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { UsernameGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/username";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService as FolderServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -160,7 +161,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider(PopupCloseWarningService),
   safeProvider({
     provide: DEFAULT_VAULT_TIMEOUT,
-    useValue: "onRestart",
+    useValue: VaultTimeoutStringType.OnRestart,
   }),
   safeProvider({
     provide: APP_INITIALIZER as SafeInjectionToken<() => Promise<void>>,

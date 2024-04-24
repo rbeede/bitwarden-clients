@@ -22,6 +22,7 @@ import {
   UserPrivateKey,
   UserPublicKey,
 } from "../../types/key";
+import { VaultTimeoutStringType } from "../../types/vault-timeout.type";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { CryptoService as CryptoServiceAbstraction } from "../abstractions/crypto.service";
 import { EncryptService } from "../abstractions/encrypt.service";
@@ -855,7 +856,7 @@ export class CryptoService implements CryptoServiceAbstraction {
           this.stateProvider.getUserState$(VAULT_TIMEOUT, userId),
         );
 
-        shouldStoreKey = vaultTimeout == "never";
+        shouldStoreKey = vaultTimeout == VaultTimeoutStringType.Never;
         break;
       }
       case KeySuffixOptions.Pin: {

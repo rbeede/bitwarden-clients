@@ -23,7 +23,7 @@ import {
   VAULT_TIMEOUT_ACTION,
 } from "../../services/vault-timeout/vault-timeout-settings.state";
 import { UserId } from "../../types/guid";
-import { VaultTimeout } from "../../types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutStringType } from "../../types/vault-timeout.type";
 
 import { VaultTimeoutSettingsService } from "./vault-timeout-settings.service";
 
@@ -226,18 +226,18 @@ describe("VaultTimeoutSettingsService", () => {
       [null, null, 15], // no policy, no vault timeout, falls back to default
       [30, 90, 30], // policy overrides vault timeout
       [30, 15, 15], // policy doesn't override vault timeout when it's within acceptable range
-      [90, "never", 90], // policy overrides vault timeout when it's "never"
-      [null, "never", "never"], // no policy, persist "never" vault timeout
+      [90, VaultTimeoutStringType.Never, 90], // policy overrides vault timeout when it's "never"
+      [null, VaultTimeoutStringType.Never, VaultTimeoutStringType.Never], // no policy, persist "never" vault timeout
       [90, 0, 0], // policy doesn't override vault timeout when it's 0 (immediate)
       [null, 0, 0], // no policy, persist 0 (immediate) vault timeout
-      [90, "onRestart", 90], // policy overrides vault timeout when it's "onRestart"
-      [null, "onRestart", "onRestart"], // no policy, persist "onRestart" vault timeout
-      [90, "onLocked", 90], // policy overrides vault timeout when it's "onLocked"
-      [null, "onLocked", "onLocked"], // no policy, persist "onLocked" vault timeout
-      [90, "onSleep", 90], // policy overrides vault timeout when it's "onSleep"
-      [null, "onSleep", "onSleep"], // no policy, persist "onSleep" vault timeout
-      [90, "onIdle", 90], // policy overrides vault timeout when it's "onIdle"
-      [null, "onIdle", "onIdle"], // no policy, persist "onIdle" vault timeout
+      [90, VaultTimeoutStringType.OnRestart, 90], // policy overrides vault timeout when it's "onRestart"
+      [null, VaultTimeoutStringType.OnRestart, VaultTimeoutStringType.OnRestart], // no policy, persist "onRestart" vault timeout
+      [90, VaultTimeoutStringType.OnLocked, 90], // policy overrides vault timeout when it's "onLocked"
+      [null, VaultTimeoutStringType.OnLocked, VaultTimeoutStringType.OnLocked], // no policy, persist "onLocked" vault timeout
+      [90, VaultTimeoutStringType.OnSleep, 90], // policy overrides vault timeout when it's "onSleep"
+      [null, VaultTimeoutStringType.OnSleep, VaultTimeoutStringType.OnSleep], // no policy, persist "onSleep" vault timeout
+      [90, VaultTimeoutStringType.OnIdle, 90], // policy overrides vault timeout when it's "onIdle"
+      [null, VaultTimeoutStringType.OnIdle, VaultTimeoutStringType.OnIdle], // no policy, persist "onIdle" vault timeout
     ])(
       "when policy is %s, and vault timeout is %s, returns %s",
       async (policy, vaultTimeout, expected) => {

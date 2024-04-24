@@ -55,6 +55,7 @@ import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/s
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { DialogService } from "@bitwarden/components";
 
@@ -140,7 +141,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: DEFAULT_VAULT_TIMEOUT,
-    useValue: "onRestart",
+    useValue: VaultTimeoutStringType.OnRestart,
   }),
   safeProvider({
     provide: I18nServiceAbstraction,

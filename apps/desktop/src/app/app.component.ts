@@ -41,7 +41,7 @@ import { BiometricStateService } from "@bitwarden/common/platform/biometrics/bio
 import { StateEventRunnerService } from "@bitwarden/common/platform/state";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { UserId } from "@bitwarden/common/types/guid";
-import { VaultTimeout } from "@bitwarden/common/types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -422,13 +422,13 @@ export class AppComponent implements OnInit, OnDestroy {
             break;
           }
           case "systemSuspended":
-            await this.checkForSystemTimeout("onSleep");
+            await this.checkForSystemTimeout(VaultTimeoutStringType.OnSleep);
             break;
           case "systemLocked":
-            await this.checkForSystemTimeout("onLocked");
+            await this.checkForSystemTimeout(VaultTimeoutStringType.OnLocked);
             break;
           case "systemIdle":
-            await this.checkForSystemTimeout("onIdle");
+            await this.checkForSystemTimeout(VaultTimeoutStringType.OnIdle);
             break;
           case "openLoginApproval":
             if (message.notificationId != null) {

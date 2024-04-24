@@ -16,7 +16,7 @@ import { Utils } from "../../platform/misc/utils";
 import { Account } from "../../platform/models/domain/account";
 import { StateEventRunnerService } from "../../platform/state";
 import { UserId } from "../../types/guid";
-import { VaultTimeout } from "../../types/vault-timeout.type";
+import { VaultTimeout, VaultTimeoutStringType } from "../../types/vault-timeout.type";
 import { CipherService } from "../../vault/abstractions/cipher.service";
 import { CollectionService } from "../../vault/abstractions/collection.service";
 import { FolderService } from "../../vault/abstractions/folder/folder.service.abstraction";
@@ -208,7 +208,13 @@ describe("VaultTimeoutService", () => {
       },
     );
 
-    it.each(["never", "onRestart", "onLocked", "onSleep", "onIdle"])(
+    it.each([
+      VaultTimeoutStringType.Never,
+      VaultTimeoutStringType.OnRestart,
+      VaultTimeoutStringType.OnLocked,
+      VaultTimeoutStringType.OnSleep,
+      VaultTimeoutStringType.OnIdle,
+    ])(
       "does not log out or lock a user who has %s as their vault timeout",
       async (vaultTimeout) => {
         setupAccounts({

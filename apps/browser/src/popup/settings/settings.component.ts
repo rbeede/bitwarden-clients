@@ -32,7 +32,11 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
-import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
+import {
+  VaultTimeout,
+  VaultTimeoutOption,
+  VaultTimeoutStringType,
+} from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 import { SetPinComponent } from "../../auth/popup/components/set-pin.component";
@@ -138,19 +142,28 @@ export class SettingsComponent implements OnInit {
     ];
 
     if (showOnLocked) {
-      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: "onLocked" });
+      this.vaultTimeoutOptions.push({
+        name: this.i18nService.t("onLocked"),
+        value: VaultTimeoutStringType.OnLocked,
+      });
     }
 
-    this.vaultTimeoutOptions.push({ name: this.i18nService.t("onRestart"), value: "onRestart" });
-    this.vaultTimeoutOptions.push({ name: this.i18nService.t("never"), value: "never" });
+    this.vaultTimeoutOptions.push({
+      name: this.i18nService.t("onRestart"),
+      value: VaultTimeoutStringType.OnRestart,
+    });
+    this.vaultTimeoutOptions.push({
+      name: this.i18nService.t("never"),
+      value: VaultTimeoutStringType.Never,
+    });
 
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
 
     let timeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(activeAccount.id),
     );
-    if (timeout === "onLocked" && !showOnLocked) {
-      timeout = "onRestart";
+    if (timeout === VaultTimeoutStringType.OnLocked && !showOnLocked) {
+      timeout = VaultTimeoutStringType.OnRestart;
     }
     const pinStatus = await this.vaultTimeoutSettingsService.isPinLockSet();
 

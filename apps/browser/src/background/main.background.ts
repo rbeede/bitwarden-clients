@@ -157,6 +157,7 @@ import { SendStateProvider } from "@bitwarden/common/tools/send/services/send-st
 import { SendService } from "@bitwarden/common/tools/send/services/send.service";
 import { InternalSendService as InternalSendServiceAbstraction } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService as CollectionServiceAbstraction } from "@bitwarden/common/vault/abstractions/collection.service";
 import { Fido2AuthenticatorService as Fido2AuthenticatorServiceAbstraction } from "@bitwarden/common/vault/abstractions/fido2/fido2-authenticator.service.abstraction";
@@ -570,7 +571,7 @@ export default class MainBackground {
       this.biometricStateService,
       this.stateProvider,
       this.logService,
-      "onRestart", // default vault timeout
+      VaultTimeoutStringType.OnRestart, // default vault timeout
     );
 
     this.apiService = new ApiService(
@@ -1285,7 +1286,7 @@ export default class MainBackground {
     const currentVaultTimeout = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(activeAccount.id),
     );
-    return currentVaultTimeout == "never" ? false : true;
+    return currentVaultTimeout == VaultTimeoutStringType.Never ? false : true;
   }
 
   async collectPageDetailsForContentScript(tab: any, sender: string, frameId: number = null) {

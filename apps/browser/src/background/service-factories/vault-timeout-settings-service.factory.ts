@@ -1,5 +1,6 @@
 import { VaultTimeoutSettingsService as AbstractVaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/services/vault-timeout/vault-timeout-settings.service";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 
 import {
   policyServiceFactory,
@@ -69,7 +70,7 @@ export function vaultTimeoutSettingsServiceFactory(
         await biometricStateServiceFactory(cache, opts),
         await stateProviderFactory(cache, opts),
         await logServiceFactory(cache, opts),
-        "onRestart", // default vault timeout
+        VaultTimeoutStringType.OnRestart, // default vault timeout
       ),
   );
 }

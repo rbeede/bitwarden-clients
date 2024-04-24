@@ -24,7 +24,11 @@ import { ThemeType, KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { VaultTimeout, VaultTimeoutOption } from "@bitwarden/common/types/vault-timeout.type";
+import {
+  VaultTimeout,
+  VaultTimeoutOption,
+  VaultTimeoutStringType,
+} from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
@@ -165,17 +169,20 @@ export class SettingsComponent implements OnInit {
       { name: this.i18nService.t("thirtyMinutes"), value: 30 },
       { name: this.i18nService.t("oneHour"), value: 60 },
       { name: this.i18nService.t("fourHours"), value: 240 },
-      { name: this.i18nService.t("onIdle"), value: "onIdle" },
-      { name: this.i18nService.t("onSleep"), value: "onSleep" },
+      { name: this.i18nService.t("onIdle"), value: VaultTimeoutStringType.OnIdle },
+      { name: this.i18nService.t("onSleep"), value: VaultTimeoutStringType.OnSleep },
     ];
 
     if (this.platformUtilsService.getDevice() !== DeviceType.LinuxDesktop) {
-      this.vaultTimeoutOptions.push({ name: this.i18nService.t("onLocked"), value: "onLocked" });
+      this.vaultTimeoutOptions.push({
+        name: this.i18nService.t("onLocked"),
+        value: VaultTimeoutStringType.OnLocked,
+      });
     }
 
     this.vaultTimeoutOptions = this.vaultTimeoutOptions.concat([
-      { name: this.i18nService.t("onRestart"), value: "onRestart" },
-      { name: this.i18nService.t("never"), value: "never" },
+      { name: this.i18nService.t("onRestart"), value: VaultTimeoutStringType.OnRestart },
+      { name: this.i18nService.t("never"), value: VaultTimeoutStringType.Never },
     ]);
 
     const localeOptions: any[] = [];
