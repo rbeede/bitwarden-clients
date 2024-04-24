@@ -113,6 +113,7 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendStateProvider } from "@bitwarden/common/tools/send/services/send-state.provider";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service";
 import { UserId } from "@bitwarden/common/types/guid";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/services/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/services/collection.service";
@@ -393,7 +394,7 @@ export class Main {
       this.biometricStateService,
       this.stateProvider,
       this.logService,
-      null, // no default vault timeout since there is no vault timeout on the CLI
+      VaultTimeoutStringType.Never, // default vault timeout
     );
 
     this.apiService = new NodeApiService(
