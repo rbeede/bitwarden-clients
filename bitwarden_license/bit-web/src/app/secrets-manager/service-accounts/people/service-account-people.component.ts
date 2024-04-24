@@ -41,7 +41,7 @@ export class ServiceAccountPeopleComponent implements OnInit, OnDestroy {
         }),
     ),
     catchError(async () => {
-      await this.router.navigate(["/sm", this.organizationId, "service-accounts"]);
+      await this.router.navigate(["/sm", this.organizationId, "machine-accounts"]);
       return undefined;
     }),
   );
@@ -196,7 +196,7 @@ export class ServiceAccountPeopleComponent implements OnInit, OnDestroy {
     selectedPolicies: ApItemValueType[],
   ): Promise<void> {
     if (showAccessRemovalWarning) {
-      await this.router.navigate(["sm", this.organizationId, "service-accounts"]);
+      await this.router.navigate(["sm", this.organizationId, "machine-accounts"]);
     } else if (
       this.accessPolicySelectorService.isAccessRemoval(currentAccessPolicies, selectedPolicies)
     ) {
