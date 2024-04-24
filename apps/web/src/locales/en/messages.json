@@ -8049,5 +8049,8 @@
   },
   "collectionItemSelect": {
     "message": "Select collection item"
+  },
+  "noCollectionsSelected": {
+    "message": "You have not selected any collections."
   }
 }

@@ -81,4 +81,8 @@ export class VaultCollectionRowComponent {
   protected deleteCollection() {
     this.onEvent.next({ type: "delete", items: [{ collection: this.collection }] });
   }
+
+  protected get isUnassignedCollection() {
+    return this.collection.id == Unassigned;
+  }
 }

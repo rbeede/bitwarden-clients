@@ -70,6 +70,17 @@ export class BulkCollectionAssignmentDialogComponent implements OnDestroy, OnIni
   ) {}
 
   async ngOnInit() {
+    // If no ciphers are passed in, close the dialog
+    if (this.params.ciphers == null || this.params.ciphers.length < 1) {
+      this.platformUtilsService.showToast(
+        "error",
+        this.i18nService.t("errorOccurred"),
+        this.i18nService.t("nothingSelected"),
+      );
+      this.dialogRef.close(BulkCollectionAssignmentDialogResult.Canceled);
+      return;
+    }
+
     const v1FCEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.FlexibleCollectionsV1,
       false,
@@ -89,9 +100,10 @@ export class BulkCollectionAssignmentDialogComponent implements OnDestroy, OnIni
       this.platformUtilsService.showToast(
         "error",
         this.i18nService.t("errorOccurred"),
-        this.i18nService.t("nothingSelected"),
+        this.i18nService.t("missingPermissions"),
       );
       this.dialogRef.close(BulkCollectionAssignmentDialogResult.Canceled);
+      return;
     }
 
     this.totalItemCount = this.params.ciphers.length;

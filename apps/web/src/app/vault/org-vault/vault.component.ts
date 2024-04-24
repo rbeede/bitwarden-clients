@@ -632,7 +632,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       } else if (event.type === "viewCollectionAccess") {
         await this.editCollection(event.item, CollectionDialogTabType.Access);
       } else if (event.type === "bulkEditCollectionAccess") {
-        await this.bulkEditCollectionAccess(event.items);
+        await this.bulkEditCollectionAccess(event.items, this.organization);
       } else if (event.type === "assignToCollections") {
         await this.bulkAssignToCollections(event.items);
       } else if (event.type === "viewEvents") {
@@ -721,7 +721,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       },
     });
     /**
-     
+
      const [modal] = await this.modalService.openViewRef(
      CollectionsComponent,
      this.collectionsModalRef,
@@ -737,7 +737,7 @@ export class VaultComponent implements OnInit, OnDestroy {
      });
      },
      );
-     
+
      */
 
     if ((await lastValueFrom(dialog.closed)) == CollectionsDialogResult.Saved) {
@@ -907,6 +907,16 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!c.edit) {
+      this.platformUtilsService.showToast(
+        "error",
+        this.i18nService.t("errorOccurred"),
+        this.i18nService.t("missingPermissions"),
+      );
+
+      return;
+    }
+
     const permanent = c.isDeleted;
 
     const confirmed = await this.dialogService.openSimpleDialog({
@@ -990,6 +1000,17 @@ export class VaultComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    if (collections?.some((c) => !c.canDelete(organization)) || ciphers?.some((c) => !c.edit)) {
+      this.platformUtilsService.showToast(
+        "error",
+        this.i18nService.t("errorOccurred"),
+        this.i18nService.t("missingPermissions"),
+      );
+
+      return;
+    }
+
     const dialog = openBulkDeleteDialog(this.dialogService, {
       data: {
         permanent: this.filter.type === "trash",
@@ -1108,13 +1129,26 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
   }
 
-  async bulkEditCollectionAccess(collections: CollectionView[]): Promise<void> {
+  async bulkEditCollectionAccess(
+    collections: CollectionView[],
+    organization: Organization,
+  ): Promise<void> {
     if (collections.length === 0) {
       this.platformUtilsService.showToast(
         "error",
         this.i18nService.t("errorOccurred"),
-        this.i18nService.t("nothingSelected"),
+        this.i18nService.t("noCollectionsSelected"),
       );
+      return;
+    }
+
+    if (collections.some((c) => !c.canEdit(organization, this.flexibleCollectionsV1Enabled))) {
+      this.platformUtilsService.showToast(
+        "error",
+        this.i18nService.t("errorOccurred"),
+        this.i18nService.t("missingPermissions"),
+      );
+
       return;
     }
 
