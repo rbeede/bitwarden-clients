@@ -172,10 +172,11 @@ export class VaultItemsComponent {
     const items: VaultItem[] = [].concat(collections).concat(ciphers);
 
     this.selection.clear();
+    // Every item except for the Unassigned collection is selectable, individual bulk actions check the user's permission
     this.editableItems = items.filter(
       (item) =>
         item.cipher !== undefined ||
-        (item.collection !== undefined && this.canDeleteCollection(item.collection)),
+        (item.collection !== undefined && item.collection.id !== Unassigned),
     );
     this.dataSource.data = items;
   }
