@@ -7,7 +7,6 @@ import { InfiniteScrollModule } from "ngx-infinite-scroll";
 import { ToastrModule } from "ngx-toastr";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AnonLayoutComponent } from "@bitwarden/auth/angular";
 import {
   AsyncActionsModule,
   AvatarModule,
@@ -81,7 +80,6 @@ import "./locales";
     TabsModule,
     ToggleGroupModule,
     TypographyModule,
-    AnonLayoutComponent,
 
     // Web specific
   ],
@@ -120,7 +118,6 @@ import "./locales";
     TabsModule,
     ToggleGroupModule,
     TypographyModule,
-    AnonLayoutComponent,
 
     // Web specific
   ],

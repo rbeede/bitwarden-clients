@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
+import { RouterModule } from "@angular/router";
 
-import { SharedModule } from "../shared";
+import { AnonLayoutComponent } from "./anon-layout.component";
 
 @Component({
   standalone: true,
   templateUrl: "anon-layout-wrapper.component.html",
-  imports: [SharedModule],
+  imports: [AnonLayoutComponent, RouterModule],
 })
 export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
   async ngOnInit() {
