@@ -908,12 +908,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
 
     if (!c.edit) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("missingPermissions"),
-      );
-
+      this.showMissingPermissionsError();
       return;
     }
 
@@ -944,11 +939,7 @@ export class VaultComponent implements OnInit, OnDestroy {
 
   async deleteCollection(collection: CollectionView): Promise<void> {
     if (!collection.canDelete(this.organization)) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("missingPermissions"),
-      );
+      this.showMissingPermissionsError();
       return;
     }
     const confirmed = await this.dialogService.openSimpleDialog({
@@ -1002,12 +993,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
 
     if (collections?.some((c) => !c.canDelete(organization)) || ciphers?.some((c) => !c.edit)) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("missingPermissions"),
-      );
-
+      this.showMissingPermissionsError();
       return;
     }
 
@@ -1143,12 +1129,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
 
     if (collections.some((c) => !c.canEdit(organization, this.flexibleCollectionsV1Enabled))) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("missingPermissions"),
-      );
-
+      this.showMissingPermissionsError();
       return;
     }
 
@@ -1249,6 +1230,14 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   protected readonly CollectionDialogTabType = CollectionDialogTabType;
+
+  private showMissingPermissionsError() {
+    this.platformUtilsService.showToast(
+      "error",
+      this.i18nService.t("errorOccurred"),
+      this.i18nService.t("missingPermissions"),
+    );
+  }
 }
 
 /**
