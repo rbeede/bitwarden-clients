@@ -693,11 +693,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   async deleteCollection(collection: CollectionView): Promise<void> {
     const organization = await this.organizationService.get(collection.organizationId);
     if (!collection.canDelete(organization)) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("missingPermissions"),
-      );
+      this.showMissingPermissionsError();
       return;
     }
     const confirmed = await this.dialogService.openSimpleDialog({
@@ -810,6 +806,11 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!c.edit) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
     const permanent = c.isDeleted;
 
     const confirmed = await this.dialogService.openSimpleDialog({
@@ -852,6 +853,15 @@ export class VaultComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    if (
+      collections?.some((c) => !c.canDelete(organizations.find((o) => o.id == c.organizationId))) ||
+      ciphers?.some((c) => !c.edit)
+    ) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
     const dialog = openBulkDeleteDialog(this.dialogService, {
       data: {
         permanent: this.filter.type === "trash",
@@ -948,6 +958,12 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (ciphers.some((c) => c.organizationId != null)) {
+      // You cannot move ciphers between organizations
+      this.showMissingPermissionsError();
+      return;
+    }
+
     if (ciphers.length === 0) {
       this.platformUtilsService.showToast(
         "error",
@@ -1008,6 +1024,14 @@ export class VaultComponent implements OnInit, OnDestroy {
       queryParamsHandling: "merge",
       replaceUrl: true,
     });
+  }
+
+  private showMissingPermissionsError() {
+    this.platformUtilsService.showToast(
+      "error",
+      this.i18nService.t("errorOccurred"),
+      this.i18nService.t("missingPermissions"),
+    );
   }
 }
 
