@@ -176,6 +176,16 @@ export class Main {
     // Note: secure storage service is not available and should not be called in the main background process.
     const illegalSecureStorageService = new IllegalSecureStorageService();
 
+    const messageSubject = new Subject<Message<object>>();
+    this.messagingService = MessageSender.combine(
+      new SubjectMessageSender(messageSubject), // For local messages
+      new ElectronMainMessagingService(this.windowMain),
+    );
+
+    messageSubject.asObservable().subscribe((message) => {
+      this.messagingMain.onMessage(message);
+    });
+
     this.tokenService = new TokenService(
       singleUserStateProvider,
       globalStateProvider,
@@ -184,6 +194,7 @@ export class Main {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
+      this.messagingService,
     );
 
     this.migrationRunner = new MigrationRunner(
@@ -223,16 +234,6 @@ export class Main {
     this.messagingMain = new MessagingMain(this, this.stateService, this.desktopSettingsService);
     this.updaterMain = new UpdaterMain(this.i18nService, this.windowMain);
     this.trayMain = new TrayMain(this.windowMain, this.i18nService, this.desktopSettingsService);
-
-    const messageSubject = new Subject<Message<object>>();
-    this.messagingService = MessageSender.combine(
-      new SubjectMessageSender(messageSubject), // For local messages
-      new ElectronMainMessagingService(this.windowMain),
-    );
-
-    messageSubject.asObservable().subscribe((message) => {
-      this.messagingMain.onMessage(message);
-    });
 
     this.powerMonitorMain = new PowerMonitorMain(this.messagingService);
     this.menuMain = new MenuMain(

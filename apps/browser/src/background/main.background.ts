@@ -517,6 +517,7 @@ export default class MainBackground {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
+      this.messagingService,
     );
 
     const migrationRunner = new MigrationRunner(

@@ -23,6 +23,10 @@ import {
   logServiceFactory,
 } from "../../../platform/background/service-factories/log-service.factory";
 import {
+  MessagingServiceInitOptions,
+  messagingServiceFactory,
+} from "../../../platform/background/service-factories/messaging-service.factory";
+import {
   PlatformUtilsServiceInitOptions,
   platformUtilsServiceFactory,
 } from "../../../platform/background/service-factories/platform-utils-service.factory";
@@ -44,7 +48,8 @@ export type TokenServiceInitOptions = TokenServiceFactoryOptions &
   SecureStorageServiceInitOptions &
   KeyGenerationServiceInitOptions &
   EncryptServiceInitOptions &
-  LogServiceInitOptions;
+  LogServiceInitOptions &
+  MessagingServiceInitOptions;
 
 export function tokenServiceFactory(
   cache: { tokenService?: AbstractTokenService } & CachedServices,
@@ -63,6 +68,7 @@ export function tokenServiceFactory(
         await keyGenerationServiceFactory(cache, opts),
         await encryptServiceFactory(cache, opts),
         await logServiceFactory(cache, opts),
+        await messagingServiceFactory(cache, opts),
       ),
   );
 }

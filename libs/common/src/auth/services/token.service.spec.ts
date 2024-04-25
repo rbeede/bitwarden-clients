@@ -6,6 +6,7 @@ import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
+import { MessagingService } from "../../platform/abstractions/messaging.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
@@ -35,6 +36,7 @@ describe("TokenService", () => {
   let keyGenerationService: MockProxy<KeyGenerationService>;
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
+  let messagingService: MockProxy<MessagingService>;
 
   const memoryVaultTimeoutAction = VaultTimeoutAction.LogOut;
   const memoryVaultTimeout = 30;
@@ -92,6 +94,7 @@ describe("TokenService", () => {
     keyGenerationService = mock<KeyGenerationService>();
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
+    messagingService = mock<MessagingService>();
 
     const supportsSecureStorage = false; // default to false; tests will override as needed
     tokenService = createTokenService(supportsSecureStorage);
@@ -2280,6 +2283,7 @@ describe("TokenService", () => {
       keyGenerationService,
       encryptService,
       logService,
+      messagingService,
     );
   }
 });

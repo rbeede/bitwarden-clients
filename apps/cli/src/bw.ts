@@ -335,6 +335,7 @@ export class Main {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
+      this.messagingService,
     );
 
     const migrationRunner = new MigrationRunner(
