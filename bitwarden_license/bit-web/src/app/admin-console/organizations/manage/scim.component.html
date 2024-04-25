@@ -10,7 +10,7 @@
   ></i>
   <span class="tw-sr-only">{{ "loading" | i18n }}</span>
 </div>
-<form [bitSubmit]="submit" [appApiAction]="formPromise" [formGroup]="formData" *ngIf="!loading">
+<form [bitSubmit]="submit" [formGroup]="formData" *ngIf="!loading">
   <bit-form-control>
     <input type="checkbox" bitCheckbox [formControl]="enabled" />
     <bit-label>{{ "scimEnabledCheckboxDesc" | i18n }}</bit-label>
@@ -36,26 +36,21 @@
       formControlName="clientSecret"
       id="clientSecret"
     />
-    <ng-container>
-      <button
-        type="button"
-        bitSuffix
-        [disabled]="$any(rotateButton).loading"
-        [bitIconButton]="showScimKey ? 'bwi-eye-slash' : 'bwi-eye'"
-        [bitAction]="toggleScimKey"
-        [appA11yTitle]="'toggleVisibility' | i18n"
-      ></button>
-    </ng-container>
-    <ng-container #rotateButton [appApiAction]="rotatePromise">
-      <button
-        [loading]="$any(rotateButton).loading"
-        type="button"
-        bitSuffix
-        bitIconButton="bwi-generate"
-        [bitAction]="rotateScimKey"
-        [appA11yTitle]="'rotateScimKey' | i18n"
-      ></button>
-    </ng-container>
+    <button
+      type="button"
+      bitSuffix
+      [bitIconButton]="showScimKey ? 'bwi-eye-slash' : 'bwi-eye'"
+      [bitAction]="toggleScimKey"
+      [appA11yTitle]="'toggleVisibility' | i18n"
+    ></button>
+    <button
+      type="button"
+      bitSuffix
+      bitIconButton="bwi-generate"
+      [bitAction]="rotateScimKey"
+      bitFormButton
+      [appA11yTitle]="'rotateScimKey' | i18n"
+    ></button>
     <button
       type="button"
       bitSuffix
