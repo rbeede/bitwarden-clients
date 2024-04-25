@@ -6,6 +6,7 @@ import {
   OrganizationUserStatusType,
   ProviderUserStatusType,
 } from "@bitwarden/common/admin-console/enums";
+import { ProviderUserUserDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-user.response";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -28,8 +29,8 @@ type BulkStatusEntry = {
 };
 
 type BulkStatusDialogData = {
-  users: OrganizationUserView[];
-  filteredUsers: OrganizationUserView[];
+  users: OrganizationUserView[] | ProviderUserUserDetailsResponse[];
+  filteredUsers: OrganizationUserView[] | ProviderUserUserDetailsResponse[];
   request: Promise<ListResponse<OrganizationUserBulkResponse>>;
   successfullMessage: string;
 };
