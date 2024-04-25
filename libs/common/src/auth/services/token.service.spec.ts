@@ -10,10 +10,12 @@ import { MessagingService } from "../../platform/abstractions/messaging.service"
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
+import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
+import { CsprngArray } from "../../types/csprng";
 import { UserId } from "../../types/guid";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
-import { DecodedAccessToken, TokenService } from "./token.service";
+import { AccessTokenKey, DecodedAccessToken, TokenService } from "./token.service";
 import {
   ACCESS_TOKEN_DISK,
   ACCESS_TOKEN_MEMORY,
@@ -26,6 +28,8 @@ import {
   REFRESH_TOKEN_MEMORY,
   SECURITY_STAMP_MEMORY,
 } from "./token.state";
+
+// TODO: add specific tests for new secure storage scenarios.
 
 describe("TokenService", () => {
   let tokenService: TokenService;
@@ -216,6 +220,14 @@ describe("TokenService", () => {
       });
 
       describe("Disk storage tests (secure storage supported on platform)", () => {
+        const accessTokenKey = new SymmetricCryptoKey(
+          new Uint8Array(64) as CsprngArray,
+        ) as AccessTokenKey;
+
+        const accessTokenKeyB64 = {
+          keyB64:
+            "lI7lSoejJ1HsrTkRs2Ipm0x+YcZMKpgm7WQGCNjAWmFAyGOKossXwBJvvtbxcYDZ0G0XNY8Gp7DBXZV2tWAO5w==",
+        };
         beforeEach(() => {
           const supportsSecureStorage = true;
           tokenService = createTokenService(supportsSecureStorage);
@@ -229,13 +241,18 @@ describe("TokenService", () => {
             .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
             .stateSubject.next([userIdFromAccessToken, accessTokenJwt]);
 
-          keyGenerationService.createKey.mockResolvedValue("accessTokenKey" as any);
+          keyGenerationService.createKey.mockResolvedValue(accessTokenKey);
 
           const mockEncryptedAccessToken = "encryptedAccessToken";
 
           encryptService.encrypt.mockResolvedValue({
             encryptedString: mockEncryptedAccessToken,
           } as any);
+
+          // First call resolves to null to simulate no key in secure storage
+          // then resolves to the key to simulate the key being set in secure storage
+          // and retrieved successfully to ensure it was set.
+          secureStorageService.get.mockResolvedValueOnce(null).mockResolvedValue(accessTokenKeyB64);
 
           // Act
           await tokenService.setAccessToken(
@@ -248,7 +265,7 @@ describe("TokenService", () => {
           // assert that the AccessTokenKey was set in secure storage
           expect(secureStorageService.save).toHaveBeenCalledWith(
             accessTokenKeySecureStorageKey,
-            "accessTokenKey",
+            accessTokenKey,
             secureStorageOptions,
           );
 
