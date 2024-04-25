@@ -6,7 +6,8 @@
 >
   {{ "updateBrowserDesc" | i18n }}
   <a
-    class="!tw-text-contrast tw-font-bold"
+    bitLink
+    linkType="contrast"
     target="_blank"
     href="https://browser-update.org/update-browser.html"
     rel="noreferrer noopener"
@@ -22,7 +23,7 @@
   (onClose)="dismissBanner(VisibleVaultBanner.KDFSettings)"
 >
   {{ "lowKDFIterationsBanner" | i18n }}
-  <a class="!tw-text-contrast tw-font-bold" routerLink="/settings/security/security-keys">
+  <a bitLink linkType="contrast" routerLink="/settings/security/security-keys">
     {{ "changeKDFSettings" | i18n }}
   </a>
 </bit-banner>
@@ -41,7 +42,7 @@
   (onClose)="dismissBanner(VisibleVaultBanner.Premium)"
 >
   {{ "premiumUpgradeUnlockFeatures" | i18n }}
-  <a class="!tw-text-contrast tw-font-bold" routerLink="/settings/subscription/premium">
+  <a bitLink linkType="contrast" routerLink="/settings/subscription/premium">
     {{ "goPremium" | i18n }}
   </a>
 </bit-banner>
