@@ -11,6 +11,7 @@ export abstract class EncryptService {
     plainValue: Uint8Array,
     key?: SymmetricCryptoKey,
   ): Promise<EncArrayBuffer>;
+  abstract stringIsEncString(value: string): boolean;
   abstract decryptToUtf8(encString: EncString, key: SymmetricCryptoKey): Promise<string>;
   abstract decryptToBytes(encThing: Encrypted, key: SymmetricCryptoKey): Promise<Uint8Array>;
   abstract rsaEncrypt(data: Uint8Array, publicKey: Uint8Array): Promise<EncString>;

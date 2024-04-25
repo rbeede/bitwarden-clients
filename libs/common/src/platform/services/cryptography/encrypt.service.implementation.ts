@@ -63,6 +63,10 @@ export class EncryptServiceImplementation implements EncryptService {
     return new EncArrayBuffer(encBytes);
   }
 
+  stringIsEncString(value: string): boolean {
+    return EncString.parseEncryptedString(value) !== undefined;
+  }
+
   async decryptToUtf8(encString: EncString, key: SymmetricCryptoKey): Promise<string> {
     if (key == null) {
       throw new Error("No key provided for decryption.");
