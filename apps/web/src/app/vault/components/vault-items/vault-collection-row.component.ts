@@ -1,8 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, Input, Output } from "@angular/core";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 
@@ -21,12 +19,7 @@ import { RowHeightClass } from "./vault-items.component";
   selector: "tr[appVaultCollectionRow]",
   templateUrl: "vault-collection-row.component.html",
 })
-export class VaultCollectionRowComponent implements OnInit {
-  private _flexibleCollectionsV1FlagEnabled: boolean;
-  private get flexibleCollectionsV1Enabled(): boolean {
-    return this._flexibleCollectionsV1FlagEnabled && this.organization?.flexibleCollections;
-  }
-
+export class VaultCollectionRowComponent {
   protected RowHeightClass = RowHeightClass;
 
   @Input() disabled: boolean;
@@ -45,17 +38,7 @@ export class VaultCollectionRowComponent implements OnInit {
   @Input() checked: boolean;
   @Output() checkedToggled = new EventEmitter<void>();
 
-  constructor(
-    private i18nService: I18nService,
-    private configService: ConfigService,
-  ) {}
-
-  async ngOnInit() {
-    this._flexibleCollectionsV1FlagEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.FlexibleCollectionsV1,
-      false,
-    );
-  }
+  constructor(private i18nService: I18nService) {}
 
   get collectionGroups() {
     if (!(this.collection instanceof CollectionAdminView)) {
@@ -70,13 +53,10 @@ export class VaultCollectionRowComponent implements OnInit {
   }
 
   get permissionText() {
-    if (
-      (this.collection as CollectionAdminView).assigned ||
-      (this.flexibleCollectionsV1Enabled
-        ? this.organization.canEditAnyCollection(this._flexibleCollectionsV1FlagEnabled) ||
-          (this.collection.id == Unassigned && this.organization.isAdmin)
-        : this.organization.isAdmin)
-    ) {
+    if (this.collection.id == Unassigned && this.organization?.canEditUnassignedCiphers()) {
+      return this.i18nService.t("canEdit");
+    }
+    if ((this.collection as CollectionAdminView).assigned) {
       const permissionList = getPermissionList(this.organization?.flexibleCollections);
       return this.i18nService.t(
         permissionList.find((p) => p.perm === convertToPermission(this.collection))?.labelId,
