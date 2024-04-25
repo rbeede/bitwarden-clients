@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import { Observable } from "rxjs";
 
 import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banners.service";
 
@@ -8,9 +9,12 @@ import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banner
 })
 export class VaultBannersComponent implements OnInit {
   visibleBanners: VisibleVaultBanner[] = [];
+  premiumBannerVisible$: Observable<boolean>;
   VisibleVaultBanner = VisibleVaultBanner;
 
-  constructor(private vaultBannerService: VaultBannersService) {}
+  constructor(private vaultBannerService: VaultBannersService) {
+    this.premiumBannerVisible$ = this.vaultBannerService.shouldShowPremiumBanner();
+  }
 
   async ngOnInit(): Promise<void> {
     await this.determineVisibleBanners();
@@ -27,13 +31,11 @@ export class VaultBannersComponent implements OnInit {
     const showBrowserOutdated = await this.vaultBannerService.shouldShowUpdateBrowserBanner();
     const showVerifyEmail = await this.vaultBannerService.shouldShowVerifyEmailBanner();
     const showLowKdf = await this.vaultBannerService.shouldShowLowKDFBanner();
-    const showPremiumBanner = await this.vaultBannerService.shouldShowPremiumBanner();
 
     this.visibleBanners = [
       showBrowserOutdated ? VisibleVaultBanner.OutdatedBrowser : null,
       showVerifyEmail ? VisibleVaultBanner.VerifyEmail : null,
       showLowKdf ? VisibleVaultBanner.KDFSettings : null,
-      showPremiumBanner ? VisibleVaultBanner.Premium : null,
     ].filter(Boolean); // remove all falsy values, i.e. null
   }
 }

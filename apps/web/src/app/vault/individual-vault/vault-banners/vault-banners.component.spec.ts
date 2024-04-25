@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { By } from "@angular/platform-browser";
 import { mock } from "jest-mock-extended";
+import { BehaviorSubject } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { BannerModule } from "@bitwarden/components";
+import { BannerComponent, BannerModule } from "@bitwarden/components";
 
 import { LooseComponentsModule } from "../../../shared";
 
@@ -16,6 +18,7 @@ import { VaultBannersComponent } from "./vault-banners.component";
 describe("VaultBannersComponent", () => {
   let component: VaultBannersComponent;
   let fixture: ComponentFixture<VaultBannersComponent>;
+  const premiumBanner$ = new BehaviorSubject<boolean>(false);
 
   const bannerService = mock<VaultBannersService>({
     shouldShowPremiumBanner: jest.fn(),
@@ -26,7 +29,7 @@ describe("VaultBannersComponent", () => {
   });
 
   beforeEach(async () => {
-    bannerService.shouldShowPremiumBanner.mockResolvedValue(false);
+    bannerService.shouldShowPremiumBanner.mockReturnValue(premiumBanner$);
     bannerService.shouldShowUpdateBrowserBanner.mockResolvedValue(false);
     bannerService.shouldShowVerifyEmailBanner.mockResolvedValue(false);
     bannerService.shouldShowLowKDFBanner.mockResolvedValue(false);
@@ -66,13 +69,28 @@ describe("VaultBannersComponent", () => {
     fixture.detectChanges();
   });
 
+  describe("premiumBannerVisible$", () => {
+    it("shows premium banner", async () => {
+      premiumBanner$.next(true);
+
+      fixture.detectChanges();
+
+      const banner = fixture.debugElement.query(By.directive(BannerComponent));
+      expect(banner.componentInstance.bannerType).toBe("premium");
+    });
+
+    it("dismisses premium banner", async () => {
+      premiumBanner$.next(false);
+
+      fixture.detectChanges();
+
+      const banner = fixture.debugElement.query(By.directive(BannerComponent));
+      expect(banner).toBeNull();
+    });
+  });
+
   describe("determineVisibleBanner", () => {
     [
-      {
-        name: "Premium",
-        method: bannerService.shouldShowPremiumBanner,
-        banner: VisibleVaultBanner.Premium,
-      },
       {
         name: "OutdatedBrowser",
         method: bannerService.shouldShowUpdateBrowserBanner,

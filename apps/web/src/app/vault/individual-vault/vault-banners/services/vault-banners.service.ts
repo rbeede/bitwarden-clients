@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { firstValueFrom } from "rxjs";
+import { Observable, combineLatest, firstValueFrom, map } from "rxjs";
 
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
@@ -99,24 +99,25 @@ export class VaultBannersService {
   }
 
   /** Returns true when the premium banner should be shown */
-  async shouldShowPremiumBanner(): Promise<boolean> {
-    const canAccessPremium = await firstValueFrom(
+  shouldShowPremiumBanner(): Observable<boolean> {
+    return combineLatest([
       this.billingAccountProfileStateService.hasPremiumFromAnySource$,
+      this.premiumBannerState.state$,
+    ]).pipe(
+      map(([canAccessPremium, dismissedState]) => {
+        const shouldShowPremiumBanner =
+          !canAccessPremium && !this.platformUtilsService.isSelfHost();
+
+        // Check if nextPromptDate is in the past passed
+        if (shouldShowPremiumBanner && dismissedState?.nextPromptDate) {
+          const nextPromptDate = new Date(dismissedState.nextPromptDate);
+          const now = new Date();
+          return now >= nextPromptDate;
+        }
+
+        return shouldShowPremiumBanner;
+      }),
     );
-
-    const shouldShowPremiumBanner = !canAccessPremium && !this.platformUtilsService.isSelfHost();
-
-    const dismissedState = await firstValueFrom(this.premiumBannerState.state$);
-
-    // Check if nextPromptDate is in the past passed
-    if (shouldShowPremiumBanner && dismissedState?.nextPromptDate) {
-      const nextPromptDate = new Date(dismissedState.nextPromptDate);
-      const now = new Date();
-
-      return now >= nextPromptDate;
-    }
-
-    return shouldShowPremiumBanner;
   }
 
   /** Dismiss the given banner and perform any respective side effects */

@@ -74,7 +74,7 @@ describe("VaultBannersService", () => {
 
       service = TestBed.inject(VaultBannersService);
 
-      expect(await service.shouldShowPremiumBanner()).toBe(true);
+      expect(await firstValueFrom(service.shouldShowPremiumBanner())).toBe(true);
     });
 
     describe("dismissing", () => {
