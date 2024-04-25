@@ -1,4 +1,6 @@
-<auth-anon-layout>
+<!-- <div *ngIf="routeData$ | async as routeData"> -->
+<auth-anon-layout [title]="pageTitle">
   <router-outlet></router-outlet>
   <router-outlet slot="secondary" name="secondary"></router-outlet>
 </auth-anon-layout>
+<!-- </div> -->

@@ -197,12 +197,20 @@ const routes: Routes = [
     children: [
       {
         path: "sample-route",
-        component: LoginComponent, // replace with your component
-      },
-      {
-        path: "",
-        component: HintComponent, // just an example that shows secondary content. Replace with your component (or remove this secondary outlet entirely if not needed)
-        outlet: "secondary",
+        children: [
+          {
+            path: "",
+            component: LoginComponent, // replace with your component
+          },
+          {
+            path: "",
+            component: HintComponent, // just an example that shows secondary content. Replace with your component (or remove this secondary outlet entirely if not needed)
+            outlet: "secondary",
+          },
+        ],
+        data: {
+          pageTitle: "The Page Title",
+        },
       },
     ],
   },

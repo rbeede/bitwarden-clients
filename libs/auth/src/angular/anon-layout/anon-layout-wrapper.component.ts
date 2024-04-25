@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { RouterModule } from "@angular/router";
+import { ActivatedRoute, RouterModule } from "@angular/router";
 
 import { AnonLayoutComponent } from "./anon-layout.component";
 
@@ -9,6 +9,12 @@ import { AnonLayoutComponent } from "./anon-layout.component";
   imports: [AnonLayoutComponent, RouterModule],
 })
 export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
+  pageTitle: string;
+
+  constructor(private route: ActivatedRoute) {
+    this.pageTitle = this.route.snapshot.firstChild.data["pageTitle"];
+  }
+
   async ngOnInit() {
     document.body.classList.add("layout_frontend");
   }
