@@ -28,7 +28,7 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService as AccountServiceAbstraction } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
@@ -71,6 +71,7 @@ import { GlobalState } from "@bitwarden/common/platform/models/domain/global-sta
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
+import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 import { WebCryptoFunctionService } from "@bitwarden/common/platform/services/web-crypto-function.service";
 import {
   DerivedStateProvider,
@@ -108,6 +109,7 @@ import { DefaultBrowserStateService } from "../../platform/services/default-brow
 import I18nService from "../../platform/services/i18n.service";
 import { ForegroundPlatformUtilsService } from "../../platform/services/platform-utils/foreground-platform-utils.service";
 import { ForegroundDerivedStateProvider } from "../../platform/state/foreground-derived-state.provider";
+import { BrowserStorageServiceProvider } from "../../platform/storage/browser-storage-service.provider";
 import { ForegroundMemoryStorageService } from "../../platform/storage/foreground-memory-storage.service";
 import { fromChromeRuntimeMessaging } from "../../platform/utils/from-chrome-runtime-messaging";
 import { BrowserSendStateService } from "../../tools/popup/services/browser-send-state.service";
@@ -119,6 +121,10 @@ import { DebounceNavigationService } from "./debounce-navigation.service";
 import { InitService } from "./init.service";
 import { PopupCloseWarningService } from "./popup-close-warning.service";
 import { PopupSearchService } from "./popup-search.service";
+
+const OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE = new SafeInjectionToken<
+  AbstractStorageService & ObservableStorageService
+>("OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE");
 
 const needsBackgroundInit = BrowserPopupUtils.backgroundInitializationRequired();
 const isPrivateMode = BrowserPopupUtils.inPrivateMode();
@@ -244,8 +250,8 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
-    provide: DeviceTrustCryptoServiceAbstraction,
-    useFactory: getBgService<DeviceTrustCryptoServiceAbstraction>("deviceTrustCryptoService"),
+    provide: DeviceTrustServiceAbstraction,
+    useFactory: getBgService<DeviceTrustServiceAbstraction>("deviceTrustService"),
     deps: [],
   }),
   safeProvider({
@@ -381,6 +387,21 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE,
+    useFactory: (
+      regularMemoryStorageService: AbstractMemoryStorageService & ObservableStorageService,
+    ) => {
+      if (BrowserApi.isManifestVersion(2)) {
+        return regularMemoryStorageService;
+      }
+
+      return getBgService<AbstractStorageService & ObservableStorageService>(
+        "largeObjectMemoryStorageForStateProviders",
+      )();
+    },
+    deps: [OBSERVABLE_MEMORY_STORAGE],
+  }),
+  safeProvider({
     provide: OBSERVABLE_DISK_STORAGE,
     useExisting: AbstractStorageService,
   }),
@@ -466,7 +487,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: DerivedStateProvider,
     useClass: ForegroundDerivedStateProvider,
-    deps: [OBSERVABLE_MEMORY_STORAGE, NgZone],
+    deps: [StorageServiceProvider, NgZone],
   }),
   safeProvider({
     provide: AutofillSettingsServiceAbstraction,
@@ -541,6 +562,15 @@ const safeProviders: SafeProvider[] = [
       }
     },
     deps: [],
+  }),
+  safeProvider({
+    provide: StorageServiceProvider,
+    useClass: BrowserStorageServiceProvider,
+    deps: [
+      OBSERVABLE_DISK_STORAGE,
+      OBSERVABLE_MEMORY_STORAGE,
+      OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE,
+    ],
   }),
 ];
 

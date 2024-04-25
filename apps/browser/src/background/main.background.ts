@@ -30,7 +30,7 @@ import { ProviderService } from "@bitwarden/common/admin-console/services/provid
 import { AccountService as AccountServiceAbstraction } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
 import { KeyConnectorService as KeyConnectorServiceAbstraction } from "@bitwarden/common/auth/abstractions/key-connector.service";
@@ -45,7 +45,7 @@ import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/for
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
-import { DeviceTrustCryptoService } from "@bitwarden/common/auth/services/device-trust-crypto.service.implementation";
+import { DeviceTrustService } from "@bitwarden/common/auth/services/device-trust.service.implementation";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { KeyConnectorService } from "@bitwarden/common/auth/services/key-connector.service";
@@ -98,7 +98,9 @@ import { StateFactory } from "@bitwarden/common/platform/factories/state-factory
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency creation
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
+import { Lazy } from "@bitwarden/common/platform/misc/lazy";
 import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
@@ -111,7 +113,6 @@ import { KeyGenerationService } from "@bitwarden/common/platform/services/key-ge
 import { MemoryStorageService } from "@bitwarden/common/platform/services/memory-storage.service";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
-import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 import { SystemService } from "@bitwarden/common/platform/services/system.service";
 import { UserKeyInitService } from "@bitwarden/common/platform/services/user-key-init.service";
 import { WebCryptoFunctionService } from "@bitwarden/common/platform/services/web-crypto-function.service";
@@ -226,6 +227,7 @@ import { BackgroundPlatformUtilsService } from "../platform/services/platform-ut
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
 import { BackgroundDerivedStateProvider } from "../platform/state/background-derived-state.provider";
 import { BackgroundMemoryStorageService } from "../platform/storage/background-memory-storage.service";
+import { BrowserStorageServiceProvider } from "../platform/storage/browser-storage-service.provider";
 import { ForegroundMemoryStorageService } from "../platform/storage/foreground-memory-storage.service";
 import { fromChromeRuntimeMessaging } from "../platform/utils/from-chrome-runtime-messaging";
 import VaultTimeoutService from "../services/vault-timeout/vault-timeout.service";
@@ -246,6 +248,8 @@ export default class MainBackground {
   secureStorageService: AbstractStorageService;
   memoryStorageService: AbstractMemoryStorageService;
   memoryStorageForStateProviders: AbstractMemoryStorageService & ObservableStorageService;
+  largeObjectMemoryStorageForStateProviders: AbstractMemoryStorageService &
+    ObservableStorageService;
   i18nService: I18nServiceAbstraction;
   platformUtilsService: PlatformUtilsServiceAbstraction;
   logService: LogServiceAbstraction;
@@ -314,7 +318,7 @@ export default class MainBackground {
   configApiService: ConfigApiServiceAbstraction;
   devicesApiService: DevicesApiServiceAbstraction;
   devicesService: DevicesServiceAbstraction;
-  deviceTrustCryptoService: DeviceTrustCryptoServiceAbstraction;
+  deviceTrustService: DeviceTrustServiceAbstraction;
   authRequestService: AuthRequestServiceAbstraction;
   accountService: AccountServiceAbstraction;
   globalStateProvider: GlobalStateProvider;
@@ -402,34 +406,57 @@ export default class MainBackground {
       self,
     );
 
-    const mv3MemoryStorageCreator = (partitionName: string) => {
-      if (this.popupOnlyContext) {
-        return new ForegroundMemoryStorageService(partitionName);
+    // Creates a session key for mv3 storage of large memory items
+    const sessionKey = new Lazy(async () => {
+      // Key already in session storage
+      const sessionStorage = new BrowserMemoryStorageService();
+      const existingKey = await sessionStorage.get<SymmetricCryptoKey>("session-key");
+      if (existingKey) {
+        if (sessionStorage.valuesRequireDeserialization) {
+          return SymmetricCryptoKey.fromJSON(existingKey);
+        }
+        return existingKey;
       }
 
-      // TODO: Consider using multithreaded encrypt service in popup only context
+      // New key
+      const { derivedKey } = await this.keyGenerationService.createKeyWithPurpose(
+        128,
+        "ephemeral",
+        "bitwarden-ephemeral",
+      );
+      await sessionStorage.save("session-key", derivedKey);
+      return derivedKey;
+    });
+
+    const mv3MemoryStorageCreator = () => {
+      if (this.popupOnlyContext) {
+        return new ForegroundMemoryStorageService();
+      }
+
       return new LocalBackedSessionStorageService(
-        this.logService,
+        sessionKey,
+        this.storageService,
         new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, false),
-        this.keyGenerationService,
-        new BrowserLocalStorageService(),
-        new BrowserMemoryStorageService(),
         this.platformUtilsService,
-        partitionName,
+        this.logService,
       );
     };
 
     this.secureStorageService = this.storageService; // secure storage is not supported in browsers, so we use local storage and warn users when it is used
-    this.memoryStorageService = BrowserApi.isManifestVersion(3)
-      ? mv3MemoryStorageCreator("stateService")
-      : new MemoryStorageService();
     this.memoryStorageForStateProviders = BrowserApi.isManifestVersion(3)
-      ? mv3MemoryStorageCreator("stateProviders")
-      : new BackgroundMemoryStorageService();
+      ? new BrowserMemoryStorageService() // mv3 stores to storage.session
+      : new BackgroundMemoryStorageService(); // mv2 stores to memory
+    this.memoryStorageService = BrowserApi.isManifestVersion(3)
+      ? this.memoryStorageForStateProviders // manifest v3 can reuse the same storage. They are split for v2 due to lacking a good sync mechanism, which isn't true for v3
+      : new MemoryStorageService();
+    this.largeObjectMemoryStorageForStateProviders = BrowserApi.isManifestVersion(3)
+      ? mv3MemoryStorageCreator() // mv3 stores to local-backed session storage
+      : this.memoryStorageForStateProviders; // mv2 stores to the same location
 
-    const storageServiceProvider = new StorageServiceProvider(
+    const storageServiceProvider = new BrowserStorageServiceProvider(
       this.storageService,
       this.memoryStorageForStateProviders,
+      this.largeObjectMemoryStorageForStateProviders,
     );
 
     this.globalStateProvider = new DefaultGlobalStateProvider(storageServiceProvider);
@@ -466,9 +493,7 @@ export default class MainBackground {
       this.accountService,
       this.singleUserStateProvider,
     );
-    this.derivedStateProvider = new BackgroundDerivedStateProvider(
-      this.memoryStorageForStateProviders,
-    );
+    this.derivedStateProvider = new BackgroundDerivedStateProvider(storageServiceProvider);
     this.stateProvider = new DefaultStateProvider(
       this.activeUserStateProvider,
       this.singleUserStateProvider,
@@ -587,7 +612,7 @@ export default class MainBackground {
     this.userDecryptionOptionsService = new UserDecryptionOptionsService(this.stateProvider);
 
     this.devicesApiService = new DevicesApiServiceImplementation(this.apiService);
-    this.deviceTrustCryptoService = new DeviceTrustCryptoService(
+    this.deviceTrustService = new DeviceTrustService(
       this.keyGenerationService,
       this.cryptoFunctionService,
       this.cryptoService,
@@ -645,7 +670,7 @@ export default class MainBackground {
       this.encryptService,
       this.passwordStrengthService,
       this.policyService,
-      this.deviceTrustCryptoService,
+      this.deviceTrustService,
       this.authRequestService,
       this.userDecryptionOptionsService,
       this.globalStateProvider,
@@ -1071,7 +1096,8 @@ export default class MainBackground {
   async bootstrap() {
     this.containerService.attachToGlobal(self);
 
-    await this.stateService.init({ runMigrations: !this.isPrivateMode });
+    // Only the "true" background should run migrations
+    await this.stateService.init({ runMigrations: !this.popupOnlyContext });
 
     // This is here instead of in in the InitService b/c we don't plan for
     // side effects to run in the Browser InitService.
@@ -1081,20 +1107,22 @@ export default class MainBackground {
     await (this.eventUploadService as EventUploadService).init(true);
     this.twoFactorService.init();
 
-    if (!this.popupOnlyContext) {
-      await this.vaultTimeoutService.init(true);
-      this.fido2Background.init();
-      await this.runtimeBackground.init();
-      await this.notificationBackground.init();
-      this.filelessImporterBackground.init();
-      await this.commandsBackground.init();
-      await this.overlayBackground.init();
-      await this.tabsBackground.init();
-      this.contextMenusBackground?.init();
-      await this.idleBackground.init();
-      if (BrowserApi.isManifestVersion(2)) {
-        await this.webRequestBackground.init();
-      }
+    if (this.popupOnlyContext) {
+      return;
+    }
+
+    await this.vaultTimeoutService.init(true);
+    this.fido2Background.init();
+    await this.runtimeBackground.init();
+    await this.notificationBackground.init();
+    this.filelessImporterBackground.init();
+    await this.commandsBackground.init();
+    await this.overlayBackground.init();
+    await this.tabsBackground.init();
+    this.contextMenusBackground?.init();
+    await this.idleBackground.init();
+    if (BrowserApi.isManifestVersion(2)) {
+      await this.webRequestBackground.init();
     }
 
     if (this.platformUtilsService.isFirefox() && !this.isPrivateMode) {
