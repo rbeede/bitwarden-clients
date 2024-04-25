@@ -46,7 +46,7 @@ export class BadgeDirective {
     ]
       .concat(styles[this.variant])
       .concat(this.hasHoverEffects ? hoverStyles[this.variant] : [])
-      .concat(this.truncate ? ["tw-truncate", "tw-max-w-40"] : []);
+      .concat(this.truncate ? ["tw-truncate", this.maxWidth] : []);
   }
   @HostBinding("attr.title") get title() {
     return this.truncate ? this.el.nativeElement.textContent.trim() : null;
@@ -61,6 +61,8 @@ export class BadgeDirective {
    * Truncate long text
    */
   @Input() truncate = true;
+
+  @Input() maxWidth = "tw-max-w-40";
 
   private hasHoverEffects = false;
 
