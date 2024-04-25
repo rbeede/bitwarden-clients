@@ -83,6 +83,6 @@ export class VaultCollectionRowComponent {
   }
 
   protected get isUnassignedCollection() {
-    return this.collection.id == Unassigned;
+    return this.collection.id === Unassigned;
   }
 }
