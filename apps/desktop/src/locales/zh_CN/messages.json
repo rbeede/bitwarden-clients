@@ -801,10 +801,10 @@
     "message": "修改主密码"
   },
   "continueToWebApp": {
-    "message": "Continue to web app?"
+    "message": "前往网页 App 吗？"
   },
   "changeMasterPasswordOnWebConfirmation": {
-    "message": "You can change your master password on the Bitwarden web app."
+    "message": "您可以在 Bitwarden 网页应用上更改您的主密码。"
   },
   "fingerprintPhrase": {
     "message": "指纹短语",
@@ -1633,10 +1633,10 @@
     "message": "不支持浏览器集成"
   },
   "browserIntegrationErrorTitle": {
-    "message": "Error enabling browser integration"
+    "message": "启用浏览器集成时出错"
   },
   "browserIntegrationErrorDesc": {
-    "message": "An error has occurred while enabling browser integration."
+    "message": "启用浏览器集成时出错。"
   },
   "browserIntegrationMasOnlyDesc": {
     "message": "很遗憾，目前仅 Mac App Store 版本支持浏览器集成。"
@@ -2716,9 +2716,9 @@
     "message": "通行密钥已移除"
   },
   "errorAssigningTargetCollection": {
-    "message": "Error assigning target collection."
+    "message": "分配目标集合时出错。"
   },
   "errorAssigningTargetFolder": {
-    "message": "Error assigning target folder."
+    "message": "分配目标文件夹时出错。"
   }
 }

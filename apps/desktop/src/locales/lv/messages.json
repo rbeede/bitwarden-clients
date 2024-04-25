@@ -1633,10 +1633,10 @@
     "message": "Sasaistīšana ar pārlūku nav atbalstīta"
   },
   "browserIntegrationErrorTitle": {
-    "message": "Error enabling browser integration"
+    "message": "Kļūda pārlūga saistīšanas iespējošanā"
   },
   "browserIntegrationErrorDesc": {
-    "message": "An error has occurred while enabling browser integration."
+    "message": "Atgadījās kļūda pārlūka saistīšanas iespējošanas laikā."
   },
   "browserIntegrationMasOnlyDesc": {
     "message": "Diemžēl sasaistīšāna ar pārlūku pagaidām ir nodrošināta tikai Mac App Store laidienā."
