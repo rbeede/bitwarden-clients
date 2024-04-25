@@ -10,9 +10,11 @@ import { AnonLayoutComponent } from "./anon-layout.component";
 })
 export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
   pageTitle: string;
+  pageSubtitle: string;
 
   constructor(private route: ActivatedRoute) {
     this.pageTitle = this.route.snapshot.firstChild.data["pageTitle"];
+    this.pageSubtitle = this.route.snapshot.firstChild.data["pageSubtitle"];
   }
 
   async ngOnInit() {

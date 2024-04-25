@@ -210,6 +210,7 @@ const routes: Routes = [
         ],
         data: {
           pageTitle: "The Page Title",
+          pageSubtitle: "The Page Subtitle",
         },
       },
     ],
