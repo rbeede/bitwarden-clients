@@ -1,20 +1,20 @@
 import { Component, Directive, importProvidersFrom, Input } from "@angular/core";
 import { RouterModule } from "@angular/router";
-import { applicationConfig, Meta, moduleMetadata, Story } from "@storybook/angular";
+import { applicationConfig, Meta, moduleMetadata, StoryFn } from "@storybook/angular";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 
-import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { Provider } from "@bitwarden/common/admin-console/models/domain/provider";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { IconButtonModule, LinkModule, MenuModule } from "@bitwarden/components";
+import { LayoutComponent, NavigationModule } from "@bitwarden/components";
 import { I18nMockService } from "@bitwarden/components/src/utils/i18n-mock.service";
 
-import { ProductSwitcherContentComponent } from "./product-switcher-content.component";
-import { ProductSwitcherComponent } from "./product-switcher.component";
-import { ProductSwitcherService } from "./shared/product-switcher.service";
+import { ProductSwitcherService } from "../shared/product-switcher.service";
+
+import { NavigationProductSwitcherComponent } from "./navigation-switcher.component";
 
 @Directive({
   selector: "[mockOrgs]",
@@ -57,34 +57,41 @@ class StoryLayoutComponent {}
 })
 class StoryContentComponent {}
 
+const translations: Record<string, string> = {
+  moreFromBitwarden: "More from Bitwarden",
+  secureYourInfrastructure: "Secure your infrastructure",
+  protectYourFamilyOrBusiness: "Protect your family or business",
+  switch: "Switch",
+  skipToContent: "Skip to content",
+};
+
 export default {
-  title: "Web/Product Switcher",
+  title: "Web/Navigation Product Switcher",
   decorators: [
     moduleMetadata({
       declarations: [
-        ProductSwitcherContentComponent,
-        ProductSwitcherComponent,
+        NavigationProductSwitcherComponent,
         MockOrganizationService,
         MockProviderService,
         StoryLayoutComponent,
         StoryContentComponent,
+        I18nPipe,
       ],
-      imports: [JslibModule, MenuModule, IconButtonModule, LinkModule, RouterModule],
+      imports: [NavigationModule, RouterModule, LayoutComponent],
       providers: [
         { provide: OrganizationService, useClass: MockOrganizationService },
-        MockOrganizationService,
         { provide: ProviderService, useClass: MockProviderService },
-        MockProviderService,
         ProductSwitcherService,
+        {
+          provide: I18nPipe,
+          useFactory: () => ({
+            transform: (key: string) => translations[key],
+          }),
+        },
         {
           provide: I18nService,
           useFactory: () => {
-            return new I18nMockService({
-              moreFromBitwarden: "More from Bitwarden",
-              switchProducts: "Switch Products",
-              secureYourInfrastructure: "Secure your infrastructure",
-              protectYourFamilyOrBusiness: "Protect your family or business",
-            });
+            return new I18nMockService(translations);
           },
         },
       ],
@@ -92,59 +99,33 @@ export default {
     applicationConfig({
       providers: [
         importProvidersFrom(
-          RouterModule.forRoot(
-            [
-              {
-                path: "",
-                component: StoryLayoutComponent,
-                children: [
-                  {
-                    path: "",
-                    redirectTo: "vault",
-                    pathMatch: "full",
-                  },
-                  {
-                    path: "sm/:organizationId",
-                    component: StoryContentComponent,
-                  },
-                  {
-                    path: "providers/:providerId",
-                    component: StoryContentComponent,
-                  },
-                  {
-                    path: "vault",
-                    component: StoryContentComponent,
-                  },
-                ],
-              },
-            ],
-            { useHash: true },
-          ),
+          RouterModule.forRoot([
+            {
+              path: "",
+              component: StoryLayoutComponent,
+              children: [
+                {
+                  path: "**",
+                  component: StoryContentComponent,
+                },
+              ],
+            },
+          ]),
         ),
       ],
     }),
   ],
 } as Meta;
 
-const Template: Story = (args) => ({
+const Template: StoryFn = (args) => ({
   props: args,
   template: `
     <router-outlet [mockOrgs]="mockOrgs" [mockProviders]="mockProviders"></router-outlet>
-    <div class="tw-flex tw-gap-[200px]">
-      <div>
-        <h1 class="tw-text-main tw-text-base tw-underline">Closed</h1>
-        <product-switcher></product-switcher>
-      </div>
-      <div>
-        <h1 class="tw-text-main tw-text-base tw-underline">Open</h1>
-        <product-switcher-content #content></product-switcher-content>
-        <div class="tw-h-40">
-          <div class="cdk-overlay-pane bit-menu-panel">
-            <ng-container *ngTemplateOutlet="content?.menu?.templateRef"></ng-container>
-          </div>
-        </div>
-      </div>
-    </div>
+    <bit-layout>
+      <nav slot="sidebar" class="tw-flex tw-flex-col tw-h-full">
+        <navigation-product-switcher></navigation-product-switcher>
+      </nav>
+    </bit-layout>
   `,
 });
 
@@ -154,14 +135,14 @@ OnlyPM.args = {
   mockProviders: [],
 };
 
-export const WithSM = Template.bind({});
-WithSM.args = {
+export const SMAvailable = Template.bind({});
+SMAvailable.args = {
   mockOrgs: [{ id: "org-a", canManageUsers: false, canAccessSecretsManager: true, enabled: true }],
   mockProviders: [],
 };
 
-export const WithSMAndAC = Template.bind({});
-WithSMAndAC.args = {
+export const SMAndACAvailable = Template.bind({});
+SMAndACAvailable.args = {
   mockOrgs: [{ id: "org-a", canManageUsers: true, canAccessSecretsManager: true, enabled: true }],
   mockProviders: [],
 };
