@@ -7,7 +7,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 
 import { PendingAuthRequestView } from "../../views/auth-requests/pending-auth-request.view";
 
-import { OrganizationAuthRequestApiService } from "bitwarden_license/bit-common/src/admin-console/services/auth-requests";
+import { OrganizationAuthRequestApiService } from "./organization-auth-request-api.service";
 
 @Injectable()
 export class OrganizationAuthRequestService {
