@@ -15,7 +15,6 @@ import { AcceptFamilySponsorshipComponent } from "./admin-console/organizations/
 import { FamiliesForEnterpriseSetupComponent } from "./admin-console/organizations/sponsorships/families-for-enterprise-setup.component";
 import { CreateOrganizationComponent } from "./admin-console/settings/create-organization.component";
 import { SponsoredFamiliesComponent } from "./admin-console/settings/sponsored-families.component";
-import { AcceptOrganizationComponent } from "./auth/accept-organization.component";
 import { deepLinkGuard } from "./auth/guards/deep-link.guard";
 import { HintComponent } from "./auth/hint.component";
 import { LockComponent } from "./auth/lock.component";
@@ -23,6 +22,7 @@ import { LoginDecryptionOptionsComponent } from "./auth/login/login-decryption-o
 import { LoginViaAuthRequestComponent } from "./auth/login/login-via-auth-request.component";
 import { LoginViaWebAuthnComponent } from "./auth/login/login-via-webauthn/login-via-webauthn.component";
 import { LoginComponent } from "./auth/login/login.component";
+import { AcceptOrganizationComponent } from "./auth/organization-invite/accept-organization.component";
 import { RecoverDeleteComponent } from "./auth/recover-delete.component";
 import { RecoverTwoFactorComponent } from "./auth/recover-two-factor.component";
 import { RemovePasswordComponent } from "./auth/remove-password.component";
@@ -118,9 +118,12 @@ const routes: Routes = [
       { path: "verify-email", component: VerifyEmailTokenComponent },
       {
         path: "accept-organization",
-        component: AcceptOrganizationComponent,
         canActivate: [deepLinkGuard()],
         data: { titleId: "joinOrganization", doNotSaveUrl: false },
+        loadComponent: () =>
+          import("./auth/organization-invite/accept-organization.component").then(
+            (mod) => mod.AcceptOrganizationComponent,
+          ),
       },
       {
         path: "accept-emergency",

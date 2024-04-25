@@ -55,6 +55,7 @@ export const DEVICE_TRUST_DISK_LOCAL = new StateDefinition("deviceTrust", "disk"
   web: "disk-local",
 });
 export const USER_DECRYPTION_OPTIONS_DISK = new StateDefinition("userDecryptionOptions", "disk");
+export const ORGANIZATION_INVITE_DISK = new StateDefinition("organizationInvite", "disk");
 
 // Autofill
 

@@ -21,11 +21,12 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { OrgKey } from "@bitwarden/common/types/key";
 
-import { BaseAcceptComponent } from "../common/base.accept.component";
-import { RouterService } from "../core";
+import { BaseAcceptComponent } from "../../common/base.accept.component";
+import { RouterService } from "../../core";
+
+import { AcceptOrganizationInviteService } from "./services/accept-organization.service";
 
 @Component({
-  selector: "app-accept-organization",
   templateUrl: "accept-organization.component.html",
 })
 export class AcceptOrganizationComponent extends BaseAcceptComponent {
@@ -39,6 +40,7 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     i18nService: I18nService,
     route: ActivatedRoute,
     authService: AuthService,
+    private acceptOrganizationInviteService: AcceptOrganizationInviteService,
     private routerService: RouterService,
     private cryptoService: CryptoService,
     private policyApiService: PolicyApiServiceAbstraction,
@@ -58,11 +60,12 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     if (initOrganization) {
       this.actionPromise = this.acceptInitOrganizationFlow(qParams);
     } else {
-      if (qParams.policyChecked !== "true") {
+      const needsReAuth =
+        (await this.acceptOrganizationInviteService.getOrganizationInvite()) == null;
+      if (needsReAuth) {
         // We must check the MP policy before accepting the invite
-        const currentUrl = this.router.url;
-        await this.addPolicyCheckedQueryParam(currentUrl);
         this.messagingService.send("logout", { redirect: false });
+        await this.prepareOrganizationInvitation(qParams);
         return;
       }
 
@@ -72,6 +75,7 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
 
     await this.actionPromise;
     await this.apiService.refreshIdentityToken();
+    await this.acceptOrganizationInviteService.clearOrganizationInvitation();
     this.platformUtilService.showToast(
       "success",
       this.i18nService.t("inviteAccepted"),
@@ -85,8 +89,7 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
   }
 
   async unauthedHandler(qParams: Params): Promise<void> {
-    const persistedUrl = await this.routerService.getAndClearLoginRedirectUrl();
-    await this.addPolicyCheckedQueryParam(persistedUrl);
+    await this.prepareOrganizationInvitation(qParams);
 
     // In certain scenarios, we want to accelerate the user through the accept org invite process
     // For example, if the user has a BW account already, we want them to be taken to login instead of creation.
@@ -227,13 +230,12 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     return s.toLowerCase() === "true";
   }
 
-  // Abusing the deep link redirect url here to store the policy checked state.
-  // This is necessary to ensure that authenticated users that accept org invites
-  // have their MP checked against policy.
-  // TODO: Refactor this to avoid using login for MP check on authenticated users.
-  private async addPolicyCheckedQueryParam(url: string): Promise<void> {
-    const deepLinkRedirectUrl = this.router.parseUrl(url);
-    deepLinkRedirectUrl.queryParams.policyChecked = "true";
-    await this.routerService.persistLoginRedirectUrl(deepLinkRedirectUrl.toString());
+  private async prepareOrganizationInvitation(qParams: Params): Promise<void> {
+    this.orgName = qParams.organizationName;
+    if (this.orgName != null) {
+      // Fix URL encoding of space issue with Angular
+      this.orgName = this.orgName.replace(/\+/g, " ");
+    }
+    await this.acceptOrganizationInviteService.setOrganizationInvitation(qParams);
   }
 }

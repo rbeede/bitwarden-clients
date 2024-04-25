@@ -1,6 +1,6 @@
 import { Component, NgZone, OnInit } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
-import { ActivatedRoute, Params, Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { takeUntil } from "rxjs";
 import { first } from "rxjs/operators";
 
@@ -32,6 +32,7 @@ import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/pass
 
 import { flagEnabled } from "../../../utils/flags";
 import { RouterService, StateService } from "../../core";
+import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
 
 @Component({
   selector: "app-login",
@@ -45,6 +46,7 @@ export class LoginComponent extends BaseLoginComponent implements OnInit {
   showPasswordless = false;
 
   constructor(
+    private acceptOrganizationInviteService: AcceptOrganizationInviteService,
     devicesApiService: DevicesApiServiceAbstraction,
     appIdService: AppIdService,
     loginStrategyService: LoginStrategyServiceAbstraction,
@@ -112,10 +114,10 @@ export class LoginComponent extends BaseLoginComponent implements OnInit {
       await super.ngOnInit();
     });
 
-    // If there's a deep linked org invite, use it to get the password policies
-    const deepLinkedParams = await this.routerService.getLoginRedirectUrlQueryParams();
-    if (deepLinkedParams != null) {
-      await this.initPasswordPolicies(deepLinkedParams);
+    // If there's an existing org invite, use it to get the password policies
+    const orgInvite = await this.acceptOrganizationInviteService.getOrganizationInvite();
+    if (orgInvite != null) {
+      await this.initPasswordPolicies(orgInvite);
     }
   }
 
@@ -186,7 +188,8 @@ export class LoginComponent extends BaseLoginComponent implements OnInit {
     return true;
   }
 
-  private async initPasswordPolicies(invite: Params): Promise<void> {
+  // TODO: add type
+  private async initPasswordPolicies(invite: any): Promise<void> {
     // Verify that the deep link is an organization invite
     const isOrgInvite =
       invite.organizationId != null &&
