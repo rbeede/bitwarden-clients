@@ -111,7 +111,7 @@ export type DecodedAccessToken = {
  * A symmetric key for encrypting the access token before the token is stored on disk.
  * This key should be stored in secure storage.
  * */
-type AccessTokenKey = Opaque<SymmetricCryptoKey, "AccessTokenKey">;
+export type AccessTokenKey = Opaque<SymmetricCryptoKey, "AccessTokenKey">;
 
 export class TokenService implements TokenServiceAbstraction {
   private readonly accessTokenKeySecureStorageKey: string = "_accessTokenKey";
@@ -214,10 +214,7 @@ export class TokenService implements TokenServiceAbstraction {
 
     // We are having intermittent issues with access token keys not saving into secure storage on windows 10/11.
     // So, let's add a check to ensure we can read the value after writing it.
-
-    const accessTokenKey = await this.getAccessTokenKey(userId); // replace a
-
-    // accessTokenKey = null; // TODO: remove this after testing
+    const accessTokenKey = await this.getAccessTokenKey(userId);
 
     if (!accessTokenKey) {
       throw new Error(this.accessTokenKeyFailedToSaveToSecureStorageError);
