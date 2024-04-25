@@ -16,8 +16,8 @@
 <app-vault-onboarding [ciphers]="ciphers" [orgs]="allOrganizations" (onAddCipher)="addCipher()">
 </app-vault-onboarding>
 
-<div class="row">
-  <div class="col-3">
+<div class="tw-flex tw-flex-row -tw-mx-2.5">
+  <div class="tw-basis-1/4 tw-max-w-1/4 tw-px-2.5">
     <div class="groupings">
       <div class="content">
         <div class="inner-content">
@@ -32,7 +32,7 @@
       </div>
     </div>
   </div>
-  <div class="col-9">
+  <div class="tw-basis-3/4 tw-max-w-3/4 tw-px-2.5">
     <app-callout type="warning" *ngIf="activeFilter.isDeleted" icon="bwi-exclamation-triangle">
       {{ trashCleanupWarning }}
     </app-callout>
