@@ -1,11 +1,11 @@
 import { TestBed } from "@angular/core/testing";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { KdfType } from "@bitwarden/common/platform/enums";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { FakeStateProvider, mockAccountServiceWith } from "@bitwarden/common/spec";
@@ -24,11 +24,11 @@ describe("VaultBannersService", () => {
   const fakeStateProvider = new FakeStateProvider(mockAccountServiceWith("user-id" as UserId));
   const getEmailVerified = jest.fn().mockResolvedValue(true);
   const hasMasterPassword = jest.fn().mockResolvedValue(true);
-  const getKdfType = jest.fn().mockResolvedValue(KdfType.PBKDF2_SHA256);
-  const getKdfConfig = jest.fn().mockResolvedValue({ iterations: 600000 });
+  const getKdfConfig = jest
+    .fn()
+    .mockResolvedValue({ kdfType: KdfType.PBKDF2_SHA256, iterations: 600000 });
 
   beforeEach(() => {
-    isSelfHost.mockClear();
     isSelfHost.mockClear();
     getEmailVerified.mockClear().mockResolvedValue(true);
 
@@ -60,8 +60,8 @@ describe("VaultBannersService", () => {
           useValue: { hasMasterPassword },
         },
         {
-          provide: StateService,
-          useValue: { getKdfType, getKdfConfig },
+          provide: KdfConfigService,
+          useValue: { getKdfConfig },
         },
       ],
     });
@@ -139,8 +139,7 @@ describe("VaultBannersService", () => {
   describe("KDFSettings", () => {
     beforeEach(async () => {
       hasMasterPassword.mockResolvedValue(true);
-      getKdfType.mockResolvedValue(KdfType.PBKDF2_SHA256);
-      getKdfConfig.mockResolvedValue({ iterations: 599999 });
+      getKdfConfig.mockResolvedValue({ kdfType: KdfType.PBKDF2_SHA256, iterations: 599999 });
     });
 
     it("shows low KDF iteration banner", async () => {
@@ -150,7 +149,7 @@ describe("VaultBannersService", () => {
     });
 
     it("does not show low KDF iteration banner if KDF type is not PBKDF2_SHA256", async () => {
-      getKdfType.mockResolvedValue(KdfType.Argon2id);
+      getKdfConfig.mockResolvedValue({ kdfType: KdfType.Argon2id, iterations: 600001 });
 
       service = TestBed.inject(VaultBannersService);
 
@@ -158,7 +157,7 @@ describe("VaultBannersService", () => {
     });
 
     it("does not show low KDF for iterations about 600,000", async () => {
-      getKdfConfig.mockResolvedValue({ iterations: 600001 });
+      getKdfConfig.mockResolvedValue({ kdfType: KdfType.PBKDF2_SHA256, iterations: 600001 });
 
       service = TestBed.inject(VaultBannersService);
 

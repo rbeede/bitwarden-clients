@@ -1,11 +1,11 @@
 import { Injectable } from "@angular/core";
 import { Observable, combineLatest, firstValueFrom, map } from "rxjs";
 
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { KdfType, PBKDF2_ITERATIONS } from "@bitwarden/common/platform/enums";
 import {
   StateProvider,
@@ -58,7 +58,7 @@ export class VaultBannersService {
     private stateProvider: StateProvider,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private platformUtilsService: PlatformUtilsService,
-    private stateService: StateService,
+    private kdfConfigService: KdfConfigService,
   ) {
     this.premiumBannerState = this.stateProvider.getActive(PREMIUM_BANNER_REPROMPT_KEY);
     this.sessionBannerState = this.stateProvider.getActive(BANNERS_DISMISSED_DISK_KEY);
@@ -179,10 +179,10 @@ export class VaultBannersService {
   }
 
   private async isLowKdfIteration() {
-    const kdfType = await this.stateService.getKdfType();
-    const kdfOptions = await this.stateService.getKdfConfig();
+    const kdfConfig = await this.kdfConfigService.getKdfConfig();
     return (
-      kdfType === KdfType.PBKDF2_SHA256 && kdfOptions.iterations < PBKDF2_ITERATIONS.defaultValue
+      kdfConfig.kdfType === KdfType.PBKDF2_SHA256 &&
+      kdfConfig.iterations < PBKDF2_ITERATIONS.defaultValue
     );
   }
 }
