@@ -16,10 +16,7 @@ import {
   INTRAPROCESS_MESSAGING_SUBJECT,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
-import {
-  AuthRequestServiceAbstraction,
-  LoginStrategyServiceAbstraction,
-} from "@bitwarden/auth/common";
+import { AuthRequestServiceAbstraction } from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { NotificationsService } from "@bitwarden/common/abstractions/notifications.service";
 import { SearchService as SearchServiceAbstraction } from "@bitwarden/common/abstractions/search.service";
@@ -34,7 +31,6 @@ import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/d
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
-import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import {
@@ -175,18 +171,8 @@ const safeProviders: SafeProvider[] = [
     deps: [AuthServiceAbstraction, Router],
   }),
   safeProvider({
-    provide: TwoFactorService,
-    useFactory: getBgService<TwoFactorService>("twoFactorService"),
-    deps: [],
-  }),
-  safeProvider({
     provide: AuthServiceAbstraction,
     useFactory: getBgService<AuthService>("authService"),
-    deps: [],
-  }),
-  safeProvider({
-    provide: LoginStrategyServiceAbstraction,
-    useFactory: getBgService<LoginStrategyServiceAbstraction>("loginStrategyService"),
     deps: [],
   }),
   safeProvider({

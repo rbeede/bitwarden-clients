@@ -55,7 +55,7 @@ import { MoveMasterKeyStateToProviderMigrator } from "./migrations/55-move-maste
 import { AuthRequestMigrator } from "./migrations/56-move-auth-requests";
 import { CipherServiceMigrator } from "./migrations/57-move-cipher-service-to-state-provider";
 import { RemoveRefreshTokenMigratedFlagMigrator } from "./migrations/58-remove-refresh-token-migrated-state-provider-flag";
-import { VaultTimeoutSettingsServiceStateProviderMigrator } from "./migrations/59-migrate-vault-timeout-settings-svc-to-state-provider";
+import { KdfConfigMigrator } from "./migrations/59-move-kdf-config-to-state-provider";
 import { RemoveLegacyEtmKeyMigrator } from "./migrations/6-remove-legacy-etm-key";
 import { MoveBiometricAutoPromptToAccount } from "./migrations/7-move-biometric-auto-prompt-to-account";
 import { MoveStateVersionMigrator } from "./migrations/8-move-state-version";
@@ -124,7 +124,8 @@ export function createMigrationBuilder() {
     .with(AuthRequestMigrator, 55, 56)
     .with(CipherServiceMigrator, 56, 57)
     .with(RemoveRefreshTokenMigratedFlagMigrator, 57, 58)
-    .with(VaultTimeoutSettingsServiceStateProviderMigrator, 58, CURRENT_VERSION);
+    .with(KdfConfigMigrator, 58, CURRENT_VERSION);
+  // .with(VaultTimeoutSettingsServiceStateProviderMigrator, 58, CURRENT_VERSION);
 }
 
 export async function currentVersion(

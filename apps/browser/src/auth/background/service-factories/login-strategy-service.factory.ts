@@ -72,6 +72,7 @@ import {
   deviceTrustServiceFactory,
   DeviceTrustServiceInitOptions,
 } from "./device-trust-service.factory";
+import { kdfConfigServiceFactory, KdfConfigServiceInitOptions } from "./kdf-config-service.factory";
 import {
   keyConnectorServiceFactory,
   KeyConnectorServiceInitOptions,
@@ -111,7 +112,8 @@ export type LoginStrategyServiceInitOptions = LoginStrategyServiceFactoryOptions
   UserDecryptionOptionsServiceInitOptions &
   GlobalStateProviderInitOptions &
   BillingAccountProfileStateServiceInitOptions &
-  VaultTimeoutSettingsServiceInitOptions;
+  VaultTimeoutSettingsServiceInitOptions &
+  KdfConfigServiceInitOptions;
 
 export function loginStrategyServiceFactory(
   cache: { loginStrategyService?: LoginStrategyServiceAbstraction } & CachedServices,
@@ -146,6 +148,7 @@ export function loginStrategyServiceFactory(
         await globalStateProviderFactory(cache, opts),
         await billingAccountProfileStateServiceFactory(cache, opts),
         await vaultTimeoutSettingsServiceFactory(cache, opts),
+        await kdfConfigServiceFactory(cache, opts),
       ),
   );
 }

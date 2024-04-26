@@ -3,6 +3,7 @@ import { BehaviorSubject } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
@@ -48,6 +49,7 @@ describe("AuthRequestLoginStrategy", () => {
   let deviceTrustService: MockProxy<DeviceTrustServiceAbstraction>;
   let billingAccountProfileStateService: MockProxy<BillingAccountProfileStateService>;
   let vaultTimeoutSettingsService: MockProxy<VaultTimeoutSettingsService>;
+  let kdfConfigService: MockProxy<KdfConfigService>;
 
   const mockUserId = Utils.newGuid() as UserId;
   let accountService: FakeAccountService;
@@ -82,13 +84,16 @@ describe("AuthRequestLoginStrategy", () => {
     deviceTrustService = mock<DeviceTrustServiceAbstraction>();
     billingAccountProfileStateService = mock<BillingAccountProfileStateService>();
     vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
+    kdfConfigService = mock<KdfConfigService>();
 
     accountService = mockAccountServiceWith(mockUserId);
     masterPasswordService = new FakeMasterPasswordService();
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.mockResolvedValue({});
+    tokenService.decodeAccessToken.mockResolvedValue({
+      sub: mockUserId,
+    });
 
     authRequestLoginStrategy = new AuthRequestLoginStrategy(
       cache,
@@ -107,6 +112,7 @@ describe("AuthRequestLoginStrategy", () => {
       deviceTrustService,
       billingAccountProfileStateService,
       vaultTimeoutSettingsService,
+      kdfConfigService,
     );
 
     tokenResponse = identityTokenResponseFactory();

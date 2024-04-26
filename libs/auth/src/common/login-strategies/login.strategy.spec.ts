@@ -4,6 +4,7 @@ import { BehaviorSubject } from "rxjs";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -26,11 +27,7 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import {
-  Account,
-  AccountProfile,
-  AccountKeys,
-} from "@bitwarden/common/platform/models/domain/account";
+import { Account, AccountProfile } from "@bitwarden/common/platform/models/domain/account";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
@@ -120,6 +117,7 @@ describe("LoginStrategy", () => {
   let passwordStrengthService: MockProxy<PasswordStrengthServiceAbstraction>;
   let billingAccountProfileStateService: MockProxy<BillingAccountProfileStateService>;
   let vaultTimeoutSettingsService: MockProxy<VaultTimeoutSettingsService>;
+  let kdfConfigService: MockProxy<KdfConfigService>;
 
   let passwordLoginStrategy: PasswordLoginStrategy;
   let credentials: PasswordLoginCredentials;
@@ -139,6 +137,7 @@ describe("LoginStrategy", () => {
     stateService = mock<StateService>();
     twoFactorService = mock<TwoFactorService>();
     userDecryptionOptionsService = mock<InternalUserDecryptionOptionsServiceAbstraction>();
+    kdfConfigService = mock<KdfConfigService>();
     policyService = mock<PolicyService>();
     passwordStrengthService = mock<PasswordStrengthService>();
     billingAccountProfileStateService = mock<BillingAccountProfileStateService>();
@@ -168,6 +167,7 @@ describe("LoginStrategy", () => {
       loginStrategyService,
       billingAccountProfileStateService,
       vaultTimeoutSettingsService,
+      kdfConfigService,
     );
     credentials = new PasswordLoginCredentials(email, masterPassword);
   });
@@ -238,17 +238,29 @@ describe("LoginStrategy", () => {
               userId: userId,
               name: name,
               email: email,
-              kdfIterations: kdfIterations,
-              kdfType: kdf,
             },
           },
-          keys: new AccountKeys(),
         }),
       );
       expect(userDecryptionOptionsService.setUserDecryptionOptions).toHaveBeenCalledWith(
         UserDecryptionOptions.fromResponse(idTokenResponse),
       );
       expect(messagingService.send).toHaveBeenCalledWith("loggedIn");
+    });
+
+    it("throws if active account isn't found after being initialized", async () => {
+      const idTokenResponse = identityTokenResponseFactory();
+      apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
+
+      const mockVaultTimeoutAction = VaultTimeoutAction.Lock;
+      const mockVaultTimeout = 1000;
+
+      stateService.getVaultTimeoutAction.mockResolvedValue(mockVaultTimeoutAction);
+      stateService.getVaultTimeout.mockResolvedValue(mockVaultTimeout);
+
+      accountService.activeAccountSubject.next(null);
+
+      await expect(async () => await passwordLoginStrategy.logIn(credentials)).rejects.toThrow();
     });
 
     it("builds AuthResult", async () => {
@@ -350,8 +362,10 @@ describe("LoginStrategy", () => {
       expect(tokenService.clearTwoFactorToken).toHaveBeenCalled();
 
       const expected = new AuthResult();
-      expected.twoFactorProviders = new Map<TwoFactorProviderType, { [key: string]: string }>();
-      expected.twoFactorProviders.set(0, null);
+      expected.twoFactorProviders = { 0: null } as Record<
+        TwoFactorProviderType,
+        Record<string, string>
+      >;
       expect(result).toEqual(expected);
     });
 
@@ -380,8 +394,9 @@ describe("LoginStrategy", () => {
       expect(messagingService.send).not.toHaveBeenCalled();
 
       const expected = new AuthResult();
-      expected.twoFactorProviders = new Map<TwoFactorProviderType, { [key: string]: string }>();
-      expected.twoFactorProviders.set(1, { Email: "k***@bitwarden.com" });
+      expected.twoFactorProviders = {
+        [TwoFactorProviderType.Email]: { Email: "k***@bitwarden.com" },
+      };
       expected.email = userEmail;
       expected.ssoEmail2FaSessionToken = ssoEmail2FaSessionToken;
 
@@ -451,6 +466,7 @@ describe("LoginStrategy", () => {
         loginStrategyService,
         billingAccountProfileStateService,
         vaultTimeoutSettingsService,
+        kdfConfigService,
       );
 
       apiService.postIdentityToken.mockResolvedValue(identityTokenResponseFactory());

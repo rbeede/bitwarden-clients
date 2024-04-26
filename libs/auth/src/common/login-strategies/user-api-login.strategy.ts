@@ -4,6 +4,7 @@ import { Jsonify } from "type-fest";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
@@ -59,6 +60,7 @@ export class UserApiLoginStrategy extends LoginStrategy {
     private keyConnectorService: KeyConnectorService,
     billingAccountProfileStateService: BillingAccountProfileStateService,
     vaultTimeoutSettingsService: VaultTimeoutSettingsService,
+    protected kdfConfigService: KdfConfigService,
   ) {
     super(
       accountService,
@@ -75,6 +77,7 @@ export class UserApiLoginStrategy extends LoginStrategy {
       userDecryptionOptionsService,
       billingAccountProfileStateService,
       vaultTimeoutSettingsService,
+      kdfConfigService,
     );
     this.cache = new BehaviorSubject(data);
   }
