@@ -1,5 +1,3 @@
-import { Injectable } from "@angular/core";
-
 import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
 import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
@@ -11,7 +9,6 @@ import { PendingAuthRequestView } from "../../views/auth-requests/pending-auth-r
 
 import { OrganizationAuthRequestApiService } from "./organization-auth-request-api.service";
 
-@Injectable()
 export class OrganizationAuthRequestService {
   constructor(
     private organizationAuthRequestApiService: OrganizationAuthRequestApiService,
