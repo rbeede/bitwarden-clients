@@ -126,11 +126,9 @@ const Template: Story = {
     props: args,
     template: `
     <router-outlet [mockOrgs]="mockOrgs" [mockProviders]="mockProviders"></router-outlet>
-    <bit-layout>
-        <nav slot="sidebar" class="tw-flex tw-flex-col tw-h-full">
-          <navigation-product-switcher></navigation-product-switcher>
-        </nav>
-      </bit-layout>
+    <div class="tw-bg-background-alt3 tw-w-60">
+      <navigation-product-switcher></navigation-product-switcher>
+    </div>
     `,
   }),
 };
