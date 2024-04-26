@@ -14,7 +14,5 @@ export class ProductSwitcherContentComponent {
 
   constructor(private productSwitcherService: ProductSwitcherService) {}
 
-  get products$() {
-    return this.productSwitcherService.products$;
-  }
+  protected readonly products$ = this.productSwitcherService.products$;
 }
