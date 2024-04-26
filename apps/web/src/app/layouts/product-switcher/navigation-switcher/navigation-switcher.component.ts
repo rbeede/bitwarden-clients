@@ -1,4 +1,4 @@
-import { Component, HostBinding } from "@angular/core";
+import { Component } from "@angular/core";
 import { map, Observable } from "rxjs";
 
 import { ProductSwitcherItem, ProductSwitcherService } from "../shared/product-switcher.service";
@@ -8,9 +8,6 @@ import { ProductSwitcherItem, ProductSwitcherService } from "../shared/product-s
   templateUrl: "./navigation-switcher.component.html",
 })
 export class NavigationProductSwitcherComponent {
-  // Use margin-top: auto to push the component to the bottom of the parent flex container
-  @HostBinding("style.margin-top") marginTop = "auto";
-
   constructor(private productSwitcherService: ProductSwitcherService) {}
 
   protected readonly accessibleProducts$: Observable<ProductSwitcherItem[]> =
