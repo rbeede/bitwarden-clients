@@ -42,7 +42,6 @@ export class UserLayoutComponent implements OnInit {
 
   protected showPaymentMethodWarningBanners$ = this.configService.getFeatureFlag$(
     FeatureFlag.ShowPaymentMethodWarningBanners,
-    false,
   );
 
   constructor(

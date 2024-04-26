@@ -60,7 +60,6 @@ export class OrganizationLayoutComponent implements OnInit, OnDestroy {
 
   protected showPaymentMethodWarningBanners$ = this.configService.getFeatureFlag$(
     FeatureFlag.ShowPaymentMethodWarningBanners,
-    false,
   );
 
   constructor(
