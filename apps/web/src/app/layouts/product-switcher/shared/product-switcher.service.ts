@@ -81,11 +81,7 @@ export class ProductSwitcherService {
       // TODO: This should be migrated to an Observable provided by the provider service and moved to the combineLatest above. See AC-2092.
       const providers = await this.providerService.getAll();
 
-      /**
-       * We can update this to the "satisfies" type upon upgrading to TypeScript 4.9
-       * https://devblogs.microsoft.com/typescript/announcing-typescript-4-9/#satisfies
-       */
-      const products: Record<"pm" | "sm" | "ac" | "provider" | "orgs", ProductSwitcherItem> = {
+      const products = {
         pm: {
           name: "Password Manager",
           icon: "bwi-lock",
@@ -128,7 +124,7 @@ export class ProductSwitcherService {
             supportingText: this.i18n.transform("protectYourFamilyOrBusiness"),
           },
         },
-      };
+      } satisfies Record<string, ProductSwitcherItem>;
 
       const bento: ProductSwitcherItem[] = [products.pm];
       const other: ProductSwitcherItem[] = [];
