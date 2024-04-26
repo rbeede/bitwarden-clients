@@ -13,12 +13,13 @@ export class NavigationProductSwitcherComponent {
 
   constructor(private productSwitcherService: ProductSwitcherService) {}
 
-  accessibleProducts$: Observable<ProductSwitcherItem[]> =
+  protected readonly accessibleProducts$: Observable<ProductSwitcherItem[]> =
     this.productSwitcherService.products$.pipe(
       map((products) => (products.bento ?? []).filter((item) => !item.isActive)),
     );
 
-  moreProducts$: Observable<ProductSwitcherItem[]> = this.productSwitcherService.products$.pipe(
-    map((products) => (products.other ?? []).filter((item) => !item.isActive)),
-  );
+  protected readonly moreProducts$: Observable<ProductSwitcherItem[]> =
+    this.productSwitcherService.products$.pipe(
+      map((products) => (products.other ?? []).filter((item) => !item.isActive)),
+    );
 }
