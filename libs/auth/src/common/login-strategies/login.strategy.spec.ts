@@ -253,10 +253,20 @@ describe("LoginStrategy", () => {
       apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
 
       const mockVaultTimeoutAction = VaultTimeoutAction.Lock;
+
+      const mockVaultTimeoutActionBSub = new BehaviorSubject<VaultTimeoutAction>(
+        mockVaultTimeoutAction,
+      );
+      vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$.mockReturnValue(
+        mockVaultTimeoutActionBSub.asObservable(),
+      );
+
       const mockVaultTimeout = 1000;
 
-      stateService.getVaultTimeoutAction.mockResolvedValue(mockVaultTimeoutAction);
-      stateService.getVaultTimeout.mockResolvedValue(mockVaultTimeout);
+      const mockVaultTimeoutBSub = new BehaviorSubject<number>(mockVaultTimeout);
+      vaultTimeoutSettingsService.getVaultTimeoutByUserId$.mockReturnValue(
+        mockVaultTimeoutBSub.asObservable(),
+      );
 
       accountService.activeAccountSubject.next(null);
 
