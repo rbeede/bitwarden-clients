@@ -1,6 +1,6 @@
 import { firstValueFrom, map, Observable } from "rxjs";
 
-import { EncString } from "../../../platform/models/domain/enc-string";
+import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import {
   MASTER_PASSWORD_DISK,
@@ -25,11 +25,12 @@ const MASTER_KEY_HASH = new UserKeyDefinition<string>(MASTER_PASSWORD_DISK, "mas
   clearOn: ["logout"],
 });
 
-const MASTER_KEY_ENCRYPTED_USER_KEY = new UserKeyDefinition<EncString>(
+/** Disk to persist through lock */
+const MASTER_KEY_ENCRYPTED_USER_KEY = new UserKeyDefinition<EncryptedString>(
   MASTER_PASSWORD_DISK,
   "masterKeyEncryptedUserKey",
   {
-    deserializer: (key) => EncString.fromJSON(key),
+    deserializer: (key) => key,
     clearOn: ["logout"],
   },
 );
@@ -78,7 +79,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     const key = await firstValueFrom(
       this.stateProvider.getUser(userId, MASTER_KEY_ENCRYPTED_USER_KEY).state$,
     );
-    return key;
+    return EncString.fromJSON(key);
   }
 
   async setMasterKey(masterKey: MasterKey, userId: UserId): Promise<void> {
@@ -91,6 +92,13 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => masterKey);
   }
 
+  async clearMasterKey(userId: UserId): Promise<void> {
+    if (userId == null) {
+      throw new Error("User ID is required.");
+    }
+    await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => null);
+  }
+
   async setMasterKeyHash(masterKeyHash: string, userId: UserId): Promise<void> {
     if (masterKeyHash == null) {
       throw new Error("Master key hash is required.");
@@ -99,6 +107,13 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
       throw new Error("User ID is required.");
     }
     await this.stateProvider.getUser(userId, MASTER_KEY_HASH).update((_) => masterKeyHash);
+  }
+
+  async clearMasterKeyHash(userId: UserId): Promise<void> {
+    if (userId == null) {
+      throw new Error("User ID is required.");
+    }
+    await this.stateProvider.getUser(userId, MASTER_KEY_HASH).update((_) => null);
   }
 
   async setMasterKeyEncryptedUserKey(encryptedKey: EncString, userId: UserId): Promise<void> {
@@ -110,7 +125,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     }
     await this.stateProvider
       .getUser(userId, MASTER_KEY_ENCRYPTED_USER_KEY)
-      .update((_) => encryptedKey);
+      .update((_) => encryptedKey.toJSON() as EncryptedString);
   }
 
   async setForceSetPasswordReason(reason: ForceSetPasswordReason, userId: UserId): Promise<void> {

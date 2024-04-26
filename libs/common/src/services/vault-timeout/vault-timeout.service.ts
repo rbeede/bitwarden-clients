@@ -91,20 +91,15 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
     const currentUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
 
     if (userId == null || userId === currentUserId) {
-      this.searchService.clearIndex();
+      await this.searchService.clearIndex();
       await this.folderService.clearCache();
       await this.collectionService.clearActiveUserCache();
     }
 
-    await this.masterPasswordService.setMasterKey(null, (userId ?? currentUserId) as UserId);
+    await this.masterPasswordService.clearMasterKey((userId ?? currentUserId) as UserId);
 
-    await this.stateService.setEverBeenUnlocked(true, { userId: userId });
     await this.stateService.setUserKeyAutoUnlock(null, { userId: userId });
     await this.stateService.setCryptoMasterKeyAuto(null, { userId: userId });
-
-    await this.cryptoService.clearUserKey(false, userId);
-    await this.cryptoService.clearOrgKeys(true, userId);
-    await this.cryptoService.clearKeyPair(true, userId);
 
     await this.cipherService.clearCache(userId);
 
