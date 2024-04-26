@@ -4,7 +4,7 @@ import { firstValueFrom } from "rxjs";
 import { PolicyService } from "@bitwarden/common/admin-console/services/policy/policy.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
-import { ConfigService } from "@bitwarden/common/platform/services/config/config.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { Importer, ImportResult, ImportServiceAbstraction } from "@bitwarden/importer/core";
 
@@ -16,6 +16,7 @@ import {
   triggerRuntimeOnConnectEvent,
 } from "../../autofill/spec/testing-utils";
 import { BrowserApi } from "../../platform/browser/browser-api";
+import { BrowserScriptInjectorService } from "../../platform/services/browser-script-injector.service";
 import { FilelessImportPort, FilelessImportType } from "../enums/fileless-import.enums";
 
 import FilelessImporterBackground from "./fileless-importer.background";
@@ -37,8 +38,10 @@ describe("FilelessImporterBackground ", () => {
   const notificationBackground = mock<NotificationBackground>();
   const importService = mock<ImportServiceAbstraction>();
   const syncService = mock<SyncService>();
+  let scriptInjectorService: BrowserScriptInjectorService;
 
   beforeEach(() => {
+    scriptInjectorService = new BrowserScriptInjectorService();
     filelessImporterBackground = new FilelessImporterBackground(
       configService,
       authService,
@@ -46,6 +49,7 @@ describe("FilelessImporterBackground ", () => {
       notificationBackground,
       importService,
       syncService,
+      scriptInjectorService,
     );
     filelessImporterBackground.init();
   });
@@ -138,7 +142,7 @@ describe("FilelessImporterBackground ", () => {
 
       expect(executeScriptInTabSpy).toHaveBeenCalledWith(
         lpImporterPort.sender.tab.id,
-        { file: "content/lp-suppress-import-download.js", runAt: "document_start" },
+        { file: "content/lp-suppress-import-download.js", runAt: "document_start", frameId: 0 },
         { world: "MAIN" },
       );
     });
@@ -149,14 +153,11 @@ describe("FilelessImporterBackground ", () => {
       triggerRuntimeOnConnectEvent(lpImporterPort);
       await flushPromises();
 
-      expect(executeScriptInTabSpy).toHaveBeenCalledWith(
-        lpImporterPort.sender.tab.id,
-        {
-          file: "content/lp-suppress-import-download-script-append-mv2.js",
-          runAt: "document_start",
-        },
-        undefined,
-      );
+      expect(executeScriptInTabSpy).toHaveBeenCalledWith(lpImporterPort.sender.tab.id, {
+        file: "content/lp-suppress-import-download-script-append-mv2.js",
+        runAt: "document_start",
+        frameId: 0,
+      });
     });
   });
 
