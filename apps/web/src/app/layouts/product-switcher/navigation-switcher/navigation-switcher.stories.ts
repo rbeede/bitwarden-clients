@@ -1,6 +1,6 @@
 import { Component, Directive, importProvidersFrom, Input } from "@angular/core";
 import { RouterModule } from "@angular/router";
-import { applicationConfig, Meta, moduleMetadata, StoryFn } from "@storybook/angular";
+import { applicationConfig, Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
@@ -115,40 +115,60 @@ export default {
       ],
     }),
   ],
-} as Meta;
+} as Meta<NavigationProductSwitcherComponent>;
 
-const Template: StoryFn = (args) => ({
-  props: args,
-  template: `
+type Story = StoryObj<
+  NavigationProductSwitcherComponent & MockProviderService & MockOrganizationService
+>;
+
+const Template: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
     <router-outlet [mockOrgs]="mockOrgs" [mockProviders]="mockProviders"></router-outlet>
     <bit-layout>
-      <nav slot="sidebar" class="tw-flex tw-flex-col tw-h-full">
-        <navigation-product-switcher></navigation-product-switcher>
-      </nav>
-    </bit-layout>
-  `,
-});
-
-export const OnlyPM = Template.bind({});
-OnlyPM.args = {
-  mockOrgs: [],
-  mockProviders: [],
+        <nav slot="sidebar" class="tw-flex tw-flex-col tw-h-full">
+          <navigation-product-switcher></navigation-product-switcher>
+        </nav>
+      </bit-layout>
+    `,
+  }),
 };
 
-export const SMAvailable = Template.bind({});
-SMAvailable.args = {
-  mockOrgs: [{ id: "org-a", canManageUsers: false, canAccessSecretsManager: true, enabled: true }],
-  mockProviders: [],
+export const OnlyPM: Story = {
+  ...Template,
+  args: {
+    mockOrgs: [],
+    mockProviders: [],
+  },
 };
 
-export const SMAndACAvailable = Template.bind({});
-SMAndACAvailable.args = {
-  mockOrgs: [{ id: "org-a", canManageUsers: true, canAccessSecretsManager: true, enabled: true }],
-  mockProviders: [],
+export const SMAvailable: Story = {
+  ...Template,
+  args: {
+    mockOrgs: [
+      { id: "org-a", canManageUsers: false, canAccessSecretsManager: true, enabled: true },
+    ] as Organization[],
+    mockProviders: [],
+  },
 };
 
-export const WithAllOptions = Template.bind({});
-WithAllOptions.args = {
-  mockOrgs: [{ id: "org-a", canManageUsers: true, canAccessSecretsManager: true, enabled: true }],
-  mockProviders: [{ id: "provider-a" }],
+export const SMAndACAvailable: Story = {
+  ...Template,
+  args: {
+    mockOrgs: [
+      { id: "org-a", canManageUsers: true, canAccessSecretsManager: true, enabled: true },
+    ] as Organization[],
+    mockProviders: [],
+  },
+};
+
+export const WithAllOptions: Story = {
+  ...Template,
+  args: {
+    mockOrgs: [
+      { id: "org-a", canManageUsers: true, canAccessSecretsManager: true, enabled: true },
+    ] as Organization[],
+    mockProviders: [{ id: "provider-a" }] as Provider[],
+  },
 };
