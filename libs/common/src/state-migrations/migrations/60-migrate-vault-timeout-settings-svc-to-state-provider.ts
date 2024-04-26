@@ -55,7 +55,7 @@ const vaultTimeoutTypeRollbackRecord: Record<VaultTimeout, any> = {
   onIdle: -4,
 };
 
-export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<58, 59> {
+export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<59, 60> {
   async migrate(helper: MigrationHelper): Promise<void> {
     const globalData = await helper.get<ExpectedGlobalType>("global");
 
