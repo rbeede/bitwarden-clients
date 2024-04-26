@@ -36,13 +36,13 @@ export type ProductSwitcherItem = {
   isActive?: boolean;
 
   /**
-   * A product switcher item can be shown in the left navigation menu
-   * with different content than the main product switcher.
+   * A product switcher item can be shown in the left navigation menu.
+   * When shown under the "other" section the content can be overridden.
    */
-  navigationUIDetails?: {
+  otherProductOverrides?: {
     /** Alternative navigation menu name */
     name?: string;
-    /** Supporting text that is shown in the "more from bitwarden" section */
+    /** Supporting text that is shown when the product is rendered in the "other" section */
     supportingText?: string;
   };
 };
@@ -98,7 +98,7 @@ export class ProductSwitcherService {
           appRoute: ["/sm", smOrg?.id],
           marketingRoute: "https://bitwarden.com/products/secrets-manager/",
           isActive: this.router.url.includes("/sm/"),
-          navigationUIDetails: {
+          otherProductOverrides: {
             supportingText: this.i18n.transform("secureYourInfrastructure"),
           },
         },
@@ -119,7 +119,7 @@ export class ProductSwitcherService {
           name: "Organizations",
           icon: "bwi-business",
           marketingRoute: "https://bitwarden.com/products/business/",
-          navigationUIDetails: {
+          otherProductOverrides: {
             name: "Share your passwords",
             supportingText: this.i18n.transform("protectYourFamilyOrBusiness"),
           },

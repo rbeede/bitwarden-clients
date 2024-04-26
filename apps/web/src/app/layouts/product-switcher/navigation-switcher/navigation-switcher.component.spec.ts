@@ -77,7 +77,7 @@ describe("NavigationProductSwitcherComponent", () => {
       expect(link.getAttribute("href")).toBe("https://www.example.com/");
     });
 
-    it("uses `navigationUIDetails` when available", () => {
+    it("uses `otherProductOverrides` when available", () => {
       mockProducts$.next({
         bento: [],
         other: [
@@ -86,7 +86,7 @@ describe("NavigationProductSwitcherComponent", () => {
             name: "Other Product",
             icon: "bwi-lock",
             marketingRoute: "https://www.example.com/",
-            navigationUIDetails: { name: "Alternate name" },
+            otherProductOverrides: { name: "Alternate name" },
           },
         ],
       });
@@ -103,7 +103,7 @@ describe("NavigationProductSwitcherComponent", () => {
             name: "Other Product",
             icon: "bwi-lock",
             marketingRoute: "https://www.example.com/",
-            navigationUIDetails: { name: "Alternate name", supportingText: "Supporting Text" },
+            otherProductOverrides: { name: "Alternate name", supportingText: "Supporting Text" },
           },
         ],
       });

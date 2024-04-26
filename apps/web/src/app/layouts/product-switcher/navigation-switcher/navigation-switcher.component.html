@@ -28,9 +28,9 @@
       >
         <i class="bwi bwi-fw {{ more.icon }} tw-mt-1"></i>
         <div>
-          {{ more.navigationUIDetails?.name ?? more.name }}
-          <div *ngIf="more.navigationUIDetails?.supportingText" class="tw-text-xs tw-font-normal">
-            {{ more.navigationUIDetails.supportingText }}
+          {{ more.otherProductOverrides?.name ?? more.name }}
+          <div *ngIf="more.otherProductOverrides?.supportingText" class="tw-text-xs tw-font-normal">
+            {{ more.otherProductOverrides.supportingText }}
           </div>
         </div>
       </a>
