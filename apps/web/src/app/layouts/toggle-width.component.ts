@@ -10,7 +10,6 @@ import { NavigationModule } from "@bitwarden/components";
     text="Toggle Width"
     icon="bwi-bug"
     *ngIf="isDev"
-    class="tw-w-full"
     (click)="toggleWidth()"
   ></bit-nav-item>`,
   standalone: true,
