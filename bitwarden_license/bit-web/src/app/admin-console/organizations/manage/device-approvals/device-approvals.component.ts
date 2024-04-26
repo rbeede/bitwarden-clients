@@ -59,34 +59,24 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
 
   async approveRequest(authRequest: PendingAuthRequestView) {
     await this.performAsyncAction(async () => {
-      const details = await this.organizationUserService.getOrganizationUserResetPasswordDetails(
-        this.organizationId,
-        authRequest.organizationUserId,
-      );
+      try {
+        await this.organizationAuthRequestService.approvePendingRequest(
+          this.organizationId,
+          authRequest,
+        );
 
-      // The user must be enrolled in account recovery (password reset) in order for the request to be approved.
-      if (details == null || details.resetPasswordKey == null) {
+        this.platformUtilsService.showToast(
+          "success",
+          null,
+          this.i18nService.t("loginRequestApproved"),
+        );
+      } catch (error) {
         this.platformUtilsService.showToast(
           "error",
           null,
           this.i18nService.t("resetPasswordDetailsError"),
         );
-        return;
       }
-
-      await this.organizationAuthRequestService.approvePendingRequest(
-        this.organizationId,
-        details.resetPasswordKey,
-        details.encryptedPrivateKey,
-        authRequest.publicKey,
-        authRequest.id,
-      );
-
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("loginRequestApproved"),
-      );
     });
   }
 
