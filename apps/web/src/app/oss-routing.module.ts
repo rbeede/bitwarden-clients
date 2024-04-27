@@ -209,8 +209,9 @@ const routes: Routes = [
           },
         ],
         data: {
-          pageTitle: "The Page Title",
-          pageSubtitle: "The Page Subtitle",
+          pageTitle: "logIn", // example of a translation key from messages.json
+          pageSubtitle: "loginWithMasterPassword", // example of a translation key from messages.json
+          pageIcon: "lock", // example of a string (of type IconType) that will show a specified icon
         },
       },
     ],

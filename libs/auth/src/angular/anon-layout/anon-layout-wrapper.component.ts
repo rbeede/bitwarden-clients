@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 
-import { AnonLayoutComponent } from "./anon-layout.component";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+
+import { AnonLayoutComponent, IconType } from "./anon-layout.component";
 
 @Component({
   standalone: true,
@@ -9,17 +11,23 @@ import { AnonLayoutComponent } from "./anon-layout.component";
   imports: [AnonLayoutComponent, RouterModule],
 })
 export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
-  pageTitle: string;
-  pageSubtitle: string;
+  protected pageTitle: string;
+  protected pageSubtitle: string;
+  protected pageIcon: IconType;
 
-  constructor(private route: ActivatedRoute) {
-    this.pageTitle = this.route.snapshot.firstChild.data["pageTitle"];
-    this.pageSubtitle = this.route.snapshot.firstChild.data["pageSubtitle"];
+  constructor(
+    private route: ActivatedRoute,
+    private i18nService: I18nService,
+  ) {
+    this.pageTitle = this.i18nService.t(this.route.snapshot.firstChild.data["pageTitle"]);
+    this.pageSubtitle = this.i18nService.t(this.route.snapshot.firstChild.data["pageSubtitle"]);
+    this.pageIcon = this.route.snapshot.firstChild.data["pageIcon"];
   }
 
-  async ngOnInit() {
+  ngOnInit() {
     document.body.classList.add("layout_frontend");
   }
+
   ngOnDestroy() {
     document.body.classList.remove("layout_frontend");
   }
