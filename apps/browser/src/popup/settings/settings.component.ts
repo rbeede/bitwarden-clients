@@ -108,7 +108,6 @@ export class SettingsComponent implements OnInit {
     private dialogService: DialogService,
     private changeDetectorRef: ChangeDetectorRef,
     private biometricStateService: BiometricStateService,
-    private accountService: AccountService,
   ) {
     this.accountSwitcherEnabled = enableAccountSwitching();
   }
