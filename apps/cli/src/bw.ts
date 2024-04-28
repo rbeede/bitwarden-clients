@@ -315,7 +315,7 @@ export class Main {
       this.singleUserStateProvider,
     );
 
-    this.derivedStateProvider = new DefaultDerivedStateProvider(storageServiceProvider);
+    this.derivedStateProvider = new DefaultDerivedStateProvider();
 
     this.stateProvider = new DefaultStateProvider(
       this.activeUserStateProvider,

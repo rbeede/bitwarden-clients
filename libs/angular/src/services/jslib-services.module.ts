@@ -1052,7 +1052,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: DerivedStateProvider,
     useClass: DefaultDerivedStateProvider,
-    deps: [StorageServiceProvider],
+    deps: [],
   }),
   safeProvider({
     provide: StateProvider,

@@ -92,6 +92,7 @@ export class SettingsComponent implements OnInit {
   private destroy$ = new Subject<void>();
 
   constructor(
+    private accountService: AccountService,
     private policyService: PolicyService,
     private formBuilder: FormBuilder,
     private platformUtilsService: PlatformUtilsService,
@@ -460,8 +461,9 @@ export class SettingsComponent implements OnInit {
       type: "info",
     });
 
+    const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
     if (confirmed) {
-      this.messagingService.send("logout");
+      this.messagingService.send("logout", { userId: userId });
     }
   }
 
