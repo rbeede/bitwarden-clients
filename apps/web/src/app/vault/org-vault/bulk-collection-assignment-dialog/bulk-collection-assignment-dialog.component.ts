@@ -77,10 +77,7 @@ export class BulkCollectionAssignmentDialogComponent implements OnDestroy, OnIni
       return;
     }
 
-    const v1FCEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.FlexibleCollectionsV1,
-      false,
-    );
+    const v1FCEnabled = await this.configService.getFeatureFlag(FeatureFlag.FlexibleCollectionsV1);
     const org = await this.organizationService.get(this.params.organizationId);
 
     if (org.canEditAllCiphers(v1FCEnabled)) {
