@@ -3,7 +3,7 @@ import { Meta, StoryObj, moduleMetadata } from "@storybook/angular";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
 import { ButtonModule } from "../../../../components/src/button";
-import { IconLock } from "../../icons/icon-lock";
+import { LockIcon } from "../icons";
 
 import { AnonLayoutComponent } from "./anon-layout.component";
 
@@ -28,7 +28,7 @@ export default {
   args: {
     title: "The Page Title",
     subtitle: "The subtitle (optional)",
-    icon: IconLock,
+    icon: LockIcon,
   },
 } as Meta;
 

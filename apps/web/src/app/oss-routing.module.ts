@@ -8,7 +8,7 @@ import {
   tdeDecryptionRequiredGuard,
   UnauthGuard,
 } from "@bitwarden/angular/auth/guards";
-import { AnonLayoutWrapperComponent } from "@bitwarden/auth/angular";
+import { AnonLayoutWrapperComponent, LockIcon } from "@bitwarden/auth/angular";
 
 import { flagEnabled, Flags } from "../utils/flags";
 
@@ -190,7 +190,7 @@ const routes: Routes = [
     ],
   },
 
-  // TODO: remove this example
+  // TODO-rr-bw: remove this example
   {
     path: "",
     component: AnonLayoutWrapperComponent,
@@ -211,12 +211,12 @@ const routes: Routes = [
         data: {
           pageTitle: "logIn", // example of a translation key from messages.json
           pageSubtitle: "loginWithMasterPassword", // example of a translation key from messages.json
-          pageIcon: "lock", // example of a string (of type IconType) that will show a specified icon
+          pageIcon: LockIcon, // example of an icon to pass in
         },
       },
     ],
   },
-  // TODO: remove this example
+  // TODO-rr-bw: remove this example
 
   {
     path: "",
