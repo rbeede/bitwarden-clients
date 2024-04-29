@@ -2,7 +2,6 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject, Subject, switchMap, takeUntil, tap } from "rxjs";
 
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -29,7 +28,6 @@ export class DeviceApprovalsComponent implements OnInit, OnDestroy {
 
   constructor(
     private organizationAuthRequestService: OrganizationAuthRequestService,
-    private organizationUserService: OrganizationUserService,
     private route: ActivatedRoute,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
