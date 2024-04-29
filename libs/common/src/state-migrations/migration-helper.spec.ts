@@ -194,6 +194,7 @@ export function mockMigrationHelper(
   mockHelper.getAccounts.mockImplementation(() => helper.getAccounts());
 
   mockHelper.type = helper.type;
+  mockHelper.clientType = helper.clientType;
 
   return mockHelper;
 }
