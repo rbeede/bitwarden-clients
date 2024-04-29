@@ -22,7 +22,6 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { OrgKey } from "@bitwarden/common/types/key";
 
 import { BaseAcceptComponent } from "../../common/base.accept.component";
-import { RouterService } from "../../core";
 
 import { AcceptOrganizationInviteService } from "./services/accept-organization.service";
 
@@ -41,7 +40,6 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     route: ActivatedRoute,
     authService: AuthService,
     private acceptOrganizationInviteService: AcceptOrganizationInviteService,
-    private routerService: RouterService,
     private cryptoService: CryptoService,
     private policyApiService: PolicyApiServiceAbstraction,
     private policyService: PolicyService,

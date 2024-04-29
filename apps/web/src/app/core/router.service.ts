@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Title } from "@angular/platform-browser";
-import { ActivatedRoute, NavigationEnd, Params, Router } from "@angular/router";
+import { ActivatedRoute, NavigationEnd, Router } from "@angular/router";
 import { filter, firstValueFrom } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -101,18 +101,5 @@ export class RouterService {
     }
 
     return;
-  }
-
-  /**
-   * Returns the query parameters of the persisted LoginRedirectUrl if present in state.
-   * Useful for authentication actions that require knowledge of the deep linked URL.
-   */
-  async getLoginRedirectUrlQueryParams(): Promise<Params | undefined> {
-    const persistedPreLoginUrl = await firstValueFrom(this.deepLinkRedirectUrlState.state$);
-    if (Utils.isNullOrEmpty(persistedPreLoginUrl)) {
-      return;
-    }
-    const url = this.router.parseUrl(persistedPreLoginUrl);
-    return url?.queryParams;
   }
 }

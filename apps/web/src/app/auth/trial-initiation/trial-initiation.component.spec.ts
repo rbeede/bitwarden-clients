@@ -19,8 +19,8 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
-import { RouterService } from "../../core";
 import { SharedModule } from "../../shared";
+import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
 
 import { TrialInitiationComponent } from "./trial-initiation.component";
 import { VerticalStepperComponent } from "./vertical-stepper/vertical-stepper.component";
@@ -36,14 +36,14 @@ describe("TrialInitiationComponent", () => {
   let stateServiceMock: MockProxy<StateService>;
   let policyApiServiceMock: MockProxy<PolicyApiServiceAbstraction>;
   let policyServiceMock: MockProxy<PolicyService>;
-  let routerServiceMock: MockProxy<RouterService>;
+  let acceptOrgInviteServiceMock: MockProxy<AcceptOrganizationInviteService>;
 
   beforeEach(() => {
     // only define services directly that we want to mock return values in this component
     stateServiceMock = mock<StateService>();
     policyApiServiceMock = mock<PolicyApiServiceAbstraction>();
     policyServiceMock = mock<PolicyService>();
-    routerServiceMock = mock<RouterService>();
+    acceptOrgInviteServiceMock = mock<AcceptOrganizationInviteService>();
 
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -82,8 +82,8 @@ describe("TrialInitiationComponent", () => {
           useClass: VerticalStepperStubComponent,
         },
         {
-          provide: RouterService,
-          useValue: routerServiceMock,
+          provide: AcceptOrganizationInviteService,
+          useValue: acceptOrgInviteServiceMock,
         },
       ],
       schemas: [NO_ERRORS_SCHEMA], // Allows child components to be ignored (such as register component)
@@ -103,7 +103,7 @@ describe("TrialInitiationComponent", () => {
   // These tests demonstrate mocking service calls
   describe("onInit() enforcedPolicyOptions", () => {
     it("should not set enforcedPolicyOptions if there isn't an org invite in deep linked url", async () => {
-      routerServiceMock.getLoginRedirectUrlQueryParams.mockResolvedValueOnce(null);
+      acceptOrgInviteServiceMock.getOrganizationInvite.mockResolvedValueOnce(null);
       // Need to recreate component with new service mock
       fixture = TestBed.createComponent(TrialInitiationComponent);
       component = fixture.componentInstance;
@@ -113,7 +113,7 @@ describe("TrialInitiationComponent", () => {
     });
     it("should set enforcedPolicyOptions if the deep linked url has an org invite", async () => {
       // Set up service method mocks
-      routerServiceMock.getLoginRedirectUrlQueryParams.mockResolvedValueOnce({
+      acceptOrgInviteServiceMock.getOrganizationInvite.mockResolvedValueOnce({
         organizationId: testOrgId,
         token: "token",
         email: "testEmail",

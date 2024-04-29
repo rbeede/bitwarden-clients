@@ -14,13 +14,13 @@ import { ProductType } from "@bitwarden/common/enums";
 import { ReferenceEventRequest } from "@bitwarden/common/models/request/reference-event.request";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
 import {
   OrganizationCreatedEvent,
   SubscriptionProduct,
   TrialOrganizationType,
 } from "../../billing/accounts/trial-initiation/trial-billing-step.component";
+import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
 
 import { RouterService } from "./../../core/router.service";
 import { VerticalStepperComponent } from "./vertical-stepper/vertical-stepper.component";
@@ -121,12 +121,12 @@ export class TrialInitiationComponent implements OnInit, OnDestroy {
     protected router: Router,
     private formBuilder: UntypedFormBuilder,
     private titleCasePipe: TitleCasePipe,
-    private stateService: StateService,
     private logService: LogService,
     private policyApiService: PolicyApiServiceAbstraction,
     private policyService: PolicyService,
     private i18nService: I18nService,
     private routerService: RouterService,
+    private acceptOrgInviteService: AcceptOrganizationInviteService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -181,9 +181,9 @@ export class TrialInitiationComponent implements OnInit, OnDestroy {
     });
 
     // If there's a deep linked org invite, use it to get the password policies
-    const deepLinkedParams = await this.routerService.getLoginRedirectUrlQueryParams();
-    if (deepLinkedParams != null) {
-      await this.initPasswordPolicies(deepLinkedParams);
+    const orgInvite = await this.acceptOrgInviteService.getOrganizationInvite();
+    if (orgInvite != null) {
+      await this.initPasswordPolicies(orgInvite);
     }
 
     this.orgInfoFormGroup.controls.name.valueChanges
@@ -284,6 +284,7 @@ export class TrialInitiationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // TODO (jake): Type correctly
   private async initPasswordPolicies(invite: Params): Promise<void> {
     // Verify that the deep link is an organization invite
     const isOrgInvite =

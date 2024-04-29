@@ -15,7 +15,6 @@ import { WeakPasswordsReportComponent as OrgWeakPasswordsReportComponent } from 
 import { ProvidersComponent } from "../admin-console/providers/providers.component";
 import { SponsoredFamiliesComponent } from "../admin-console/settings/sponsored-families.component";
 import { SponsoringOrgRowComponent } from "../admin-console/settings/sponsoring-org-row.component";
-import { AcceptOrganizationComponent } from "../auth/organization-invite/accept-organization.component";
 import { HintComponent } from "../auth/hint.component";
 import { LockComponent } from "../auth/lock.component";
 import { RecoverDeleteComponent } from "../auth/recover-delete.component";
@@ -115,7 +114,6 @@ import { SharedModule } from "./shared.module";
   ],
   declarations: [
     AcceptFamilySponsorshipComponent,
-    AcceptOrganizationComponent,
     AccountComponent,
     AddEditComponent,
     AddEditCustomFieldsComponent,
@@ -189,7 +187,6 @@ import { SharedModule } from "./shared.module";
   exports: [
     UserVerificationModule,
     PremiumBadgeComponent,
-    AcceptOrganizationComponent,
     AccountComponent,
     AddEditComponent,
     AddEditCustomFieldsComponent,
