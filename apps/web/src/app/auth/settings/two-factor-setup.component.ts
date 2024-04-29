@@ -180,11 +180,11 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
         if (!result) {
           return;
         }
-        const emailComp = await this.openModal(this.emailModalRef, TwoFactorEmailComponent);
-        await emailComp.auth(result);
-        emailComp.onUpdated.pipe(takeUntil(this.destroy$)).subscribe((enabled: boolean) => {
-          this.updateStatus(enabled, TwoFactorProviderType.Email);
-        });
+        const emailComp = TwoFactorEmailComponent.open(this.dialogService, { data: result });
+        const response: boolean = await lastValueFrom(emailComp.closed);
+        if (response !== null) {
+          this.updateStatus(response, TwoFactorProviderType.Email);
+        }
         break;
       }
       case TwoFactorProviderType.WebAuthn: {
