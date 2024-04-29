@@ -55,6 +55,15 @@ const vaultTimeoutTypeRollbackRecord: Record<VaultTimeout, any> = {
   onIdle: -4,
 };
 
+export enum ClientType {
+  Web = "web",
+  Browser = "browser",
+  Desktop = "desktop",
+  // Mobile = "mobile",
+  Cli = "cli",
+  // DirectoryConnector = "connector",
+}
+
 export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<59, 60> {
   async migrate(helper: MigrationHelper): Promise<void> {
     const globalData = await helper.get<ExpectedGlobalType>("global");
@@ -67,7 +76,13 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<5
       let updatedAccount = false;
 
       // Migrate vault timeout
-      const existingVaultTimeout = account?.settings?.vaultTimeout;
+      let existingVaultTimeout = account?.settings?.vaultTimeout;
+
+      if (helper.clientType === ClientType.Cli && existingVaultTimeout === undefined) {
+        // The CLI does not set a vault timeout by default so we need to set it to null
+        // so that the migration can migrate null to "never" as the CLI does not have a vault timeout.
+        existingVaultTimeout = null;
+      }
 
       if (existingVaultTimeout !== undefined) {
         // check undefined so that we allow null values (previously meant never timeout)
@@ -107,7 +122,12 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<5
       }
     }
 
-    await Promise.all([...accounts.map(({ userId, account }) => migrateAccount(userId, account))]);
+    // await Promise.all([...accounts.map(({ userId, account }) => migrateAccount(userId, account))]);
+
+    // convert the promise all to a loop
+    for (const { userId, account } of accounts) {
+      await migrateAccount(userId, account);
+    }
 
     // Delete global data
     delete globalData?.vaultTimeout;

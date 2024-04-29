@@ -4,6 +4,7 @@ import { MigrationHelper } from "../migration-helper";
 import { mockMigrationHelper } from "../migration-helper.spec";
 
 import {
+  ClientType,
   VAULT_TIMEOUT,
   VAULT_TIMEOUT_ACTION,
   VaultTimeoutSettingsServiceStateProviderMigrator,
@@ -253,6 +254,218 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
       // Expect that we didn't migrate anything to user 7 or 8
       expect(helper.setToUser).not.toHaveBeenCalledWith("user7", VAULT_TIMEOUT, any());
       expect(helper.setToUser).not.toHaveBeenCalledWith("user7", VAULT_TIMEOUT_ACTION, any());
+      expect(helper.setToUser).not.toHaveBeenCalledWith("user8", VAULT_TIMEOUT, any());
+      expect(helper.setToUser).not.toHaveBeenCalledWith("user8", VAULT_TIMEOUT_ACTION, any());
+    });
+  });
+
+  describe("rollback", () => {
+    beforeEach(() => {
+      helper = mockMigrationHelper(rollbackJSON(), 60);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+    });
+
+    it("should null out newly migrated entries in state provider framework", async () => {
+      await sut.rollback(helper);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user1", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user1", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user2", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user2", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user3", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user3", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user4", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user4", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user5", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user5", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user6", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user6", VAULT_TIMEOUT_ACTION, null);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user7", VAULT_TIMEOUT, null);
+      expect(helper.setToUser).toHaveBeenCalledWith("user7", VAULT_TIMEOUT_ACTION, null);
+    });
+
+    it("should add back data to all accounts that had migrated data (only user 1)", async () => {
+      await sut.rollback(helper);
+
+      expect(helper.set).toHaveBeenCalledWith("user1", {
+        settings: {
+          vaultTimeout: 30,
+          vaultTimeoutAction: "lock",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user2", {
+        settings: {
+          vaultTimeout: null,
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user3", {
+        settings: {
+          vaultTimeout: -1, // onRestart
+          vaultTimeoutAction: "lock",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user4", {
+        settings: {
+          vaultTimeout: -2, // onLocked
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user5", {
+        settings: {
+          vaultTimeout: -3, // onSleep
+          vaultTimeoutAction: "lock",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user6", {
+        settings: {
+          vaultTimeout: -4, // onIdle
+          vaultTimeoutAction: "logOut",
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+    });
+
+    it("should not add back the global vault timeout data", async () => {
+      await sut.rollback(helper);
+
+      expect(helper.set).not.toHaveBeenCalledWith("global", any());
+    });
+
+    it("should not add data back if data wasn't migrated or acct doesn't exist", async () => {
+      await sut.rollback(helper);
+
+      // no data to add back for user7 (acct exists but no migrated data) and user8 (no acct)
+      expect(helper.set).not.toHaveBeenCalledWith("user7", any());
+      expect(helper.set).not.toHaveBeenCalledWith("user8", any());
+    });
+  });
+});
+
+describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
+  let helper: MockProxy<MigrationHelper>;
+  let sut: VaultTimeoutSettingsServiceStateProviderMigrator;
+
+  describe("migrate", () => {
+    beforeEach(() => {
+      helper = mockMigrationHelper(preMigrationJson(), 59, "general", ClientType.Cli);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+    });
+
+    it("should remove state service data from all accounts that have it", async () => {
+      await sut.migrate(helper);
+
+      // Global data
+      expect(helper.set).toHaveBeenCalledWith("global", {
+        // no longer has vault timeout data
+        otherStuff: "otherStuff",
+      });
+
+      // User data
+      expect(helper.set).toHaveBeenCalledWith("user1", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user2", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user3", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user4", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user5", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user6", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledWith("user7", {
+        settings: {
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
+
+      expect(helper.set).toHaveBeenCalledTimes(8); // 7 users + 1 global
+      expect(helper.set).not.toHaveBeenCalledWith("user8", any());
+    });
+
+    it("should migrate data to state providers for defined accounts that have the data with an exception for the vault timeout", async () => {
+      await sut.migrate(helper);
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user1", VAULT_TIMEOUT, 30);
+      expect(helper.setToUser).toHaveBeenCalledWith("user1", VAULT_TIMEOUT_ACTION, "lock");
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user2", VAULT_TIMEOUT, "never");
+      expect(helper.setToUser).toHaveBeenCalledWith("user2", VAULT_TIMEOUT_ACTION, "logOut");
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user3", VAULT_TIMEOUT, "onRestart");
+      expect(helper.setToUser).toHaveBeenCalledWith("user3", VAULT_TIMEOUT_ACTION, "lock");
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user4", VAULT_TIMEOUT, "onLocked");
+      expect(helper.setToUser).toHaveBeenCalledWith("user4", VAULT_TIMEOUT_ACTION, "logOut");
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user5", VAULT_TIMEOUT, "onSleep");
+      expect(helper.setToUser).toHaveBeenCalledWith("user5", VAULT_TIMEOUT_ACTION, "lock");
+
+      expect(helper.setToUser).toHaveBeenCalledWith("user6", VAULT_TIMEOUT, "onIdle");
+      expect(helper.setToUser).toHaveBeenCalledWith("user6", VAULT_TIMEOUT_ACTION, "logOut");
+
+      // User7 has an undefined vault timeout, but we should still migrate it to "never"
+      // b/c the CLI doesn't have a vault timeout
+      expect(helper.setToUser).toHaveBeenCalledWith("user7", VAULT_TIMEOUT, "never");
+      // Note: we don't have to worry about not migrating the vault timeout action b/c each client
+      // has a default value for the vault timeout action when it is retrieved via the vault timeout settings svc.
+      expect(helper.setToUser).not.toHaveBeenCalledWith("user7", VAULT_TIMEOUT_ACTION, any());
+
+      // Expect that we didn't migrate anything to user 8 b/c it doesn't exist
       expect(helper.setToUser).not.toHaveBeenCalledWith("user8", VAULT_TIMEOUT, any());
       expect(helper.setToUser).not.toHaveBeenCalledWith("user8", VAULT_TIMEOUT_ACTION, any());
     });
