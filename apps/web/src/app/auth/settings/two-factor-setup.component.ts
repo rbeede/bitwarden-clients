@@ -167,11 +167,11 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
         if (!result) {
           return;
         }
-        const duoComp = await this.openModal(this.duoModalRef, TwoFactorDuoComponent);
-        duoComp.auth(result);
-        duoComp.onUpdated.pipe(takeUntil(this.destroy$)).subscribe((enabled: boolean) => {
-          this.updateStatus(enabled, TwoFactorProviderType.Duo);
-        });
+        const duoComp = TwoFactorDuoComponent.open(this.dialogService, { data: result });
+        const response: boolean = await lastValueFrom(duoComp.closed);
+        if (response !== null) {
+          this.updateStatus(response, TwoFactorProviderType.Duo);
+        }
         break;
       }
       case TwoFactorProviderType.Email: {
