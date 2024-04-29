@@ -1,6 +1,7 @@
 import { InjectionToken } from "@angular/core";
 import { Observable, Subject } from "rxjs";
 
+import { ClientType } from "@bitwarden/common/enums";
 import {
   AbstractMemoryStorageService,
   AbstractStorageService,
@@ -54,3 +55,4 @@ export const DEFAULT_VAULT_TIMEOUT = new SafeInjectionToken<VaultTimeout>("DEFAU
 export const INTRAPROCESS_MESSAGING_SUBJECT = new SafeInjectionToken<Subject<Message<object>>>(
   "INTRAPROCESS_MESSAGING_SUBJECT",
 );
+export const CLIENT_TYPE = new SafeInjectionToken<ClientType>("CLIENT_TYPE");
