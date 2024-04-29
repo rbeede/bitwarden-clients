@@ -1109,14 +1109,11 @@ export class CipherService implements CipherServiceAbstraction {
     await this.restore({ id: id, revisionDate: response.revisionDate });
   }
 
-  async restoreManyWithServer(
-    ids: string[],
-    organizationId: string = null,
-    asAdmin = false,
-  ): Promise<void> {
+  async restoreManyWithServer(ids: string[], orgId: string = null): Promise<void> {
     let response;
-    if (asAdmin) {
-      const request = new CipherBulkRestoreRequest(ids, organizationId);
+
+    if (orgId) {
+      const request = new CipherBulkRestoreRequest(ids, orgId);
       response = await this.apiService.putRestoreManyCiphersAdmin(request);
     } else {
       const request = new CipherBulkRestoreRequest(ids);

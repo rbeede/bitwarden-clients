@@ -871,8 +871,11 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Allow restore of an Unassigned Item
     try {
-      const asAdmin = this.organization?.canEditAnyCollection(this.flexibleCollectionsV1Enabled);
+      const isUnassigned = c.collectionIds.length === 0;
+      const asAdmin =
+        this.organization?.canEditAnyCollection(this.flexibleCollectionsV1Enabled) || isUnassigned;
       await this.cipherService.restoreWithServer(c.id, asAdmin);
       this.platformUtilsService.showToast("success", null, this.i18nService.t("restoredItem"));
       this.refresh();
@@ -885,9 +888,20 @@ export class VaultComponent implements OnInit, OnDestroy {
     if (!(await this.repromptCipher(ciphers))) {
       return;
     }
+    // assess if there are unassigned ciphers and/or editable ciphers selected in bulk for restore
+    const orgId = ciphers[0]?.organizationId;
+    const editAccessCiphers: string[] = [];
+    const unassignedCiphers: string[] = [];
 
-    const selectedCipherIds = ciphers.map((cipher) => cipher.id);
-    if (selectedCipherIds.length === 0) {
+    ciphers.map((cipher) => {
+      if (cipher.collectionIds.length === 0) {
+        unassignedCiphers.push(cipher.id);
+      } else if (cipher.edit) {
+        editAccessCiphers.push(cipher.id);
+      }
+    });
+
+    if (unassignedCiphers.length === 0 && editAccessCiphers.length === 0) {
       this.platformUtilsService.showToast(
         "error",
         this.i18nService.t("errorOccurred"),
@@ -896,7 +910,13 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await this.cipherService.restoreManyWithServer(selectedCipherIds);
+    if (unassignedCiphers.length > 0) {
+      await this.cipherService.restoreManyWithServer(unassignedCiphers, orgId);
+    }
+
+    if (editAccessCiphers.length > 0) {
+      await this.cipherService.restoreManyWithServer(editAccessCiphers, orgId);
+    }
     this.platformUtilsService.showToast("success", null, this.i18nService.t("restoredItems"));
     this.refresh();
   }
@@ -914,12 +934,15 @@ export class VaultComponent implements OnInit, OnDestroy {
       type: "warning",
     });
 
+    // Allow deleting for Unassigned Items
+    const isUnassigned = c.collectionIds.length === 0;
+
     if (!confirmed) {
       return false;
     }
 
     try {
-      await this.deleteCipherWithServer(c.id, permanent);
+      await this.deleteCipherWithServer(c.id, permanent, isUnassigned);
       this.platformUtilsService.showToast(
         "success",
         null,
@@ -981,6 +1004,18 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Allow bulk deleting of Unassigned Items
+    const unassignedCiphers: string[] = [];
+    const assignedCiphers: string[] = [];
+
+    ciphers.map((c) => {
+      if (c.collectionIds.length === 0) {
+        unassignedCiphers.push(c.id);
+      } else {
+        assignedCiphers.push(c.id);
+      }
+    });
+
     if (ciphers.length === 0 && collections.length === 0) {
       this.platformUtilsService.showToast(
         "error",
@@ -992,9 +1027,10 @@ export class VaultComponent implements OnInit, OnDestroy {
     const dialog = openBulkDeleteDialog(this.dialogService, {
       data: {
         permanent: this.filter.type === "trash",
-        cipherIds: ciphers.map((c) => c.id),
+        cipherIds: assignedCiphers,
         collections: collections,
         organization,
+        unassignedCiphers,
       },
     });
 
@@ -1177,8 +1213,9 @@ export class VaultComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected deleteCipherWithServer(id: string, permanent: boolean) {
-    const asAdmin = this.organization?.canEditAllCiphers(this.flexibleCollectionsV1Enabled);
+  protected deleteCipherWithServer(id: string, permanent: boolean, isUnassigned: boolean) {
+    const asAdmin =
+      this.organization?.canEditAllCiphers(this.flexibleCollectionsV1Enabled) || isUnassigned;
     return permanent
       ? this.cipherService.deleteWithServer(id, asAdmin)
       : this.cipherService.softDeleteWithServer(id, asAdmin);
