@@ -23,7 +23,6 @@ export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
   ) {
     this.pageTitle = this.i18nService.t(this.route.snapshot.firstChild.data["pageTitle"]);
     this.pageSubtitle = this.i18nService.t(this.route.snapshot.firstChild.data["pageSubtitle"]);
-
     this.pageIcon = this.route.snapshot.firstChild.data["pageIcon"]; // don't translate
   }
 

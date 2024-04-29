@@ -8,7 +8,7 @@ import { LockIcon } from "../icons";
 import { AnonLayoutComponent } from "./anon-layout.component";
 
 class MockPlatformUtilsService implements Partial<PlatformUtilsService> {
-  getApplicationVersion = () => Promise.resolve("Version 2023.1.1");
+  getApplicationVersion = () => Promise.resolve("Version 2024.1.1");
 }
 
 export default {
@@ -89,7 +89,6 @@ export const WithLongContent: Story = {
           <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias laborum nostrum natus. Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias laborum nostrum natus. Expedita, quod est?          </p>
           <button bitButton>Perform Action</button>
         </div>
-
       </auth-anon-layout>
     `,
   }),
