@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "files": ["../../libs/common/test.setup.ts"]
+}
