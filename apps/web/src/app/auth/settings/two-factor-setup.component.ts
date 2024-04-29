@@ -35,8 +35,6 @@ import { TwoFactorYubiKeyComponent } from "./two-factor-yubikey.component";
 export class TwoFactorSetupComponent implements OnInit, OnDestroy {
   @ViewChild("recoveryTemplate", { read: ViewContainerRef, static: true })
   recoveryModalRef: ViewContainerRef;
-  @ViewChild("authenticatorTemplate", { read: ViewContainerRef, static: true })
-  authenticatorModalRef: ViewContainerRef;
   @ViewChild("yubikeyTemplate", { read: ViewContainerRef, static: true })
   yubikeyModalRef: ViewContainerRef;
   @ViewChild("duoTemplate", { read: ViewContainerRef, static: true }) duoModalRef: ViewContainerRef;
@@ -138,14 +136,11 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
         if (!result) {
           return;
         }
-        const authComp = await this.openModal(
-          this.authenticatorModalRef,
-          TwoFactorAuthenticatorComponent,
-        );
-        await authComp.auth(result);
-        authComp.onUpdated.pipe(takeUntil(this.destroy$)).subscribe((enabled: boolean) => {
-          this.updateStatus(enabled, TwoFactorProviderType.Authenticator);
-        });
+        const authComp = TwoFactorAuthenticatorComponent.open(this.dialogService, { data: result });
+        const response: boolean = await lastValueFrom(authComp.closed);
+        if (response !== null) {
+          this.updateStatus(response, TwoFactorProviderType.Authenticator);
+        }
         break;
       }
       case TwoFactorProviderType.Yubikey: {
