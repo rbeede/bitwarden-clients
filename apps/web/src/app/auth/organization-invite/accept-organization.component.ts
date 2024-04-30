@@ -1,25 +1,9 @@
 import { Component } from "@angular/core";
 import { ActivatedRoute, Params, Router } from "@angular/router";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import {
-  OrganizationUserAcceptInitRequest,
-  OrganizationUserAcceptRequest,
-} from "@bitwarden/common/admin-console/abstractions/organization-user/requests";
-import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
-import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
-import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { OrgKey } from "@bitwarden/common/types/key";
 
 import { BaseAcceptComponent } from "../../common/base.accept.component";
 
@@ -29,8 +13,7 @@ import { AcceptOrganizationInviteService } from "./services/accept-organization.
   templateUrl: "accept-organization.component.html",
 })
 export class AcceptOrganizationComponent extends BaseAcceptComponent {
-  orgName: string;
-
+  orgName$ = this.acceptOrganizationInviteService.orgName$;
   protected requiredParameters: string[] = ["organizationId", "organizationUserId", "token"];
 
   constructor(
@@ -40,44 +23,18 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     route: ActivatedRoute,
     authService: AuthService,
     private acceptOrganizationInviteService: AcceptOrganizationInviteService,
-    private cryptoService: CryptoService,
-    private policyApiService: PolicyApiServiceAbstraction,
-    private policyService: PolicyService,
-    private logService: LogService,
-    private organizationApiService: OrganizationApiServiceAbstraction,
-    private organizationUserService: OrganizationUserService,
-    private messagingService: MessagingService,
-    private apiService: ApiService,
   ) {
     super(router, platformUtilsService, i18nService, route, authService);
   }
 
   async authedHandler(qParams: Params): Promise<void> {
-    const initOrganization =
-      qParams.initOrganization != null && qParams.initOrganization.toLocaleLowerCase() === "true";
-    if (initOrganization) {
-      this.actionPromise = this.acceptInitOrganizationFlow(qParams);
-    } else {
-      const needsReAuth =
-        (await this.acceptOrganizationInviteService.getOrganizationInvite()) == null;
-      if (needsReAuth) {
-        // We must check the MP policy before accepting the invite
-        this.messagingService.send("logout", { redirect: false });
-        await this.prepareOrganizationInvitation(qParams);
-        return;
-      }
-
-      // User has already logged in and passed the Master Password policy check
-      this.actionPromise = this.acceptFlow(qParams);
-    }
-
+    this.actionPromise = await this.acceptOrganizationInviteService.initializeInvite(qParams);
     await this.actionPromise;
-    await this.apiService.refreshIdentityToken();
-    await this.acceptOrganizationInviteService.clearOrganizationInvitation();
+
     this.platformUtilService.showToast(
       "success",
       this.i18nService.t("inviteAccepted"),
-      initOrganization
+      this.acceptOrganizationInviteService.inviteType === "accept-init"
         ? this.i18nService.t("inviteInitAcceptedDesc")
         : this.i18nService.t("inviteAcceptedDesc"),
       { timeout: 10000 },
@@ -87,105 +44,14 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
   }
 
   async unauthedHandler(qParams: Params): Promise<void> {
-    await this.prepareOrganizationInvitation(qParams);
-
-    // In certain scenarios, we want to accelerate the user through the accept org invite process
-    // For example, if the user has a BW account already, we want them to be taken to login instead of creation.
+    await this.acceptOrganizationInviteService.setOrganizationInvitation(qParams);
     await this.accelerateInviteAcceptIfPossible(qParams);
   }
 
-  private async acceptInitOrganizationFlow(qParams: Params): Promise<any> {
-    return this.prepareAcceptInitRequest(qParams).then((request) =>
-      this.organizationUserService.postOrganizationUserAcceptInit(
-        qParams.organizationId,
-        qParams.organizationUserId,
-        request,
-      ),
-    );
-  }
-
-  private async acceptFlow(qParams: Params): Promise<any> {
-    return this.prepareAcceptRequest(qParams).then((request) =>
-      this.organizationUserService.postOrganizationUserAccept(
-        qParams.organizationId,
-        qParams.organizationUserId,
-        request,
-      ),
-    );
-  }
-
-  private async prepareAcceptInitRequest(
-    qParams: Params,
-  ): Promise<OrganizationUserAcceptInitRequest> {
-    const request = new OrganizationUserAcceptInitRequest();
-    request.token = qParams.token;
-
-    const [encryptedOrgKey, orgKey] = await this.cryptoService.makeOrgKey<OrgKey>();
-    const [orgPublicKey, encryptedOrgPrivateKey] = await this.cryptoService.makeKeyPair(orgKey);
-    const collection = await this.cryptoService.encrypt(
-      this.i18nService.t("defaultCollection"),
-      orgKey,
-    );
-
-    request.key = encryptedOrgKey.encryptedString;
-    request.keys = new OrganizationKeysRequest(
-      orgPublicKey,
-      encryptedOrgPrivateKey.encryptedString,
-    );
-    request.collectionName = collection.encryptedString;
-
-    return request;
-  }
-
-  private async prepareAcceptRequest(qParams: Params): Promise<OrganizationUserAcceptRequest> {
-    const request = new OrganizationUserAcceptRequest();
-    request.token = qParams.token;
-
-    if (await this.performResetPasswordAutoEnroll(qParams)) {
-      const response = await this.organizationApiService.getKeys(qParams.organizationId);
-
-      if (response == null) {
-        throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
-      }
-
-      const publicKey = Utils.fromB64ToArray(response.publicKey);
-
-      // RSA Encrypt user's encKey.key with organization public key
-      const userKey = await this.cryptoService.getUserKey();
-      const encryptedKey = await this.cryptoService.rsaEncrypt(userKey.key, publicKey);
-
-      // Add reset password key to accept request
-      request.resetPasswordKey = encryptedKey.encryptedString;
-    }
-    return request;
-  }
-
-  private async performResetPasswordAutoEnroll(qParams: Params): Promise<boolean> {
-    let policyList: Policy[] = null;
-    try {
-      const policies = await this.policyApiService.getPoliciesByToken(
-        qParams.organizationId,
-        qParams.token,
-        qParams.email,
-        qParams.organizationUserId,
-      );
-      policyList = Policy.fromListResponse(policies);
-    } catch (e) {
-      this.logService.error(e);
-    }
-
-    if (policyList != null) {
-      const result = this.policyService.getResetPasswordPolicyOptions(
-        policyList,
-        qParams.organizationId,
-      );
-      // Return true if policy enabled and auto-enroll enabled
-      return result[1] && result[0].autoEnrollEnabled;
-    }
-
-    return false;
-  }
-
+  /**
+   * In certain scenarios, we want to accelerate the user through the accept org invite process
+   * For example, if the user has a BW account already, we want them to be taken to login instead of creation.
+   */
   private async accelerateInviteAcceptIfPossible(qParams: Params): Promise<void> {
     // Extract the query params we need to make routing acceleration decisions
     const orgSsoIdentifier = qParams.orgSsoIdentifier;
@@ -226,14 +92,5 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
       return null;
     }
     return s.toLowerCase() === "true";
-  }
-
-  private async prepareOrganizationInvitation(qParams: Params): Promise<void> {
-    this.orgName = qParams.organizationName;
-    if (this.orgName != null) {
-      // Fix URL encoding of space issue with Angular
-      this.orgName = this.orgName.replace(/\+/g, " ");
-    }
-    await this.acceptOrganizationInviteService.setOrganizationInvitation(qParams);
   }
 }
