@@ -18,7 +18,46 @@ function preMigrationJson() {
       vaultTimeoutAction: "lock",
       otherStuff: "otherStuff",
     },
-    authenticatedAccounts: ["user1", "user2", "user3", "user4", "user5", "user6", "user7"],
+
+    global_account_accounts: {
+      user1: {
+        email: "user1@email.com",
+        name: "User 1",
+        emailVerified: true,
+      },
+      user2: {
+        email: "user2@email.com",
+        name: "User 2",
+        emailVerified: true,
+      },
+      // create the same structure for user3, user4, user5, user6, user7 in the global_account_accounts
+      user3: {
+        email: "user3@email.com",
+        name: "User 3",
+        emailVerified: true,
+      },
+      user4: {
+        email: "user4@email.com",
+        name: "User 4",
+        emailVerified: true,
+      },
+      user5: {
+        email: "user5@email.com",
+        name: "User 5",
+        emailVerified: true,
+      },
+      user6: {
+        email: "user6@email.com",
+        name: "User 6",
+        emailVerified: true,
+      },
+      user7: {
+        email: "user7@email.com",
+        name: "User 7",
+        emailVerified: true,
+      },
+    },
+
     user1: {
       settings: {
         vaultTimeout: 30,
@@ -118,7 +157,46 @@ function rollbackJSON() {
       // no longer has vault timeout data
       otherStuff: "otherStuff",
     },
-    authenticatedAccounts: ["user1", "user2", "user3", "user4", "user5", "user6", "user7"],
+
+    global_account_accounts: {
+      user1: {
+        email: "user1@email.com",
+        name: "User 1",
+        emailVerified: true,
+      },
+      user2: {
+        email: "user2@email.com",
+        name: "User 2",
+        emailVerified: true,
+      },
+      // create the same structure for user3, user4, user5, user6, user7 in the global_account_accounts
+      user3: {
+        email: "user3@email.com",
+        name: "User 3",
+        emailVerified: true,
+      },
+      user4: {
+        email: "user4@email.com",
+        name: "User 4",
+        emailVerified: true,
+      },
+      user5: {
+        email: "user5@email.com",
+        name: "User 5",
+        emailVerified: true,
+      },
+      user6: {
+        email: "user6@email.com",
+        name: "User 6",
+        emailVerified: true,
+      },
+      user7: {
+        email: "user7@email.com",
+        name: "User 7",
+        emailVerified: true,
+      },
+    },
+
     user1: {
       settings: {
         otherStuff: "otherStuff",
