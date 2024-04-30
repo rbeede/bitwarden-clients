@@ -100,17 +100,20 @@ export class ProjectPeopleComponent implements OnInit, OnDestroy {
     if (this.formGroup.invalid) {
       return;
     }
+    const formValues = this.formGroup.value.accessPolicies;
+    this.formGroup.disable();
 
     const showAccessRemovalWarning =
       await this.accessPolicySelectorService.showAccessRemovalWarning(
         this.organizationId,
-        this.formGroup.value.accessPolicies,
+        formValues,
       );
 
     if (showAccessRemovalWarning) {
       const confirmed = await this.showWarning();
       if (!confirmed) {
         this.setSelected(this.currentAccessPolicies);
+        this.formGroup.enable();
         return;
       }
     }
@@ -118,7 +121,7 @@ export class ProjectPeopleComponent implements OnInit, OnDestroy {
     try {
       const projectPeopleView = convertToProjectPeopleAccessPoliciesView(
         this.projectId,
-        this.formGroup.value.accessPolicies,
+        formValues,
       );
       const peoplePoliciesViews = await this.accessPolicyService.putProjectPeopleAccessPolicies(
         this.projectId,
@@ -138,6 +141,7 @@ export class ProjectPeopleComponent implements OnInit, OnDestroy {
       this.validationService.showError(e);
       this.setSelected(this.currentAccessPolicies);
     }
+    this.formGroup.enable();
   };
 
   private setSelected(policiesToSelect: ApItemViewType[]) {
