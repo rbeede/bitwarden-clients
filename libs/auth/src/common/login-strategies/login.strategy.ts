@@ -165,8 +165,15 @@ export abstract class LoginStrategy {
    */
   protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
     const accountInformation = await this.tokenService.decodeAccessToken(tokenResponse.accessToken);
-
     const userId = accountInformation.sub as UserId;
+
+    await this.accountService.addAccount(userId, {
+      name: accountInformation.name,
+      email: accountInformation.email,
+      emailVerified: accountInformation.email_verified,
+    });
+
+    await this.accountService.switchAccount(userId);
 
     await this.stateService.addAccount(
       new Account({
@@ -196,7 +203,6 @@ export abstract class LoginStrategy {
       this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
     );
 
-    // set access token and refresh token before account initialization so authN status can be accurate
     // User id will be derived from the access token.
     await this.tokenService.setTokens(
       tokenResponse.accessToken,

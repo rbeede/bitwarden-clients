@@ -1,9 +1,10 @@
 import { MockProxy, any, mock } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, of } from "rxjs";
 
 import { FakeAccountService, mockAccountServiceWith } from "../../../spec/fake-account-service";
 import { SearchService } from "../../abstractions/search.service";
 import { VaultTimeoutSettingsService } from "../../abstractions/vault-timeout/vault-timeout-settings.service";
+import { AccountInfo } from "../../auth/abstractions/account.service";
 import { AuthService } from "../../auth/abstractions/auth.service";
 import { AuthenticationStatus } from "../../auth/enums/authentication-status";
 import { FakeMasterPasswordService } from "../../auth/services/master-password/fake-master-password.service";
@@ -13,7 +14,6 @@ import { MessagingService } from "../../platform/abstractions/messaging.service"
 import { PlatformUtilsService } from "../../platform/abstractions/platform-utils.service";
 import { StateService } from "../../platform/abstractions/state.service";
 import { Utils } from "../../platform/misc/utils";
-import { Account } from "../../platform/models/domain/account";
 import { StateEventRunnerService } from "../../platform/state";
 import { UserId } from "../../types/guid";
 import { VaultTimeout, VaultTimeoutStringType } from "../../types/vault-timeout.type";
@@ -40,7 +40,6 @@ describe("VaultTimeoutService", () => {
   let lockedCallback: jest.Mock<Promise<void>, [userId: string]>;
   let loggedOutCallback: jest.Mock<Promise<void>, [expired: boolean, userId?: string]>;
 
-  let accountsSubject: BehaviorSubject<Record<string, Account>>;
   let vaultTimeoutActionSubject: BehaviorSubject<VaultTimeoutAction>;
   let availableVaultTimeoutActionsSubject: BehaviorSubject<VaultTimeoutAction[]>;
 
@@ -65,10 +64,6 @@ describe("VaultTimeoutService", () => {
 
     lockedCallback = jest.fn();
     loggedOutCallback = jest.fn();
-
-    accountsSubject = new BehaviorSubject(null);
-
-    stateService.accounts$ = accountsSubject;
 
     vaultTimeoutActionSubject = new BehaviorSubject(VaultTimeoutAction.Lock);
 
@@ -130,21 +125,39 @@ describe("VaultTimeoutService", () => {
       return new BehaviorSubject<VaultTimeout>(accounts[userId]?.vaultTimeout);
     });
 
-    stateService.getLastActive.mockImplementation((options) => {
-      return Promise.resolve(accounts[options.userId]?.lastActive);
-    });
-
     stateService.getUserId.mockResolvedValue(globalSetups?.userId);
 
-    stateService.activeAccount$ = new BehaviorSubject<string>(globalSetups?.userId);
-
+    // Set desired user active and known users on accounts service : note the only thing that matters here is that the ID are set
     if (globalSetups?.userId) {
       accountService.activeAccountSubject.next({
         id: globalSetups.userId as UserId,
         email: null,
+        emailVerified: false,
         name: null,
       });
     }
+    accountService.accounts$ = of(
+      Object.entries(accounts).reduce(
+        (agg, [id]) => {
+          agg[id] = {
+            email: "",
+            emailVerified: true,
+            name: "",
+          };
+          return agg;
+        },
+        {} as Record<string, AccountInfo>,
+      ),
+    );
+    accountService.accountActivity$ = of(
+      Object.entries(accounts).reduce(
+        (agg, [id, info]) => {
+          agg[id] = info.lastActive ? new Date(info.lastActive) : null;
+          return agg;
+        },
+        {} as Record<string, Date>,
+      ),
+    );
 
     platformUtilsService.isViewOpen.mockResolvedValue(globalSetups?.isViewOpen ?? false);
 
@@ -161,16 +174,6 @@ describe("VaultTimeoutService", () => {
         ],
       );
     });
-
-    const accountsSubjectValue: Record<string, Account> = Object.keys(accounts).reduce(
-      (agg, key) => {
-        const newPartial: Record<string, unknown> = {};
-        newPartial[key] = null; // No values actually matter on this other than the key
-        return Object.assign(agg, newPartial);
-      },
-      {} as Record<string, Account>,
-    );
-    accountsSubject.next(accountsSubjectValue);
   };
 
   const expectUserToHaveLocked = (userId: string) => {
