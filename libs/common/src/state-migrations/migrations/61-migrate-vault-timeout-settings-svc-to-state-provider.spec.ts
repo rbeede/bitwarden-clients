@@ -116,8 +116,8 @@ function preMigrationJson() {
   };
 }
 
-function rollbackJSON() {
-  return {
+function rollbackJSON(cli: boolean = false) {
+  const rollbackJson: any = {
     // User specific state provider data
     // use pattern user_{userId}_{stateDefinitionName}_{keyDefinitionKey} for user data
 
@@ -240,6 +240,12 @@ function rollbackJSON() {
       otherStuff: "otherStuff",
     },
   };
+
+  if (cli) {
+    rollbackJson.user_user7_vaultTimeoutSettings_vaultTimeout = "never";
+  }
+
+  return rollbackJson;
 }
 
 describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
@@ -551,7 +557,7 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
 
   describe("rollback", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(rollbackJSON(), 61, "general", ClientType.Cli);
+      helper = mockMigrationHelper(rollbackJSON(true), 61, "general", ClientType.Cli);
       sut = new VaultTimeoutSettingsServiceStateProviderMigrator(60, 61);
     });
 
@@ -636,6 +642,15 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
         },
         otherStuff: "otherStuff",
       });
+
+      expect(helper.set).toHaveBeenCalledWith("user7", {
+        settings: {
+          vaultTimeout: null,
+          // vaultTimeoutAction: null, // not migrated
+          otherStuff: "otherStuff",
+        },
+        otherStuff: "otherStuff",
+      });
     });
 
     it("should not add back the global vault timeout data", async () => {
@@ -647,8 +662,7 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
     it("should not add data back if data wasn't migrated or acct doesn't exist", async () => {
       await sut.rollback(helper);
 
-      // no data to add back for user7 (acct exists but no migrated data) and user8 (no acct)
-      expect(helper.set).not.toHaveBeenCalledWith("user7", any());
+      // no data to add back for user8 (no acct)
       expect(helper.set).not.toHaveBeenCalledWith("user8", any());
     });
   });
