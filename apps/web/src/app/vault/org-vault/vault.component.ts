@@ -873,9 +873,9 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     // Allow restore of an Unassigned Item
     try {
-      const isUnassigned = c.collectionIds.length === 0;
       const asAdmin =
-        this.organization?.canEditAnyCollection(this.flexibleCollectionsV1Enabled) || isUnassigned;
+        this.organization?.canEditAnyCollection(this.flexibleCollectionsV1Enabled) ||
+        c.isUnassigned;
       await this.cipherService.restoreWithServer(c.id, asAdmin);
       this.platformUtilsService.showToast("success", null, this.i18nService.t("restoredItem"));
       this.refresh();
@@ -933,15 +933,12 @@ export class VaultComponent implements OnInit, OnDestroy {
       type: "warning",
     });
 
-    // Allow deleting for Unassigned Items
-    const isUnassigned = c.collectionIds.length === 0;
-
     if (!confirmed) {
       return false;
     }
 
     try {
-      await this.deleteCipherWithServer(c.id, permanent, isUnassigned);
+      await this.deleteCipherWithServer(c.id, permanent, c.isUnassigned);
       this.platformUtilsService.showToast(
         "success",
         null,
@@ -1008,7 +1005,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     const assignedCiphers: string[] = [];
 
     ciphers.map((c) => {
-      if (c.collectionIds.length === 0) {
+      if (c.isUnassigned) {
         unassignedCiphers.push(c.id);
       } else {
         assignedCiphers.push(c.id);
