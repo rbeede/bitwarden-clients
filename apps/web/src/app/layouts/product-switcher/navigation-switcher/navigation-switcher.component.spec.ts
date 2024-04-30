@@ -117,28 +117,10 @@ describe("NavigationProductSwitcherComponent", () => {
   });
 
   describe("available products", () => {
-    it("does not show active products", () => {
+    it("shows all products", () => {
       mockProducts$.next({
         bento: [
           { isActive: true, name: "Password Manager", icon: "bwi-lock", appRoute: "/vault" },
-          { isActive: false, name: "Secret Manager", icon: "bwi-lock", appRoute: "/sm" },
-        ],
-        other: [],
-      });
-
-      fixture.detectChanges();
-
-      const links = fixture.nativeElement.querySelectorAll("a");
-
-      expect(links.length).toBe(1);
-
-      expect(links[0].textContent).toContain("Secret Manager");
-    });
-
-    it("shows inactive products", () => {
-      mockProducts$.next({
-        bento: [
-          { isActive: false, name: "Password Manager", icon: "bwi-lock", appRoute: "/vault" },
           { isActive: false, name: "Secret Manager", icon: "bwi-lock", appRoute: "/sm" },
         ],
         other: [],

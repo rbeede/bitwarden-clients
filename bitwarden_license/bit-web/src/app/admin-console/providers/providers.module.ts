@@ -1,6 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { RouterModule } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { SearchModule } from "@bitwarden/components";
@@ -45,6 +46,7 @@ import { SetupComponent } from "./setup/setup.component";
     PaymentMethodWarningsModule,
     TaxInfoComponent,
     DangerZoneComponent,
+    RouterModule,
   ],
   declarations: [
     AcceptProviderComponent,

@@ -4,7 +4,6 @@
     [icon]="product.icon"
     [text]="product.name"
     [route]="product.appRoute"
-    [hideActiveStyles]="true"
   >
   </bit-nav-item>
   <ng-container *ngIf="(moreProducts$ | async) ?? [] as moreProducts">
