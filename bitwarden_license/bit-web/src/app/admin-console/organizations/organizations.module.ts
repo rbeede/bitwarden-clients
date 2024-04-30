@@ -1,6 +1,6 @@
 import { NgModule } from "@angular/core";
 
-import { safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
+import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import { LOGOUT_CALLBACK } from "@bitwarden/angular/services/injection-tokens";
 import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
@@ -24,28 +24,30 @@ import { DomainVerificationComponent } from "./manage/domain-verification/domain
 import { ScimComponent } from "./manage/scim.component";
 import { OrganizationsRoutingModule } from "./organizations-routing.module";
 
+const safeProviders: SafeProvider[] = [
+  safeProvider({
+    provide: ApiService,
+    deps: [
+      TokenService,
+      PlatformUtilsService,
+      EnvironmentService,
+      AppIdService,
+      StateService,
+      LOGOUT_CALLBACK,
+    ],
+  }),
+  safeProvider({
+    provide: OrganizationAuthRequestApiService,
+    deps: [ApiService],
+  }),
+  safeProvider({
+    provide: OrganizationAuthRequestService,
+    deps: [OrganizationAuthRequestApiService, CryptoService, OrganizationUserService],
+  }),
+];
+
 @NgModule({
-  providers: [
-    safeProvider({
-      provide: ApiService,
-      deps: [
-        TokenService,
-        PlatformUtilsService,
-        EnvironmentService,
-        AppIdService,
-        StateService,
-        LOGOUT_CALLBACK,
-      ],
-    }),
-    safeProvider({
-      provide: OrganizationAuthRequestApiService,
-      deps: [ApiService],
-    }),
-    safeProvider({
-      provide: OrganizationAuthRequestService,
-      deps: [OrganizationAuthRequestApiService, CryptoService, OrganizationUserService],
-    }),
-  ],
+  providers: safeProviders,
   imports: [SharedModule, OrganizationsRoutingModule, NoItemsModule, LooseComponentsModule],
   declarations: [
     SsoComponent,
