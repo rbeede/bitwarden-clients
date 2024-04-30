@@ -8050,6 +8050,9 @@
   "collectionItemSelect": {
     "message": "Select collection item"
   },
+  "manageBillingFromProviderPortalMessage": {
+    "message": "Manage billing from the Provider Portal"
+  },
   "lowKDFIterationsBanner": {
     "message": "Low KDF iterations. Increase your iterations to improve the security of your account."
   },
