@@ -8,7 +8,7 @@ import {
   VAULT_TIMEOUT,
   VAULT_TIMEOUT_ACTION,
   VaultTimeoutSettingsServiceStateProviderMigrator,
-} from "./60-migrate-vault-timeout-settings-svc-to-state-provider";
+} from "./61-migrate-vault-timeout-settings-svc-to-state-provider";
 
 // Represents data in state service pre-migration
 function preMigrationJson() {
@@ -170,8 +170,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
 
   describe("migrate", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(preMigrationJson(), 59);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+      helper = mockMigrationHelper(preMigrationJson(), 60);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(60, 61);
     });
 
     it("should remove state service data from all accounts that have it", async () => {
@@ -261,8 +261,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator", () => {
 
   describe("rollback", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(rollbackJSON(), 60);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+      helper = mockMigrationHelper(rollbackJSON(), 61);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(60, 61);
     });
 
     it("should null out newly migrated entries in state provider framework", async () => {
@@ -370,8 +370,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
 
   describe("migrate", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(preMigrationJson(), 59, "general", ClientType.Cli);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+      helper = mockMigrationHelper(preMigrationJson(), 60, "general", ClientType.Cli);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(60, 61);
     });
 
     it("should remove state service data from all accounts that have it", async () => {
@@ -473,8 +473,8 @@ describe("VaultTimeoutSettingsServiceStateProviderMigrator - CLI", () => {
 
   describe("rollback", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(rollbackJSON(), 60);
-      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(59, 60);
+      helper = mockMigrationHelper(rollbackJSON(), 61, "general", ClientType.Cli);
+      sut = new VaultTimeoutSettingsServiceStateProviderMigrator(60, 61);
     });
 
     it("should null out newly migrated entries in state provider framework", async () => {

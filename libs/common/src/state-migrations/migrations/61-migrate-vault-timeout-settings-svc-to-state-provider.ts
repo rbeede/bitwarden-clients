@@ -64,7 +64,7 @@ export enum ClientType {
   // DirectoryConnector = "connector",
 }
 
-export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<59, 60> {
+export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<60, 61> {
   async migrate(helper: MigrationHelper): Promise<void> {
     const globalData = await helper.get<ExpectedGlobalType>("global");
 
