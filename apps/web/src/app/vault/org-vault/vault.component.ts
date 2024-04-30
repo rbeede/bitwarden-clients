@@ -889,7 +889,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
     // assess if there are unassigned ciphers and/or editable ciphers selected in bulk for restore
-    const orgId = ciphers[0]?.organizationId;
     const editAccessCiphers: string[] = [];
     const unassignedCiphers: string[] = [];
 
@@ -911,11 +910,11 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
 
     if (unassignedCiphers.length > 0) {
-      await this.cipherService.restoreManyWithServer(unassignedCiphers, orgId);
+      await this.cipherService.restoreManyWithServer(unassignedCiphers, this.organization.id);
     }
 
     if (editAccessCiphers.length > 0) {
-      await this.cipherService.restoreManyWithServer(editAccessCiphers, orgId);
+      await this.cipherService.restoreManyWithServer(editAccessCiphers, this.organization.id);
     }
     this.platformUtilsService.showToast("success", null, this.i18nService.t("restoredItems"));
     this.refresh();
