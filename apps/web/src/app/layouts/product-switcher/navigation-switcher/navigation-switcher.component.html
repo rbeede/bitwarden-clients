@@ -5,13 +5,7 @@
     [text]="product.name"
     [route]="product.appRoute"
     [hideActiveStyles]="true"
-    class="tw-group"
   >
-    <ng-container slot="end">
-      <span class="tw-text-xxs tw-hidden group-hover:tw-block group-focus:tw-block">
-        {{ "switch" | i18n }}
-      </span>
-    </ng-container>
   </bit-nav-item>
   <ng-container *ngIf="(moreProducts$ | async) ?? [] as moreProducts">
     <section
