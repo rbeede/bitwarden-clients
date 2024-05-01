@@ -16,7 +16,6 @@ export class LegacyPasswordHistoryDecryptor {
   async decrypt(history: GeneratedPasswordHistory[]): Promise<GeneratedPasswordHistory[]> {
     const key = await this.cryptoService.getUserKey(this.userId);
 
-    // this code uses `decryptToUtf8` because the legacy service does
     const promises = (history ?? []).map(async (item) => {
       const encrypted = new EncString(item.password);
       const decrypted = await this.encryptService.decryptToUtf8(encrypted, key);
