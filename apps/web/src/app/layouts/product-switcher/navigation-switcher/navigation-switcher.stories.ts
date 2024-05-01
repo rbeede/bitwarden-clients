@@ -61,7 +61,6 @@ const translations: Record<string, string> = {
   moreFromBitwarden: "More from Bitwarden",
   secureYourInfrastructure: "Secure your infrastructure",
   protectYourFamilyOrBusiness: "Protect your family or business",
-  switch: "Switch",
   skipToContent: "Skip to content",
 };
 
