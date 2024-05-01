@@ -223,7 +223,7 @@ export const GENERATOR_HISTORY_BUFFER = new BufferedKeyDefinition<
     return items?.map((h) => new GeneratedPasswordHistory(h.password, h.date));
   },
   async isValid(history) {
-    return history && history.length ? true : false;
+    return history.length ? true : false;
   },
   async map(history, decryptor) {
     const credentials = await decryptor.decrypt(history);
