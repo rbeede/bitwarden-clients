@@ -4,6 +4,7 @@ import { ActivatedRoute } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -75,6 +76,10 @@ describe("GeneratorComponent", () => {
         {
           provide: CipherService,
           useValue: mock<CipherService>(),
+        },
+        {
+          provide: AccountService,
+          useValue: mock<AccountService>(),
         },
       ],
       schemas: [NO_ERRORS_SCHEMA],

@@ -8040,5 +8040,14 @@
   },
   "collectionAdminConsoleManaged": {
     "message": "Denne samling er kun tilgængelig via Admin-konsol"
+  },
+  "organizationOptionsMenu": {
+    "message": "Skift Organisationsmenu"
+  },
+  "vaultItemSelect": {
+    "message": "Vælg boksemne"
+  },
+  "collectionItemSelect": {
+    "message": "Vælg samlingsemne"
   }
 }

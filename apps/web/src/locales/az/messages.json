@@ -8040,5 +8040,14 @@
   },
   "collectionAdminConsoleManaged": {
     "message": "Bu kolleksiya yalnız admin konsolundan əlçatandır"
+  },
+  "organizationOptionsMenu": {
+    "message": "Təşkilat Menyusuna keç"
+  },
+  "vaultItemSelect": {
+    "message": "Anbar elementini seç"
+  },
+  "collectionItemSelect": {
+    "message": "Kolleksiya elementini seç"
   }
 }
