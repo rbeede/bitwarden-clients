@@ -56,7 +56,7 @@ describe("PasswordOptionsMigrator", () => {
       const helper = migrationHelper({
         type: "password",
       });
-      helper.getFromUser.mockReturnValue(Promise.resolve({ some: { other: "data" } }));
+      helper.getFromUser.mockResolvedValue({ some: { other: "data" } });
       const migrator = new PasswordOptionsMigrator(60, 61);
 
       await migrator.migrate(helper);
