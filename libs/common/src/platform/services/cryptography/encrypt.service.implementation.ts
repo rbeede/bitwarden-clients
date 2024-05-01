@@ -2,7 +2,7 @@ import { Utils } from "../../../platform/misc/utils";
 import { CryptoFunctionService } from "../../abstractions/crypto-function.service";
 import { EncryptService } from "../../abstractions/encrypt.service";
 import { LogService } from "../../abstractions/log.service";
-import { EncryptionType } from "../../enums";
+import { EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE, EncryptionType } from "../../enums";
 import { Decryptable } from "../../interfaces/decryptable.interface";
 import { Encrypted } from "../../interfaces/encrypted";
 import { InitializerMetadata } from "../../interfaces/initializer-metadata.interface";
@@ -64,7 +64,25 @@ export class EncryptServiceImplementation implements EncryptService {
   }
 
   stringIsEncString(value: string): boolean {
-    return EncString.parseEncryptedString(value) !== undefined;
+    if (value == null) {
+      return false;
+    }
+
+    const parsedEncString = EncString.parseEncryptedString(value);
+
+    if (
+      parsedEncString == null ||
+      parsedEncString.encType === null ||
+      parsedEncString.encPieces == null
+    ) {
+      return false;
+    }
+
+    // check if the number of parts in the parsed enc pieces matches the expected number of parts for the encryption type
+    return (
+      parsedEncString.encPieces.length ===
+      EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[parsedEncString.encType]
+    );
   }
 
   async decryptToUtf8(encString: EncString, key: SymmetricCryptoKey): Promise<string> {

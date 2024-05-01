@@ -2306,6 +2306,9 @@
   "important": {
     "message": "Important:"
   },
+  "logoutReasonAccessTokenUnableToBeDecrypted": {
+    "message": "You have been logged out because your access token could not be decrypted. Please log in again."
+  },
   "masterPasswordHint": {
     "message": "Your master password cannot be recovered if you forget it!"
   },

@@ -7,9 +7,9 @@ import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
-import { MessagingService } from "../../platform/abstractions/messaging.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
+import { MessageSender } from "../../platform/messaging";
 import { EncString, EncryptedString } from "../../platform/models/domain/enc-string";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -21,6 +21,7 @@ import {
 } from "../../platform/state";
 import { UserId } from "../../types/guid";
 import { TokenService as TokenServiceAbstraction } from "../abstractions/token.service";
+import { LogoutReason } from "../enums/logout-reason.enum";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
 import {
@@ -115,8 +116,6 @@ export type AccessTokenKey = Opaque<SymmetricCryptoKey, "AccessTokenKey">;
 
 export class TokenService implements TokenServiceAbstraction {
   private readonly accessTokenKeySecureStorageKey: string = "_accessTokenKey";
-  private readonly accessTokenKeyFailedToSaveToSecureStorageError =
-    "Access token key not saved to secure storage.";
 
   private readonly refreshTokenSecureStorageKey: string = "_refreshToken";
 
@@ -134,7 +133,7 @@ export class TokenService implements TokenServiceAbstraction {
     private keyGenerationService: KeyGenerationService,
     private encryptService: EncryptService,
     private logService: LogService,
-    private messagingService: MessagingService,
+    private messageSender: MessageSender,
   ) {
     this.initializeState();
   }
@@ -216,8 +215,11 @@ export class TokenService implements TokenServiceAbstraction {
     // So, let's add a check to ensure we can read the value after writing it.
     const accessTokenKey = await this.getAccessTokenKey(userId);
 
+    // TODO: remove this test code
+    // accessTokenKey = null;
+
     if (!accessTokenKey) {
-      throw new Error(this.accessTokenKeyFailedToSaveToSecureStorageError);
+      throw new Error("New Access token key unable to be retrieved from secure storage.");
     }
 
     return newAccessTokenKey;
@@ -240,7 +242,12 @@ export class TokenService implements TokenServiceAbstraction {
     }
 
     // First see if we have an accessTokenKey in secure storage and return it if we do
+    // Note: retrieving/saving data from/to secure storage on linux will throw if the
+    // distro doesn't have a secure storage provider
     let accessTokenKey: AccessTokenKey = await this.getAccessTokenKey(userId);
+
+    // TODO: remove this test code
+    // accessTokenKey = null;
 
     if (!accessTokenKey) {
       // Otherwise, create a new one and save it to secure storage, then return it
@@ -314,15 +321,15 @@ export class TokenService implements TokenServiceAbstraction {
           // Remove this call to remove the access token from memory after 3 releases.
           await this.singleUserStateProvider.get(userId, ACCESS_TOKEN_MEMORY).update((_) => null);
         } catch (error) {
-          // check if error is Access token key not saved to secure storage.
-          if (error.message === this.accessTokenKeyFailedToSaveToSecureStorageError) {
-            // Fall back to disk storage for unecrypted access token
-            await this.singleUserStateProvider
-              .get(userId, ACCESS_TOKEN_DISK)
-              .update((_) => accessToken);
-          }
-          // re-throw the error if it's not the expected error
-          throw error;
+          this.logService.error(
+            `SetAccessToken: storing encrypted access token in secure storage failed. Falling back to disk storage."`,
+            error,
+          );
+
+          // Fall back to disk storage for unecrypted access token
+          await this.singleUserStateProvider
+            .get(userId, ACCESS_TOKEN_DISK)
+            .update((_) => accessToken);
         }
 
         return;
@@ -383,11 +390,11 @@ export class TokenService implements TokenServiceAbstraction {
     await this.singleUserStateProvider.get(userId, ACCESS_TOKEN_MEMORY).update((_) => null);
   }
 
-  async getAccessToken(userId?: UserId): Promise<string | undefined> {
+  async getAccessToken(userId?: UserId): Promise<string | null> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
 
     if (!userId) {
-      return undefined;
+      return null;
     }
 
     // Try to get the access token from memory
@@ -406,15 +413,44 @@ export class TokenService implements TokenServiceAbstraction {
     }
 
     if (this.platformSupportsSecureStorage) {
-      const accessTokenKey = await this.getAccessTokenKey(userId);
+      let accessTokenKey: AccessTokenKey;
+      try {
+        accessTokenKey = await this.getAccessTokenKey(userId);
+      } catch (error) {
+        if (this.encryptService.stringIsEncString(accessTokenDisk)) {
+          this.logService.error(
+            "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
+          );
+          this.messageSender.send("logout", {
+            userId,
+            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          });
+          return null;
+        }
+
+        // If the access token key is not found, but the access token is unencrypted then
+        // this indicates that this is the pre-migration state where the access token
+        // was stored unencrypted on disk. We can return the access token as is.
+        // Note: this is likely to only be hit for linux users who don't
+        // have a secure storage provider configured.
+        return accessTokenDisk;
+      }
+
+      // TODO: remove this test code
+      // accessTokenKey = null;
 
       if (!accessTokenKey) {
         if (this.encryptService.stringIsEncString(accessTokenDisk)) {
-          // We have to log the user out if we can't decrypt the access token
+          // The access token is encrypted but we don't have the key to decrypt it for
+          // whatever reason so we have to log the user out.
           this.logService.error(
             "Access token key not found to decrypt encrypted access token. Logging user out.",
           );
-          this.messagingService.send("logout", { userId });
+          this.messageSender.send("logout", {
+            userId,
+            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          });
+          return null;
         }
 
         // We know this is an unencrypted access token
@@ -430,12 +466,14 @@ export class TokenService implements TokenServiceAbstraction {
         );
         return decryptedAccessToken;
       } catch (error) {
-        // If an error occurs during decryption, return null for logout.
+        // If an error occurs during decryption, logout and then return null.
         // We don't try to recover here since we'd like to know
         // if access token and key are getting out of sync.
-        this.logService.error(
-          `Failed to decrypt access token: ${error?.message ?? "Unknown error."}`,
-        );
+        this.logService.error(`Failed to decrypt access token`, error);
+        this.messageSender.send("logout", {
+          userId,
+          reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+        });
         return null;
       }
     }
