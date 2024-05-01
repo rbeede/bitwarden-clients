@@ -10,7 +10,9 @@ import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeou
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { DeviceType } from "@bitwarden/common/enums";
@@ -63,6 +65,8 @@ export class LockComponent extends BaseLockComponent {
     pinCryptoService: PinCryptoServiceAbstraction,
     biometricStateService: BiometricStateService,
     accountService: AccountService,
+    authService: AuthService,
+    kdfConfigService: KdfConfigService,
   ) {
     super(
       masterPasswordService,
@@ -87,6 +91,8 @@ export class LockComponent extends BaseLockComponent {
       pinCryptoService,
       biometricStateService,
       accountService,
+      authService,
+      kdfConfigService,
     );
   }
 

@@ -3,6 +3,7 @@ import * as path from "path";
 
 import { program } from "commander";
 import * as jsdom from "jsdom";
+import { firstValueFrom } from "rxjs";
 
 import {
   InternalUserDecryptionOptionsServiceAbstraction,
@@ -30,12 +31,14 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
+import { KdfConfigService as KdfConfigServiceAbstraction } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import { DeviceTrustService } from "@bitwarden/common/auth/services/device-trust.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
+import { KdfConfigService } from "@bitwarden/common/auth/services/kdf-config.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/services/key-connector.service";
 import { MasterPasswordService } from "@bitwarden/common/auth/services/master-password/master-password.service";
 import { TokenService } from "@bitwarden/common/auth/services/token.service";
@@ -77,7 +80,7 @@ import { MigrationBuilderService } from "@bitwarden/common/platform/services/mig
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
-import { UserKeyInitService } from "@bitwarden/common/platform/services/user-key-init.service";
+import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import {
   ActiveUserStateProvider,
   DerivedStateProvider,
@@ -234,7 +237,8 @@ export class Main {
   biometricStateService: BiometricStateService;
   billingAccountProfileStateService: BillingAccountProfileStateService;
   providerApiService: ProviderApiServiceAbstraction;
-  userKeyInitService: UserKeyInitService;
+  userAutoUnlockKeyService: UserAutoUnlockKeyService;
+  kdfConfigService: KdfConfigServiceAbstraction;
 
   constructor() {
     let p = null;
@@ -311,7 +315,7 @@ export class Main {
       this.singleUserStateProvider,
     );
 
-    this.derivedStateProvider = new DefaultDerivedStateProvider(storageServiceProvider);
+    this.derivedStateProvider = new DefaultDerivedStateProvider();
 
     this.stateProvider = new DefaultStateProvider(
       this.activeUserStateProvider,
@@ -342,6 +346,7 @@ export class Main {
       this.storageService,
       this.logService,
       new MigrationBuilderService(),
+      ClientType.Cli,
     );
 
     this.stateService = new StateService(
@@ -358,6 +363,8 @@ export class Main {
 
     this.masterPasswordService = new MasterPasswordService(this.stateProvider);
 
+    this.kdfConfigService = new KdfConfigService(this.stateProvider);
+
     this.cryptoService = new CryptoService(
       this.masterPasswordService,
       this.keyGenerationService,
@@ -368,6 +375,7 @@ export class Main {
       this.stateService,
       this.accountService,
       this.stateProvider,
+      this.kdfConfigService,
     );
 
     this.appIdService = new AppIdService(this.globalStateProvider);
@@ -450,7 +458,11 @@ export class Main {
       this.stateProvider,
     );
 
-    this.twoFactorService = new TwoFactorService(this.i18nService, this.platformUtilsService);
+    this.twoFactorService = new TwoFactorService(
+      this.i18nService,
+      this.platformUtilsService,
+      this.globalStateProvider,
+    );
 
     this.passwordStrengthService = new PasswordStrengthService();
 
@@ -513,6 +525,7 @@ export class Main {
       this.userDecryptionOptionsService,
       this.globalStateProvider,
       this.billingAccountProfileStateService,
+      this.kdfConfigService,
     );
 
     this.authService = new AuthService(
@@ -575,6 +588,7 @@ export class Main {
       this.cryptoService,
       this.vaultTimeoutSettingsService,
       this.logService,
+      this.kdfConfigService,
     );
 
     this.userVerificationService = new UserVerificationService(
@@ -589,6 +603,7 @@ export class Main {
       this.logService,
       this.vaultTimeoutSettingsService,
       this.platformUtilsService,
+      this.kdfConfigService,
     );
 
     this.vaultTimeoutService = new VaultTimeoutService(
@@ -655,7 +670,7 @@ export class Main {
       this.cipherService,
       this.cryptoService,
       this.cryptoFunctionService,
-      this.stateService,
+      this.kdfConfigService,
     );
 
     this.organizationExportService = new OrganizationVaultExportService(
@@ -663,8 +678,8 @@ export class Main {
       this.apiService,
       this.cryptoService,
       this.cryptoFunctionService,
-      this.stateService,
       this.collectionService,
+      this.kdfConfigService,
     );
 
     this.exportService = new VaultExportService(
@@ -696,11 +711,7 @@ export class Main {
 
     this.providerApiService = new ProviderApiService(this.apiService);
 
-    this.userKeyInitService = new UserKeyInitService(
-      this.accountService,
-      this.cryptoService,
-      this.logService,
-    );
+    this.userAutoUnlockKeyService = new UserAutoUnlockKeyService(this.cryptoService);
   }
 
   async run() {
@@ -721,7 +732,7 @@ export class Main {
     this.authService.logOut(() => {
       /* Do nothing */
     });
-    const userId = await this.stateService.getUserId();
+    const userId = (await this.stateService.getUserId()) as UserId;
     await Promise.all([
       this.eventUploadService.uploadEvents(userId as UserId),
       this.syncService.setLastSync(new Date(0)),
@@ -732,9 +743,10 @@ export class Main {
       this.passwordGenerationService.clear(),
     ]);
 
-    await this.stateEventRunnerService.handleEvent("logout", userId as UserId);
+    await this.stateEventRunnerService.handleEvent("logout", userId);
 
     await this.stateService.clean();
+    await this.accountService.clean(userId);
     process.env.BW_SESSION = null;
   }
 
@@ -744,7 +756,11 @@ export class Main {
     this.containerService.attachToGlobal(global);
     await this.i18nService.init();
     this.twoFactorService.init();
-    this.userKeyInitService.listenForActiveUserChangesToSetUserKey();
+
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    if (activeAccount) {
+      await this.userAutoUnlockKeyService.setUserKeyInMemoryIfAutoUserKeySet(activeAccount.id);
+    }
   }
 }
 
