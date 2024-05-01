@@ -141,6 +141,66 @@ export const SIMPLE_LOGIN_FORWARDER = new UserKeyDefinition<SelfHostedApiOptions
   },
 );
 
+/** backing store configuration for {@link Forwarders.AddyIo} */
+export const ADDY_IO_BUFFER = new BufferedKeyDefinition<SelfHostedApiOptions & EmailDomainOptions>(
+  GENERATOR_DISK,
+  "addyIoBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** backing store configuration for {@link Forwarders.DuckDuckGo} */
+export const DUCK_DUCK_GO_BUFFER = new BufferedKeyDefinition<ApiOptions>(
+  GENERATOR_DISK,
+  "duckDuckGoBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** backing store configuration for {@link Forwarders.FastMail} */
+export const FASTMAIL_BUFFER = new BufferedKeyDefinition<ApiOptions & EmailPrefixOptions>(
+  GENERATOR_DISK,
+  "fastmailBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** backing store configuration for {@link Forwarders.FireFoxRelay} */
+export const FIREFOX_RELAY_BUFFER = new BufferedKeyDefinition<ApiOptions>(
+  GENERATOR_DISK,
+  "firefoxRelayBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** backing store configuration for {@link Forwarders.ForwardEmail} */
+export const FORWARD_EMAIL_BUFFER = new BufferedKeyDefinition<ApiOptions & EmailDomainOptions>(
+  GENERATOR_DISK,
+  "forwardEmailBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** backing store configuration for {@link forwarders.SimpleLogin} */
+export const SIMPLE_LOGIN_BUFFER = new BufferedKeyDefinition<SelfHostedApiOptions>(
+  GENERATOR_DISK,
+  "simpleLoginBuffer",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
 /** encrypted password generation history */
 export const GENERATOR_HISTORY = SecretKeyDefinition.array(
   GENERATOR_DISK,
