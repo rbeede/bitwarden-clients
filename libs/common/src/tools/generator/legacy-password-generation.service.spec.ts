@@ -175,7 +175,7 @@ describe("LegacyPasswordGenerationService", () => {
         number: true,
         minNumber: 3,
         special: false,
-        minSpecial: 4,
+        minSpecial: 0,
       });
       const innerPassphrase = createPassphraseGenerator({
         numWords: 10,
@@ -211,7 +211,7 @@ describe("LegacyPasswordGenerationService", () => {
         number: true,
         minNumber: 3,
         special: false,
-        minSpecial: 4,
+        minSpecial: 0,
         numWords: 10,
         wordSeparator: "-",
         capitalize: true,
@@ -452,7 +452,7 @@ describe("LegacyPasswordGenerationService", () => {
         number: true,
         minNumber: 3,
         special: false,
-        minSpecial: 4,
+        minSpecial: 0,
       };
       await generator.saveOptions(options);
 
