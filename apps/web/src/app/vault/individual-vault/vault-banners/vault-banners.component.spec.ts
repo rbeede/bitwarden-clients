@@ -10,6 +10,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { BannerComponent, BannerModule } from "@bitwarden/components";
 
+import { VerifyEmailComponent } from "../../../auth/settings/verify-email.component";
 import { LooseComponentsModule } from "../../../shared";
 
 import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banners.service";
@@ -35,7 +36,7 @@ describe("VaultBannersComponent", () => {
     bannerService.shouldShowLowKDFBanner.mockResolvedValue(false);
 
     await TestBed.configureTestingModule({
-      imports: [BannerModule, LooseComponentsModule],
+      imports: [BannerModule, LooseComponentsModule, VerifyEmailComponent],
       declarations: [VaultBannersComponent, I18nPipe],
       providers: [
         {

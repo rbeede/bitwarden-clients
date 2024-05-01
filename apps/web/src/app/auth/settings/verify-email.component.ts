@@ -1,13 +1,18 @@
+import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Output } from "@angular/core";
 
+import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { AsyncActionsModule, BannerModule, ButtonModule, LinkModule } from "@bitwarden/components";
 
 @Component({
+  standalone: true,
   selector: "app-verify-email",
   templateUrl: "verify-email.component.html",
+  imports: [AsyncActionsModule, BannerModule, ButtonModule, CommonModule, JslibModule, LinkModule],
 })
 export class VerifyEmailComponent {
   actionPromise: Promise<unknown>;

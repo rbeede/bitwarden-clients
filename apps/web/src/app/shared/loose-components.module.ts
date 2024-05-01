@@ -4,7 +4,7 @@ import {
   PasswordCalloutComponent,
   UserVerificationFormInputComponent,
 } from "@bitwarden/auth/angular";
-import { BannerModule, LayoutComponent, NavigationModule } from "@bitwarden/components";
+import { LayoutComponent, NavigationModule } from "@bitwarden/components";
 
 import { OrganizationLayoutComponent } from "../admin-console/organizations/layouts/organization-layout.component";
 import { EventsComponent as OrgEventsComponent } from "../admin-console/organizations/manage/events.component";
@@ -53,7 +53,6 @@ import { TwoFactorSetupComponent } from "../auth/settings/two-factor-setup.compo
 import { TwoFactorVerifyComponent } from "../auth/settings/two-factor-verify.component";
 import { TwoFactorWebAuthnComponent } from "../auth/settings/two-factor-webauthn.component";
 import { TwoFactorYubiKeyComponent } from "../auth/settings/two-factor-yubikey.component";
-import { VerifyEmailComponent } from "../auth/settings/verify-email.component";
 import { UserVerificationModule } from "../auth/shared/components/user-verification";
 import { SsoComponent } from "../auth/sso.component";
 import { TwoFactorOptionsComponent } from "../auth/two-factor-options.component";
@@ -116,7 +115,6 @@ import { SharedModule } from "./shared.module";
     OrganizationLayoutComponent,
     UserLayoutComponent,
     PaymentMethodWarningsModule,
-    BannerModule,
   ],
   declarations: [
     AcceptFamilySponsorshipComponent,
@@ -186,7 +184,6 @@ import { SharedModule } from "./shared.module";
     UpdatePasswordComponent,
     UpdateTempPasswordComponent,
     VaultTimeoutInputComponent,
-    VerifyEmailComponent,
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
     VerifyRecoverDeleteProviderComponent,
@@ -263,7 +260,6 @@ import { SharedModule } from "./shared.module";
     UpdateTempPasswordComponent,
     UserLayoutComponent,
     VaultTimeoutInputComponent,
-    VerifyEmailComponent,
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
     VerifyRecoverDeleteProviderComponent,

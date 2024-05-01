@@ -2,6 +2,7 @@ import { NgModule } from "@angular/core";
 
 import { BannerModule, BreadcrumbsModule } from "@bitwarden/components";
 
+import { VerifyEmailComponent } from "../../auth/settings/verify-email.component";
 import { LooseComponentsModule, SharedModule } from "../../shared";
 import { CollectionDialogModule } from "../components/collection-dialog";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
@@ -37,6 +38,7 @@ import { VaultComponent } from "./vault.component";
     CollectionDialogModule,
     VaultOnboardingComponent,
     BannerModule,
+    VerifyEmailComponent,
   ],
   declarations: [VaultComponent, VaultHeaderComponent, VaultBannersComponent],
   exports: [VaultComponent],
