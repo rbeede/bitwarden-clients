@@ -14,7 +14,8 @@
       "@bitwarden/vault-export-ui": ["../../libs/tools/export/vault-export/vault-export-core/src"],
       "@bitwarden/platform": ["../../libs/platform/src"],
       "@bitwarden/vault": ["../../libs/vault/src"],
-      "@bitwarden/web-vault/*": ["../../apps/web/src/*"]
+      "@bitwarden/web-vault/*": ["../../apps/web/src/*"],
+      "@bitwarden/bit-common": ["../../bitwarden_license/bit-common/src"]
     }
   },
   "include": ["src/**/*.stories.ts"]

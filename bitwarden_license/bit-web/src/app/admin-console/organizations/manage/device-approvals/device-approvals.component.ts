@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject, Subject, switchMap, takeUntil, tap } from "rxjs";
 
+import { OrganizationAuthRequestService } from "@bitwarden/bit-common/admin-console/auth-requests/organization-auth-request.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -9,7 +10,6 @@ import { ValidationService } from "@bitwarden/common/platform/abstractions/valid
 import { TableDataSource } from "@bitwarden/components";
 import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 
-import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/auth-requests/organization-auth-request.service";
 import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/auth-requests/pending-auth-request.view";
 @Component({
   selector: "app-org-device-approvals",
