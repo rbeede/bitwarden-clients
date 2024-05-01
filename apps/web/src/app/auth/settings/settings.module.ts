@@ -1,7 +1,6 @@
 import { NgModule } from "@angular/core";
 
 import { PasswordCalloutComponent } from "@bitwarden/auth/angular";
-import { BannerModule } from "@bitwarden/components";
 
 import { SharedModule } from "../../shared";
 import { EmergencyAccessModule } from "../emergency-access";
@@ -17,7 +16,6 @@ import { WebauthnLoginSettingsModule } from "./webauthn-login-settings";
     EmergencyAccessModule,
     PasswordCalloutComponent,
     UserKeyRotationModule,
-    BannerModule,
   ],
   declarations: [ChangePasswordComponent],
   providers: [],
