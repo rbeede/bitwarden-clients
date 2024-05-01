@@ -8040,5 +8040,14 @@
   },
   "collectionAdminConsoleManaged": {
     "message": "Эта коллекция доступна только из консоли администратора"
+  },
+  "organizationOptionsMenu": {
+    "message": "Переключить меню организации"
+  },
+  "vaultItemSelect": {
+    "message": "Выбрать элемент хранилища"
+  },
+  "collectionItemSelect": {
+    "message": "Выбрать элемент коллекции"
   }
 }

@@ -8040,5 +8040,14 @@
   },
   "collectionAdminConsoleManaged": {
     "message": "Ця збірка доступна тільки з консолі адміністратора"
+  },
+  "organizationOptionsMenu": {
+    "message": "Перемкнути меню організації"
+  },
+  "vaultItemSelect": {
+    "message": "Вибрати елемент сховища"
+  },
+  "collectionItemSelect": {
+    "message": "Вибрати елемент збірки"
   }
 }
