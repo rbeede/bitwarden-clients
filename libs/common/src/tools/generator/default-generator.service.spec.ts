@@ -126,6 +126,8 @@ describe("Password generator service", () => {
       expect(policy).toBe(evaluator);
     });
 
+    // FIXME: This test is disabled because the evaluator logic updates conflict with the
+    // skip logic required to work around missing sync events.
     it("should update the evaluator when the password generator policy changes", async () => {
       // set up dependencies
       const state = new BehaviorSubject<Policy[]>([null]);

@@ -1,10 +1,11 @@
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { ChangeDetectorRef, NO_ERRORS_SCHEMA, NgZone } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -55,6 +56,22 @@ describe("GeneratorComponent", () => {
         {
           provide: LogService,
           useValue: mock<LogService>(),
+        },
+        {
+          provide: BroadcasterService,
+          useValue: mock<BroadcasterService>(),
+        },
+        {
+          provide: NgZone,
+          useValue: new NgZone({
+            enableLongStackTrace: true,
+            shouldCoalesceEventChangeDetection: false,
+            shouldCoalesceRunChangeDetection: false,
+          }),
+        },
+        {
+          provide: ChangeDetectorRef,
+          useValue: mock<ChangeDetectorRef>(),
         },
         {
           provide: CipherService,

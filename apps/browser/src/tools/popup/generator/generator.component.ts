@@ -1,9 +1,10 @@
 import { Location } from "@angular/common";
-import { Component } from "@angular/core";
+import { ChangeDetectorRef, Component, NgZone } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { GeneratorComponent as BaseGeneratorComponent } from "@bitwarden/angular/tools/generator/components/generator.component";
+import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -32,6 +33,9 @@ export class GeneratorComponent extends BaseGeneratorComponent {
     cipherService: CipherService,
     route: ActivatedRoute,
     logService: LogService,
+    broadcasterService: BroadcasterService,
+    ngZone: NgZone,
+    changeDetectorRef: ChangeDetectorRef,
     private location: Location,
   ) {
     super(
@@ -42,6 +46,9 @@ export class GeneratorComponent extends BaseGeneratorComponent {
       i18nService,
       logService,
       route,
+      broadcasterService,
+      ngZone,
+      changeDetectorRef,
       window,
     );
     this.cipherService = cipherService;

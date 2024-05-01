@@ -137,10 +137,8 @@ import { EventUploadService } from "@bitwarden/common/services/event/event-uploa
 import { NotificationsService } from "@bitwarden/common/services/notifications.service";
 import { SearchService } from "@bitwarden/common/services/search.service";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/services/vault-timeout/vault-timeout-settings.service";
-import {
-  PasswordGenerationService,
-  PasswordGenerationServiceAbstraction,
-} from "@bitwarden/common/tools/generator/password";
+import { legacyPasswordGenerationServiceFactory } from "@bitwarden/common/tools/generator";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import {
   UsernameGenerationService,
   UsernameGenerationServiceAbstraction,
@@ -604,10 +602,12 @@ export default class MainBackground {
 
     this.passwordStrengthService = new PasswordStrengthService();
 
-    this.passwordGenerationService = new PasswordGenerationService(
+    this.passwordGenerationService = legacyPasswordGenerationServiceFactory(
+      this.encryptService,
       this.cryptoService,
       this.policyService,
-      this.stateService,
+      this.accountService,
+      this.stateProvider,
     );
 
     this.userDecryptionOptionsService = new UserDecryptionOptionsService(this.stateProvider);
