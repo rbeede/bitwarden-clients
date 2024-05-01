@@ -59,9 +59,7 @@ export enum ClientType {
   Web = "web",
   Browser = "browser",
   Desktop = "desktop",
-  // Mobile = "mobile",
   Cli = "cli",
-  // DirectoryConnector = "connector",
 }
 
 export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<60, 61> {
@@ -122,12 +120,7 @@ export class VaultTimeoutSettingsServiceStateProviderMigrator extends Migrator<6
       }
     }
 
-    // await Promise.all([...accounts.map(({ userId, account }) => migrateAccount(userId, account))]);
-
-    // convert the promise all to a loop
-    for (const { userId, account } of accounts) {
-      await migrateAccount(userId, account);
-    }
+    await Promise.all([...accounts.map(({ userId, account }) => migrateAccount(userId, account))]);
 
     // Delete global data
     delete globalData?.vaultTimeout;
