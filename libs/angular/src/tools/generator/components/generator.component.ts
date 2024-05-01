@@ -1,23 +1,13 @@
-import {
-  ChangeDetectorRef,
-  Directive,
-  EventEmitter,
-  Input,
-  NgZone,
-  OnDestroy,
-  OnInit,
-  Output,
-} from "@angular/core";
+import { Directive, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { BehaviorSubject } from "rxjs";
-import { debounceTime, first, map } from "rxjs/operators";
+import { BehaviorSubject, combineLatest, firstValueFrom, Subject } from "rxjs";
+import { debounceTime, first, map, skipWhile, takeUntil } from "rxjs/operators";
 
 import { PasswordGeneratorPolicyOptions } from "@bitwarden/common/admin-console/models/domain/password-generator-policy-options";
-import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { GeneratorType } from "@bitwarden/common/tools/generator/generator-type";
 import {
   PasswordGenerationServiceAbstraction,
@@ -29,8 +19,6 @@ import {
   UsernameGeneratorOptions,
 } from "@bitwarden/common/tools/generator/username";
 import { EmailForwarderOptions } from "@bitwarden/common/tools/models/domain/email-forwarder-options";
-
-const ComponentId = "GeneratorComponent";
 
 @Directive()
 export class GeneratorComponent implements OnInit, OnDestroy {
@@ -54,6 +42,9 @@ export class GeneratorComponent implements OnInit, OnDestroy {
   enforcedPasswordPolicyOptions: PasswordGeneratorPolicyOptions;
   usernameWebsite: string = null;
 
+  private destroy$ = new Subject<void>();
+  private isInitialized$ = new BehaviorSubject(false);
+
   // update screen reader minimum password length with 500ms debounce
   // so that the user isn't flooded with status updates
   private _passwordOptionsMinLengthForReader = new BehaviorSubject<number>(
@@ -68,13 +59,10 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     protected passwordGenerationService: PasswordGenerationServiceAbstraction,
     protected usernameGenerationService: UsernameGenerationServiceAbstraction,
     protected platformUtilsService: PlatformUtilsService,
-    protected stateService: StateService,
+    protected accountService: AccountService,
     protected i18nService: I18nService,
     protected logService: LogService,
     protected route: ActivatedRoute,
-    protected broadcasterService: BroadcasterService,
-    protected ngZone: NgZone,
-    protected changeDetectorRef: ChangeDetectorRef,
     private win: Window,
   ) {
     this.typeOptions = [
@@ -105,15 +93,19 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     ];
     this.subaddressOptions = [{ name: i18nService.t("random"), value: "random" }];
     this.catchallOptions = [{ name: i18nService.t("random"), value: "random" }];
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.initForwardOptions();
+
+    this.forwardOptions = [
+      { name: "", value: "", validForSelfHosted: false },
+      { name: "addy.io", value: "anonaddy", validForSelfHosted: true },
+      { name: "DuckDuckGo", value: "duckduckgo", validForSelfHosted: false },
+      { name: "Fastmail", value: "fastmail", validForSelfHosted: true },
+      { name: "Firefox Relay", value: "firefoxrelay", validForSelfHosted: false },
+      { name: "SimpleLogin", value: "simplelogin", validForSelfHosted: true },
+      { name: "Forward Email", value: "forwardemail", validForSelfHosted: true },
+    ].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async load(navigationType: GeneratorType = undefined) {
-    const passwordOptionsResponse = await this.passwordGenerationService.getOptions();
-    this.passwordOptions = passwordOptionsResponse[0];
-    this.enforcedPasswordPolicyOptions = passwordOptionsResponse[1];
+  cascadeOptions(navigationType: GeneratorType = undefined, accountEmail: string) {
     this.avoidAmbiguous = !this.passwordOptions.ambiguous;
 
     if (!this.type) {
@@ -127,7 +119,6 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     this.passwordOptions.type =
       this.passwordOptions.type === "passphrase" ? "passphrase" : "password";
 
-    this.usernameOptions = await this.usernameGenerationService.getOptions();
     if (this.usernameOptions.type == null) {
       this.usernameOptions.type = "word";
     }
@@ -135,7 +126,7 @@ export class GeneratorComponent implements OnInit, OnDestroy {
       this.usernameOptions.subaddressEmail == null ||
       this.usernameOptions.subaddressEmail === ""
     ) {
-      this.usernameOptions.subaddressEmail = await this.stateService.getEmail();
+      this.usernameOptions.subaddressEmail = accountEmail;
     }
     if (this.usernameWebsite == null) {
       this.usernameOptions.subaddressType = this.usernameOptions.catchallType = "random";
@@ -145,42 +136,69 @@ export class GeneratorComponent implements OnInit, OnDestroy {
       this.subaddressOptions.push(websiteOption);
       this.catchallOptions.push(websiteOption);
     }
-
-    if (this.regenerateWithoutButtonPress()) {
-      await this.regenerate();
-    }
   }
 
   async ngOnInit() {
-    // eslint-disable-next-line rxjs/no-async-subscribe
-    this.route.queryParams.pipe(first()).subscribe(async (qParams) => {
-      await this.load(qParams.type as GeneratorType);
-    });
+    // look upon my works, ye mighty, and despair!
+    combineLatest(
+      this.route.queryParams.pipe(first()),
+      this.accountService.activeAccount$.pipe(first()),
+      this.passwordGenerationService.getOptions$(),
+      this.usernameGenerationService.getOptions$(),
+    )
+      .pipe(
+        map(([qParams, account, [passwordOptions, passwordPolicy], usernameOptions]) => ({
+          navigationType: qParams.type as GeneratorType,
+          accountEmail: account.email,
+          passwordOptions,
+          passwordPolicy,
+          usernameOptions,
+        })),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((options) => {
+        this.passwordOptions = options.passwordOptions;
+        this.enforcedPasswordPolicyOptions = options.passwordPolicy;
+        this.usernameOptions = options.usernameOptions;
 
-    // Load all sends if sync completed in background
-    this.broadcasterService.subscribe(ComponentId, (message: any) => {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.ngZone.run(async () => {
-        switch (message.command) {
-          case "syncCompleted":
-            window.setTimeout(() => {
-              // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
-              this.load();
-            }, 500);
-            break;
-          default:
-            break;
-        }
+        this.cascadeOptions(options.navigationType, options.accountEmail);
 
-        this.changeDetectorRef.detectChanges();
+        this.isInitialized$.next(true);
       });
-    });
+
+    // only perform this regeneration on the first load to avoid
+    // multiple-generation issues due to `this.regenerate()` calls
+    // elsewhere. The main downside is a generation won't occur
+    // immediately after the policy updates. The user needs to
+    // interact with the generator.
+    this.isInitialized$
+      .pipe(
+        skipWhile((initialized) => !initialized),
+        first(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        if (this.regenerateWithoutButtonPress()) {
+          this.regenerate().catch((e) => {
+            this.logService.error(e);
+          });
+        }
+      });
+
+    // once initialization is complete, `ngOnInit` should return.
+    //
+    // FIXME(#6944): if a sync is in progress, wait to complete until after
+    // the sync completes.
+    await firstValueFrom(
+      this.isInitialized$.pipe(
+        skipWhile((initialized) => !initialized),
+        takeUntil(this.destroy$),
+      ),
+    );
   }
 
   ngOnDestroy() {
-    this.broadcasterService.unsubscribe(ComponentId);
+    this.destroy$.next();
   }
 
   async typeChanged() {
@@ -350,26 +368,5 @@ export class GeneratorComponent implements OnInit, OnDestroy {
     );
 
     this._passwordOptionsMinLengthForReader.next(this.passwordOptions.minLength);
-  }
-
-  private async initForwardOptions() {
-    this.forwardOptions = [
-      { name: "addy.io", value: "anonaddy", validForSelfHosted: true },
-      { name: "DuckDuckGo", value: "duckduckgo", validForSelfHosted: false },
-      { name: "Fastmail", value: "fastmail", validForSelfHosted: true },
-      { name: "Firefox Relay", value: "firefoxrelay", validForSelfHosted: false },
-      { name: "SimpleLogin", value: "simplelogin", validForSelfHosted: true },
-      { name: "Forward Email", value: "forwardemail", validForSelfHosted: true },
-    ];
-
-    this.usernameOptions = await this.usernameGenerationService.getOptions();
-    if (
-      this.usernameOptions.forwardedService == null ||
-      this.usernameOptions.forwardedService === ""
-    ) {
-      this.forwardOptions.push({ name: "", value: null, validForSelfHosted: false });
-    }
-
-    this.forwardOptions = this.forwardOptions.sort((a, b) => a.name.localeCompare(b.name));
   }
 }

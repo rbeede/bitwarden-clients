@@ -1,3 +1,5 @@
+import { from } from "rxjs";
+
 import { PolicyService } from "../../../admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "../../../admin-console/enums";
 import { PasswordGeneratorPolicyOptions } from "../../../admin-console/models/domain/password-generator-policy-options";
@@ -169,6 +171,10 @@ export class PasswordGenerationService implements PasswordGenerationServiceAbstr
       await this.appendRandomNumberToRandomWord(wordList);
     }
     return wordList.join(o.wordSeparator);
+  }
+
+  getOptions$() {
+    return from(this.getOptions());
   }
 
   async getOptions(): Promise<[PasswordGeneratorOptions, PasswordGeneratorPolicyOptions]> {

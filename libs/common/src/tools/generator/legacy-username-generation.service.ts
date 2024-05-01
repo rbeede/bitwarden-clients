@@ -205,7 +205,7 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
     }
   }
 
-  getOptions() {
+  getOptions$() {
     const options$ = this.accountService.activeAccount$.pipe(
       concatMap((account) =>
         zip(
@@ -273,7 +273,11 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
       ),
     );
 
-    return firstValueFrom(options$);
+    return options$;
+  }
+
+  getOptions() {
+    return firstValueFrom(this.getOptions$());
   }
 
   async saveOptions(options: UsernameGeneratorOptions) {

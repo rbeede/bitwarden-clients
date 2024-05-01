@@ -99,7 +99,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
     return this.passphrases.generate(options);
   }
 
-  async getOptions() {
+  getOptions$() {
     const options$ = this.accountService.activeAccount$.pipe(
       concatMap((activeUser) =>
         zip(
@@ -127,9 +127,9 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
           generatorEvaluator,
         ]) => {
           const options = this.toPasswordGeneratorOptions({
-            password: passwordOptions ?? passwordDefaults,
-            passphrase: passphraseOptions ?? passphraseDefaults,
-            generator: generatorOptions ?? generatorDefaults,
+            password: passwordEvaluator.applyPolicy(passwordOptions ?? passwordDefaults),
+            passphrase: passphraseEvaluator.applyPolicy(passphraseOptions ?? passphraseDefaults),
+            generator: generatorEvaluator.applyPolicy(generatorOptions ?? generatorDefaults),
           });
 
           const policy = Object.assign(
@@ -144,8 +144,11 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
       ),
     );
 
-    const options = await firstValueFrom(options$);
-    return options;
+    return options$;
+  }
+
+  async getOptions() {
+    return await firstValueFrom(this.getOptions$());
   }
 
   async enforcePasswordGeneratorPoliciesOnOptions(options: PasswordGeneratorOptions) {

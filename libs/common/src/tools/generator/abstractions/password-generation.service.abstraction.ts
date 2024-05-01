@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { PasswordGeneratorPolicyOptions } from "../../../admin-console/models/domain/password-generator-policy-options";
 import { GeneratedPasswordHistory } from "../password/generated-password-history";
 import { PasswordGeneratorOptions } from "../password/password-generator-options";
@@ -7,6 +9,7 @@ export abstract class PasswordGenerationServiceAbstraction {
   generatePassword: (options: PasswordGeneratorOptions) => Promise<string>;
   generatePassphrase: (options: PasswordGeneratorOptions) => Promise<string>;
   getOptions: () => Promise<[PasswordGeneratorOptions, PasswordGeneratorPolicyOptions]>;
+  getOptions$: () => Observable<[PasswordGeneratorOptions, PasswordGeneratorPolicyOptions]>;
   enforcePasswordGeneratorPoliciesOnOptions: (
     options: PasswordGeneratorOptions,
   ) => Promise<[PasswordGeneratorOptions, PasswordGeneratorPolicyOptions]>;
