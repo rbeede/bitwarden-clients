@@ -13,7 +13,7 @@ export class VaultBannersComponent implements OnInit {
   VisibleVaultBanner = VisibleVaultBanner;
 
   constructor(private vaultBannerService: VaultBannersService) {
-    this.premiumBannerVisible$ = this.vaultBannerService.shouldShowPremiumBanner();
+    this.premiumBannerVisible$ = this.vaultBannerService.shouldShowPremiumBanner$;
   }
 
   async ngOnInit(): Promise<void> {

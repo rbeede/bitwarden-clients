@@ -49,6 +49,8 @@ export const BANNERS_DISMISSED_DISK_KEY = new KeyDefinition<SessionBanners[]>(
 
 @Injectable()
 export class VaultBannersService {
+  shouldShowPremiumBanner$: Observable<boolean>;
+
   private premiumBannerState: ActiveUserState<PremiumBannerReprompt>;
   private sessionBannerState: ActiveUserState<SessionBanners[]>;
 
@@ -62,6 +64,25 @@ export class VaultBannersService {
   ) {
     this.premiumBannerState = this.stateProvider.getActive(PREMIUM_BANNER_REPROMPT_KEY);
     this.sessionBannerState = this.stateProvider.getActive(BANNERS_DISMISSED_DISK_KEY);
+
+    this.shouldShowPremiumBanner$ = combineLatest([
+      this.billingAccountProfileStateService.hasPremiumFromAnySource$,
+      this.premiumBannerState.state$,
+    ]).pipe(
+      map(([canAccessPremium, dismissedState]) => {
+        const shouldShowPremiumBanner =
+          !canAccessPremium && !this.platformUtilsService.isSelfHost();
+
+        // Check if nextPromptDate is in the past passed
+        if (shouldShowPremiumBanner && dismissedState?.nextPromptDate) {
+          const nextPromptDate = new Date(dismissedState.nextPromptDate);
+          const now = new Date();
+          return now >= nextPromptDate;
+        }
+
+        return shouldShowPremiumBanner;
+      }),
+    );
   }
 
   /** Returns true when the update browser banner should be shown */
@@ -96,28 +117,6 @@ export class VaultBannersService {
     );
 
     return hasLowKDF && !alreadyDismissed;
-  }
-
-  /** Returns true when the premium banner should be shown */
-  shouldShowPremiumBanner(): Observable<boolean> {
-    return combineLatest([
-      this.billingAccountProfileStateService.hasPremiumFromAnySource$,
-      this.premiumBannerState.state$,
-    ]).pipe(
-      map(([canAccessPremium, dismissedState]) => {
-        const shouldShowPremiumBanner =
-          !canAccessPremium && !this.platformUtilsService.isSelfHost();
-
-        // Check if nextPromptDate is in the past passed
-        if (shouldShowPremiumBanner && dismissedState?.nextPromptDate) {
-          const nextPromptDate = new Date(dismissedState.nextPromptDate);
-          const now = new Date();
-          return now >= nextPromptDate;
-        }
-
-        return shouldShowPremiumBanner;
-      }),
-    );
   }
 
   /** Dismiss the given banner and perform any respective side effects */

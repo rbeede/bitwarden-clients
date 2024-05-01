@@ -68,13 +68,13 @@ describe("VaultBannersService", () => {
   });
 
   describe("Premium", () => {
-    it("shows premium banner when not self hosted and no premium", async () => {
+    it("shows premium banner when not self hosted and not already a premium user", async () => {
       hasPremiumFromAnySource$.next(false);
       isSelfHost.mockReturnValue(false);
 
       service = TestBed.inject(VaultBannersService);
 
-      expect(await firstValueFrom(service.shouldShowPremiumBanner())).toBe(true);
+      expect(await firstValueFrom(service.shouldShowPremiumBanner$)).toBe(true);
     });
 
     describe("dismissing", () => {

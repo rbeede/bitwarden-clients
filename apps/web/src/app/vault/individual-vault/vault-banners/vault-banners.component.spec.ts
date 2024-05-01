@@ -22,7 +22,7 @@ describe("VaultBannersComponent", () => {
   const premiumBanner$ = new BehaviorSubject<boolean>(false);
 
   const bannerService = mock<VaultBannersService>({
-    shouldShowPremiumBanner: jest.fn(),
+    shouldShowPremiumBanner$: premiumBanner$,
     shouldShowUpdateBrowserBanner: jest.fn(),
     shouldShowVerifyEmailBanner: jest.fn(),
     shouldShowLowKDFBanner: jest.fn(),
@@ -30,7 +30,7 @@ describe("VaultBannersComponent", () => {
   });
 
   beforeEach(async () => {
-    bannerService.shouldShowPremiumBanner.mockReturnValue(premiumBanner$);
+    bannerService.shouldShowPremiumBanner$ = premiumBanner$;
     bannerService.shouldShowUpdateBrowserBanner.mockResolvedValue(false);
     bannerService.shouldShowVerifyEmailBanner.mockResolvedValue(false);
     bannerService.shouldShowLowKDFBanner.mockResolvedValue(false);
