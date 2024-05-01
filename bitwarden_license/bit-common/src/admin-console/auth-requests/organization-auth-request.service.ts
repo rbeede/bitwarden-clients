@@ -5,9 +5,8 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
-import { PendingAuthRequestView } from "../../views/auth-requests/pending-auth-request.view";
-
 import { OrganizationAuthRequestApiService } from "./organization-auth-request-api.service";
+import { PendingAuthRequestView } from "./pending-auth-request.view";
 
 export class OrganizationAuthRequestService {
   constructor(

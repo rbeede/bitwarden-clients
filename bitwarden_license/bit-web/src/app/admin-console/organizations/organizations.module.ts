@@ -14,8 +14,8 @@ import { NoItemsModule } from "@bitwarden/components";
 import { LooseComponentsModule } from "@bitwarden/web-vault/app/shared";
 import { SharedModule } from "@bitwarden/web-vault/app/shared/shared.module";
 
-import { OrganizationAuthRequestApiService } from "../../../../../bit-common/src/admin-console/services/auth-requests/organization-auth-request-api.service";
-import { OrganizationAuthRequestService } from "../../../../../bit-common/src/admin-console/services/auth-requests/organization-auth-request.service";
+import { OrganizationAuthRequestApiService } from "../../../../../bit-common/src/admin-console/auth-requests/organization-auth-request-api.service";
+import { OrganizationAuthRequestService } from "../../../../../bit-common/src/admin-console/auth-requests/organization-auth-request.service";
 import { SsoComponent } from "../../auth/sso/sso.component";
 
 import { DeviceApprovalsComponent } from "./manage/device-approvals/device-approvals.component";

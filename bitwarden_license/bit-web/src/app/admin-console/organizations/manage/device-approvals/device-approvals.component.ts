@@ -9,8 +9,8 @@ import { ValidationService } from "@bitwarden/common/platform/abstractions/valid
 import { TableDataSource } from "@bitwarden/components";
 import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 
-import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/services/auth-requests/organization-auth-request.service";
-import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/views/auth-requests/pending-auth-request.view";
+import { OrganizationAuthRequestService } from "../../../../../../../bit-common/src/admin-console/auth-requests/organization-auth-request.service";
+import { PendingAuthRequestView } from "../../../../../../../bit-common/src/admin-console/auth-requests/pending-auth-request.view";
 @Component({
   selector: "app-org-device-approvals",
   templateUrl: "./device-approvals.component.html",

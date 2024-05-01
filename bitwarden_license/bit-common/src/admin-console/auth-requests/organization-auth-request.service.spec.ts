@@ -5,10 +5,9 @@ import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 
-import { PendingAuthRequestView } from "../../views/auth-requests/pending-auth-request.view";
-
 import { OrganizationAuthRequestApiService } from "./organization-auth-request-api.service";
 import { OrganizationAuthRequestService } from "./organization-auth-request.service";
+import { PendingAuthRequestView } from "./pending-auth-request.view";
 
 describe("OrganizationAuthRequestService", () => {
   let organizationAuthRequestApiService: MockProxy<OrganizationAuthRequestApiService>;
