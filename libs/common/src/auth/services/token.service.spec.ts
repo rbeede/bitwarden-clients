@@ -13,6 +13,7 @@ import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
 import { CsprngArray } from "../../types/csprng";
 import { UserId } from "../../types/guid";
+import { LogoutReason } from "../enums/logout-reason.enum";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
 import { AccessTokenKey, DecodedAccessToken, TokenService } from "./token.service";
@@ -1399,6 +1400,82 @@ describe("TokenService", () => {
 
           // assert that secure storage was not called
           expect(secureStorageService.get).not.toHaveBeenCalled();
+        });
+
+        it("should return null if the refresh token is not found in memory, disk, or secure storage", async () => {
+          // Arrange
+          secureStorageService.get.mockResolvedValue(null);
+
+          // Act
+          const result = await tokenService.getRefreshToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+        });
+
+        it("should should trigger a log out if the refresh token is not found in secure storage when it should be", async () => {
+          // This scenario mocks the case where we have intermittent windows 10/11 issues w/ secure storage not
+          // returning the refresh token when it should be there.
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          secureStorageService.get.mockResolvedValue(null);
+
+          // Act
+          const result = await tokenService.getRefreshToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+
+          // expect that we logged an error and logged the user out
+          expect(logService.error).toHaveBeenCalledWith(
+            `Failed to retrieve refresh token from secure storage`,
+            new Error("Refresh token not found in secure storage."),
+          );
+
+          expect(messagingService.send).toHaveBeenCalledWith("logout", {
+            userId: userIdFromAccessToken,
+            reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
+          });
+        });
+
+        it("should should trigger a log out if the refresh token retrieval out of secure storage errors", async () => {
+          // This scenario mocks the case where linux users don't have secure storage configured.
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          const secureStorageSvcMockErrorMsg = "Secure storage retrieval error";
+
+          secureStorageService.get.mockRejectedValue(new Error(secureStorageSvcMockErrorMsg));
+
+          // Act
+          const result = await tokenService.getRefreshToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+
+          // expect that we logged an error and logged the user out
+          expect(logService.error).toHaveBeenCalledWith(
+            `Failed to retrieve refresh token from secure storage`,
+            new Error(secureStorageSvcMockErrorMsg),
+          );
+
+          expect(messagingService.send).toHaveBeenCalledWith("logout", {
+            userId: userIdFromAccessToken,
+            reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
+          });
         });
       });
     });
