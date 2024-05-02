@@ -1314,7 +1314,7 @@ describe("TokenService", () => {
           tokenService = createTokenService(supportsSecureStorage);
         });
 
-        it("should get the refresh token from secure storage when no user id is specified and the migration flag is set to true", async () => {
+        it("should get the refresh token from secure storage when no user id is specified", async () => {
           // Arrange
           singleUserStateProvider
             .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
@@ -1337,7 +1337,7 @@ describe("TokenService", () => {
           expect(result).toEqual(refreshToken);
         });
 
-        it("should get the refresh token from secure storage when user id is specified and the migration flag set to true", async () => {
+        it("should get the refresh token from secure storage when user id is specified", async () => {
           // Arrange
 
           singleUserStateProvider
@@ -1356,7 +1356,7 @@ describe("TokenService", () => {
           expect(result).toEqual(refreshToken);
         });
 
-        it("should fallback and get the refresh token from disk when user id is specified and the migration flag is set to false even if the platform supports secure storage", async () => {
+        it("should fallback and get the refresh token from disk when user id is specified even if the platform supports secure storage", async () => {
           // Arrange
           singleUserStateProvider
             .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
@@ -1376,7 +1376,7 @@ describe("TokenService", () => {
           expect(secureStorageService.get).not.toHaveBeenCalled();
         });
 
-        it("should fallback and get the refresh token from disk when no user id is specified and the migration flag is set to false even if the platform supports secure storage", async () => {
+        it("should fallback and get the refresh token from disk when no user id is specified even if the platform supports secure storage", async () => {
           // Arrange
           singleUserStateProvider
             .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
