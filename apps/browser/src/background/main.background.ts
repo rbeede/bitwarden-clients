@@ -1234,7 +1234,7 @@ export default class MainBackground {
     ]);
 
     //Needs to be checked before state is cleaned
-    const needStorageReseed = await this.needsStorageReseed();
+    const needStorageReseed = await this.needsStorageReseed(userId);
 
     const newActiveUser = await firstValueFrom(
       this.accountService.nextUpAccount$.pipe(map((a) => a?.id)),
@@ -1270,10 +1270,9 @@ export default class MainBackground {
     await this.systemService.startProcessReload(this.authService);
   }
 
-  private async needsStorageReseed(): Promise<boolean> {
-    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+  private async needsStorageReseed(userId: UserId): Promise<boolean> {
     const currentVaultTimeout = await firstValueFrom(
-      this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(activeAccount.id),
+      this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
     );
     return currentVaultTimeout == VaultTimeoutStringType.Never ? false : true;
   }
