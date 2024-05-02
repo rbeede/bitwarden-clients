@@ -1,6 +1,7 @@
 {
   "extends": "../../apps/web/tsconfig",
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
       "@bitwarden/admin-console": ["../../libs/admin-console/src"],
       "@bitwarden/angular/*": ["../../libs/angular/src/*"],
@@ -15,7 +16,7 @@
       "@bitwarden/platform": ["../../libs/platform/src"],
       "@bitwarden/vault": ["../../libs/vault/src"],
       "@bitwarden/web-vault/*": ["../../apps/web/src/*"],
-      "@bitwarden/bit-common": ["../../bitwarden_license/bit-common/src"]
+      "@bitwarden/bit-common/*": ["../bit-common/src/*"]
     }
   },
   "include": ["src/**/*.stories.ts"]
