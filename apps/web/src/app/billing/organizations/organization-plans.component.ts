@@ -433,6 +433,10 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     return this.selectedSecretsManagerPlan != null;
   }
 
+  get teamsStarterPlanIsAvailable() {
+    return this.selectablePlans.some((plan) => plan.type === PlanType.TeamsStarter);
+  }
+
   changedProduct() {
     const selectedPlan = this.selectablePlans[0];
 
@@ -506,8 +510,13 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     if (!this.formGroup.controls.businessOwned.value || this.selectedPlan.canBeUsedByBusiness) {
       return;
     }
-    this.formGroup.controls.product.setValue(ProductType.TeamsStarter);
-    this.formGroup.controls.plan.setValue(PlanType.TeamsStarter);
+    if (this.teamsStarterPlanIsAvailable) {
+      this.formGroup.controls.product.setValue(ProductType.TeamsStarter);
+      this.formGroup.controls.plan.setValue(PlanType.TeamsStarter);
+    } else {
+      this.formGroup.controls.product.setValue(ProductType.Teams);
+      this.formGroup.controls.plan.setValue(PlanType.TeamsAnnually);
+    }
     this.changedProduct();
   }
 
@@ -760,11 +769,20 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     }
 
     if (this.currentPlan && this.currentPlan.product !== ProductType.Enterprise) {
-      const upgradedPlan = this.passwordManagerPlans.find((plan) =>
-        this.currentPlan.product === ProductType.Free
-          ? plan.type === PlanType.FamiliesAnnually
-          : plan.upgradeSortOrder == this.currentPlan.upgradeSortOrder + 1,
-      );
+      const upgradedPlan = this.passwordManagerPlans.find((plan) => {
+        if (this.currentPlan.product === ProductType.Free) {
+          return plan.type === PlanType.FamiliesAnnually;
+        }
+
+        if (
+          this.currentPlan.product === ProductType.Families &&
+          !this.teamsStarterPlanIsAvailable
+        ) {
+          return plan.type === PlanType.TeamsAnnually;
+        }
+
+        return plan.upgradeSortOrder === this.currentPlan.upgradeSortOrder + 1;
+      });
 
       this.plan = upgradedPlan.type;
       this.product = upgradedPlan.product;
