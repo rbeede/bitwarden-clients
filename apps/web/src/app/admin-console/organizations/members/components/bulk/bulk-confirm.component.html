@@ -1,9 +1,5 @@
-<bit-dialog dialogSize="large" [title]="'confirmUsers' | i18n">
+<bit-dialog dialogSize="large" [title]="'confirmUsers' | i18n" [loading]="loading">
   <ng-container bitDialogContent>
-    <div class="tw-text-center" *ngIf="loading">
-      <i class="bwi bwi-spinner bwi-spin" title="{{ 'loading' | i18n }}" aria-hidden="true"></i>
-      {{ "loading" | i18n }}
-    </div>
     <app-callout type="danger" *ngIf="filteredUsers.length <= 0">
       {{ "noSelectedUsersApplicable" | i18n }}
     </app-callout>
