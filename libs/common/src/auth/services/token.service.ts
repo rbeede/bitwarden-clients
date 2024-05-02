@@ -496,22 +496,46 @@ export class TokenService implements TokenServiceAbstraction {
     );
 
     switch (storageLocation) {
-      case TokenStorageLocation.SecureStorage:
-        //TODO: add fallback to disk if secure storage fails
-        await this.saveStringToSecureStorage(
-          userId,
-          this.refreshTokenSecureStorageKey,
-          refreshToken,
-        );
+      case TokenStorageLocation.SecureStorage: {
+        try {
+          await this.saveStringToSecureStorage(
+            userId,
+            this.refreshTokenSecureStorageKey,
+            refreshToken,
+          );
 
-        // TODO: PM-6408 - https://bitwarden.atlassian.net/browse/PM-6408
-        // 2024-02-20: Remove refresh token from memory and disk so that we migrate to secure storage over time.
-        // Remove these 2 calls to remove the refresh token from memory and disk after 3 releases.
-        await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_DISK).update((_) => null);
-        await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_MEMORY).update((_) => null);
+          // Check if the refresh token was able to be saved to secure storage by reading it
+          // immediately after setting it. This is needed due to intermittent silent failures on Windows 10/11.
+          const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
+            userId,
+            this.refreshTokenSecureStorageKey,
+          );
+
+          if (!refreshTokenSecureStorage) {
+            throw new Error("Refresh token failed to save to secure storage.");
+          }
+
+          // TODO: PM-6408 - https://bitwarden.atlassian.net/browse/PM-6408
+          // 2024-02-20: Remove refresh token from memory and disk so that we migrate to secure storage over time.
+          // Remove these 2 calls to remove the refresh token from memory and disk after 3 releases.
+          await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_DISK).update((_) => null);
+          await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_MEMORY).update((_) => null);
+        } catch (error) {
+          // This case could be hit for both Linux users who don't have secure storage configured
+          // or for Windows users who have intermittent issues with secure storage.
+          this.logService.error(
+            `SetRefreshToken: storing refresh token in secure storage failed. Falling back to disk storage.`,
+            error,
+          );
+
+          // Fall back to disk storage for refresh token
+          await this.singleUserStateProvider
+            .get(userId, REFRESH_TOKEN_DISK)
+            .update((_) => refreshToken);
+        }
 
         return;
-
+      }
       case TokenStorageLocation.Disk:
         await this.singleUserStateProvider
           .get(userId, REFRESH_TOKEN_DISK)
@@ -548,17 +572,43 @@ export class TokenService implements TokenServiceAbstraction {
     const refreshTokenDisk = await this.getStateValueByUserIdAndKeyDef(userId, REFRESH_TOKEN_DISK);
 
     if (refreshTokenDisk != null) {
+      // This handles the scenario pre-secure storage migration where the refresh token was stored on disk.
       return refreshTokenDisk;
     }
 
     if (this.platformSupportsSecureStorage) {
-      const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
-        userId,
-        this.refreshTokenSecureStorageKey,
-      );
+      try {
+        const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
+          userId,
+          this.refreshTokenSecureStorageKey,
+        );
 
-      if (refreshTokenSecureStorage != null) {
-        return refreshTokenSecureStorage;
+        if (refreshTokenSecureStorage != null) {
+          return refreshTokenSecureStorage;
+        }
+
+        // If we can't read the refresh token from secure storage when it was supposed to be there, throw an error
+        throw new Error("Refresh token not found in secure storage.");
+      } catch (error) {
+        // This case will be hit in two scenarios:
+        // 1. Linux users who don't have secure storage configured.
+        // 2. Windows users who have intermittent issues with secure storage where it might have gotten set successfully
+        // but we can't read it back out of secure storage.
+        // For both scenarios, we are going to log the error and then log the user out.
+        // Technically, in scenario 2, the user could use the access token successfully for 55 min before the
+        // refresh token is needed, but we are going to log them out immediately to avoid leaving the user in a
+        // 55 min delayed error state. Also, hopefully the immediate read of the refresh token after setting it
+        // in the set method will help prevent this from happening.
+
+        this.logService.error(`Failed to retrieve refresh token from secure storage`, error);
+
+        // This is not ideal as we would like to use the LOGOUT_CALLBACK injection token
+        // instead of directly using the MessagingService here. However, we can't customize the
+        // logout reason if we do so.
+        this.messageSender.send("logout", {
+          userId,
+          reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
+        });
       }
     }
 
