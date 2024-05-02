@@ -3,4 +3,5 @@ export class GlobalState {
   vaultTimeoutAction?: string;
   enableBrowserIntegration?: boolean;
   enableBrowserIntegrationFingerprint?: boolean;
+  enableDuckDuckGoBrowserIntegration?: boolean;
 }

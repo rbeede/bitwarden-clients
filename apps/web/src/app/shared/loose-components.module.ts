@@ -1,6 +1,9 @@
 import { NgModule } from "@angular/core";
 
-import { PasswordCalloutComponent } from "@bitwarden/auth/angular";
+import {
+  PasswordCalloutComponent,
+  UserVerificationFormInputComponent,
+} from "@bitwarden/auth/angular";
 import { LayoutComponent, NavigationModule } from "@bitwarden/components";
 
 import { OrganizationLayoutComponent } from "../admin-console/organizations/layouts/organization-layout.component";
@@ -13,6 +16,7 @@ import { ReusedPasswordsReportComponent as OrgReusedPasswordsReportComponent } f
 import { UnsecuredWebsitesReportComponent as OrgUnsecuredWebsitesReportComponent } from "../admin-console/organizations/tools/unsecured-websites-report.component";
 import { WeakPasswordsReportComponent as OrgWeakPasswordsReportComponent } from "../admin-console/organizations/tools/weak-passwords-report.component";
 import { ProvidersComponent } from "../admin-console/providers/providers.component";
+import { VerifyRecoverDeleteProviderComponent } from "../admin-console/providers/verify-recover-delete-provider.component";
 import { SponsoredFamiliesComponent } from "../admin-console/settings/sponsored-families.component";
 import { SponsoringOrgRowComponent } from "../admin-console/settings/sponsoring-org-row.component";
 import { HintComponent } from "../auth/hint.component";
@@ -104,6 +108,7 @@ import { SharedModule } from "./shared.module";
     OrganizationBadgeModule,
     PipesModule,
     PasswordCalloutComponent,
+    UserVerificationFormInputComponent,
     DangerZoneComponent,
     LayoutComponent,
     NavigationModule,
@@ -182,6 +187,7 @@ import { SharedModule } from "./shared.module";
     VerifyEmailComponent,
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
+    VerifyRecoverDeleteProviderComponent,
     LowKdfComponent,
   ],
   exports: [
@@ -258,6 +264,7 @@ import { SharedModule } from "./shared.module";
     VerifyEmailComponent,
     VerifyEmailTokenComponent,
     VerifyRecoverDeleteComponent,
+    VerifyRecoverDeleteProviderComponent,
     LowKdfComponent,
     HeaderModule,
     DangerZoneComponent,
