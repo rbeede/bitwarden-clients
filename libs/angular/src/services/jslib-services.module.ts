@@ -657,7 +657,6 @@ const safeProviders: SafeProvider[] = [
       CipherServiceAbstraction,
       FolderServiceAbstraction,
       CollectionServiceAbstraction,
-      CryptoServiceAbstraction,
       PlatformUtilsServiceAbstraction,
       MessagingServiceAbstraction,
       SearchServiceAbstraction,
