@@ -106,7 +106,6 @@ import { DefaultConfigService } from "@bitwarden/common/platform/services/config
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { EncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/encrypt.service.implementation";
-import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/multithread-encrypt.service.implementation";
 import { FileUploadService } from "@bitwarden/common/platform/services/file-upload/file-upload.service";
 import { KeyGenerationService } from "@bitwarden/common/platform/services/key-generation.service";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
@@ -213,11 +212,14 @@ import { UpdateBadge } from "../platform/listeners/update-badge";
 /* eslint-disable no-restricted-imports */
 import { ChromeMessageSender } from "../platform/messaging/chrome-message.sender";
 /* eslint-enable no-restricted-imports */
+import { OffscreenDocumentService } from "../platform/offscreen-document/abstractions/offscreen-document";
+import { DefaultOffscreenDocumentService } from "../platform/offscreen-document/offscreen-document.service";
 import { BrowserStateService as StateServiceAbstraction } from "../platform/services/abstractions/browser-state.service";
 import { BrowserCryptoService } from "../platform/services/browser-crypto.service";
 import { BrowserEnvironmentService } from "../platform/services/browser-environment.service";
 import BrowserLocalStorageService from "../platform/services/browser-local-storage.service";
 import BrowserMemoryStorageService from "../platform/services/browser-memory-storage.service";
+import { BrowserMultithreadEncryptServiceImplementation } from "../platform/services/browser-multithread-encrypt.service.implementation";
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import { DefaultBrowserStateService } from "../platform/services/default-browser-state.service";
 import I18nService from "../platform/services/i18n.service";
@@ -337,6 +339,7 @@ export default class MainBackground {
   userAutoUnlockKeyService: UserAutoUnlockKeyService;
   scriptInjectorService: BrowserScriptInjectorService;
   kdfConfigService: kdfConfigServiceAbstraction;
+  offscreenDocumentService: OffscreenDocumentService;
 
   onUpdatedRan: boolean;
   onReplacedRan: boolean;
@@ -394,11 +397,14 @@ export default class MainBackground {
       ),
     );
 
+    this.offscreenDocumentService = new DefaultOffscreenDocumentService();
+
     this.platformUtilsService = new BackgroundPlatformUtilsService(
       this.messagingService,
       (clipboardValue, clearMs) => this.clearClipboard(clipboardValue, clearMs),
       async () => this.biometricUnlock(),
       self,
+      this.offscreenDocumentService,
     );
 
     // Creates a session key for mv3 storage of large memory items
@@ -470,14 +476,14 @@ export default class MainBackground {
       storageServiceProvider,
     );
 
-    this.encryptService =
-      flagEnabled("multithreadDecryption") && BrowserApi.isManifestVersion(2)
-        ? new MultithreadEncryptServiceImplementation(
-            this.cryptoFunctionService,
-            this.logService,
-            true,
-          )
-        : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
+    this.encryptService = flagEnabled("multithreadDecryption")
+      ? new BrowserMultithreadEncryptServiceImplementation(
+          this.cryptoFunctionService,
+          this.logService,
+          true,
+          this.offscreenDocumentService,
+        )
+      : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,
@@ -745,7 +751,6 @@ export default class MainBackground {
       this.cipherService,
       this.folderService,
       this.collectionService,
-      this.cryptoService,
       this.platformUtilsService,
       this.messagingService,
       this.searchService,
@@ -816,7 +821,10 @@ export default class MainBackground {
     );
     this.totpService = new TotpService(this.cryptoFunctionService, this.logService);
 
-    this.scriptInjectorService = new BrowserScriptInjectorService();
+    this.scriptInjectorService = new BrowserScriptInjectorService(
+      this.platformUtilsService,
+      this.logService,
+    );
     this.autofillService = new AutofillService(
       this.cipherService,
       this.autofillSettingsService,
