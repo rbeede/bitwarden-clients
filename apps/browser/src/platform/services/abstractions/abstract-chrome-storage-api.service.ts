@@ -10,6 +10,8 @@ import { fromChromeEvent } from "../../browser/from-chrome-event";
 
 export const serializationIndicator = "__json__";
 
+type serializedObject = { [serializationIndicator]: true; value: string };
+
 export const objToStore = (obj: any) => {
   if (obj == null) {
     return null;
@@ -61,11 +63,7 @@ export default abstract class AbstractChromeStorageService
     return new Promise((resolve) => {
       this.chromeStorageApi.get(key, (obj: any) => {
         if (obj != null && obj[key] != null) {
-          let value = obj[key];
-          if (value[serializationIndicator] && typeof value.value === "string") {
-            value = JSON.parse(value.value);
-          }
-          resolve(value as T);
+          resolve(this.processGetObject(obj[key]));
           return;
         }
         resolve(null);
@@ -79,6 +77,11 @@ export default abstract class AbstractChromeStorageService
 
   async save(key: string, obj: any): Promise<void> {
     obj = objToStore(obj);
+
+    if (obj == null) {
+      // Safari does not support set of null values
+      return this.remove(key);
+    }
 
     const keyedObj = { [key]: obj };
     return new Promise<void>((resolve) => {
@@ -94,5 +97,23 @@ export default abstract class AbstractChromeStorageService
         resolve();
       });
     });
+  }
+
+  /** Backwards compatible resolution of retrieved object with new serialized storage */
+  protected processGetObject<T>(obj: T | serializedObject): T | null {
+    if (this.isSerialized(obj)) {
+      obj = JSON.parse(obj.value);
+    }
+    return obj as T;
+  }
+
+  /** Type guard for whether an object is tagged as serialized */
+  protected isSerialized<T>(value: T | serializedObject): value is serializedObject {
+    const asSerialized = value as serializedObject;
+    return (
+      asSerialized != null &&
+      asSerialized[serializationIndicator] &&
+      typeof asSerialized.value === "string"
+    );
   }
 }
