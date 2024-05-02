@@ -91,7 +91,6 @@ export class AcceptOrganizationInviteService {
    * Initializes the organization invite flow. Returns a promise that should be called to accept the invite.
    * Note: Users might need to pass a MP policy check before accepting an invite to an existing organization. If the user
    * has not passed this check, they will be logged out and the invite will be stored for later use.
-   * TODO: Check if the organization has a MP policy before redirecting the user.
    * @param invite an organization invite
    * @returns This method returns a promise that should be called to accept the invite OR redirects the user to the login page.
    */
@@ -211,8 +210,14 @@ export class AcceptOrganizationInviteService {
     const hasMasterPasswordPolicy = policies.some(
       (p) => p.type === PolicyType.MasterPassword && p.enabled,
     );
+
+    const storedInvite = await this.getOrganizationInvite();
+    if (storedInvite.email !== invite.email) {
+      // clear stored invites if the email doesn't match
+      await this.clearOrganizationInvitation();
+    }
     // if we don't have an org invite stored, we know the user hasn't been redirected yet to check the MP policy
-    const hasNotCheckedMasterPasswordYet = (await this.getOrganizationInvite()) == null;
+    const hasNotCheckedMasterPasswordYet = storedInvite == null;
     return hasMasterPasswordPolicy && hasNotCheckedMasterPasswordYet;
   }
 
