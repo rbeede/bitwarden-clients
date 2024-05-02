@@ -53,7 +53,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
 
   async setVaultTimeoutOptions(
     userId: UserId,
-    timeout: VaultTimeout | null,
+    timeout: VaultTimeout,
     action: VaultTimeoutAction,
   ): Promise<void> {
     if (!userId) {
