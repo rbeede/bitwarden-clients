@@ -1214,7 +1214,7 @@ describe("TokenService", () => {
         // Act
         const result = await (tokenService as any).getRefreshToken();
         // Assert
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
       });
 
       it("should return null if no refresh token is found in memory, disk, or secure storage", async () => {

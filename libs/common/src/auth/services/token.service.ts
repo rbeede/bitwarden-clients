@@ -550,11 +550,11 @@ export class TokenService implements TokenServiceAbstraction {
     }
   }
 
-  async getRefreshToken(userId?: UserId): Promise<string | undefined> {
+  async getRefreshToken(userId?: UserId): Promise<string | null> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
 
     if (!userId) {
-      return undefined;
+      return null;
     }
 
     // pre-secure storage migration:
