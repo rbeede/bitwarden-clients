@@ -147,10 +147,6 @@ export class TokenService implements TokenServiceAbstraction {
     ]).pipe(map(([disk, memory]) => Boolean(disk || memory)));
   }
 
-  // pivoting to an approach where we create a symmetric key we store in secure storage
-  // which is used to protect the data before persisting to disk.
-  // We will also use the same symmetric key to decrypt the data when reading from disk.
-
   private initializeState(): void {
     this.emailTwoFactorTokenRecordGlobalState = this.globalStateProvider.get(
       EMAIL_TWO_FACTOR_TOKEN_RECORD_DISK_LOCAL,
@@ -501,6 +497,7 @@ export class TokenService implements TokenServiceAbstraction {
 
     switch (storageLocation) {
       case TokenStorageLocation.SecureStorage:
+        //TODO: add fallback to disk if secure storage fails
         await this.saveStringToSecureStorage(
           userId,
           this.refreshTokenSecureStorageKey,
