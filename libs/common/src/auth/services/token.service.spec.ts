@@ -278,6 +278,73 @@ describe("TokenService", () => {
             singleUserStateProvider.getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY).nextMock,
           ).toHaveBeenCalledWith(null);
         });
+
+        it("should fallback to disk storage for the access token if the access token cannot be set in secure storage", async () => {
+          // This tests the scenario where the access token key silently fails to be set in secure storage
+
+          // Arrange:
+          keyGenerationService.createKey.mockResolvedValue(accessTokenKey);
+
+          // First call resolves to null to simulate no key in secure storage
+          // and then resolves to no key after it should have been set
+          secureStorageService.get.mockResolvedValueOnce(null).mockResolvedValue(null);
+
+          // Act
+          await tokenService.setAccessToken(
+            accessTokenJwt,
+            diskVaultTimeoutAction,
+            diskVaultTimeout,
+          );
+          // Assert
+
+          // assert that we tried to store the AccessTokenKey in secure storage
+          expect(secureStorageService.save).toHaveBeenCalledWith(
+            accessTokenKeySecureStorageKey,
+            accessTokenKey,
+            secureStorageOptions,
+          );
+
+          // assert that we logged the error
+          expect(logService.error).toHaveBeenCalledWith(
+            "SetAccessToken: storing encrypted access token in secure storage failed. Falling back to disk storage.",
+            new Error("New Access token key unable to be retrieved from secure storage."),
+          );
+
+          // assert that the access token was put on disk unencrypted
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK).nextMock,
+          ).toHaveBeenCalledWith(accessTokenJwt);
+        });
+
+        it("should fallback to disk storage for the access token if secure storage errors on trying to get an existing access token key", async () => {
+          // This tests the scenario for linux users who don't have secure storage configured.
+
+          // Arrange:
+          keyGenerationService.createKey.mockResolvedValue(accessTokenKey);
+
+          // Mock linux secure storage error
+          const secureStorageError = "Secure storage error";
+          secureStorageService.get.mockRejectedValue(new Error(secureStorageError));
+
+          // Act
+          await tokenService.setAccessToken(
+            accessTokenJwt,
+            diskVaultTimeoutAction,
+            diskVaultTimeout,
+          );
+          // Assert
+
+          // assert that we logged the error
+          expect(logService.error).toHaveBeenCalledWith(
+            "SetAccessToken: storing encrypted access token in secure storage failed. Falling back to disk storage.",
+            new Error(secureStorageError),
+          );
+
+          // assert that the access token was put on disk unencrypted
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK).nextMock,
+          ).toHaveBeenCalledWith(accessTokenJwt);
+        });
       });
     });
 
