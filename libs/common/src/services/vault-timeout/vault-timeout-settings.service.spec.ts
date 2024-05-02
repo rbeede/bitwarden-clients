@@ -270,6 +270,20 @@ describe("VaultTimeoutSettingsService", () => {
       await expect(result).rejects.toThrow("User id required. Cannot set vault timeout settings.");
     });
 
+    it("should throw an error if a null vault timeout is provided", async () => {
+      // note: don't await here because we want to test the error
+      const result = vaultTimeoutSettingsService.setVaultTimeoutOptions(mockUserId, null, null);
+      // Assert
+      await expect(result).rejects.toThrow("Vault Timeout cannot be null.");
+    });
+
+    it("should throw an error if a null vault timout action is provided", async () => {
+      // note: don't await here because we want to test the error
+      const result = vaultTimeoutSettingsService.setVaultTimeoutOptions(mockUserId, 30, null);
+      // Assert
+      await expect(result).rejects.toThrow("Vault Timeout Action cannot be null.");
+    });
+
     it("should set the vault timeout options for the given user", async () => {
       // Arrange
       tokenService.getAccessToken.mockResolvedValue(mockAccessToken);

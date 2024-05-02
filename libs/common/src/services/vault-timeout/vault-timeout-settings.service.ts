@@ -60,6 +60,14 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
       throw new Error("User id required. Cannot set vault timeout settings.");
     }
 
+    if (!timeout) {
+      throw new Error("Vault Timeout cannot be null.");
+    }
+
+    if (!action) {
+      throw new Error("Vault Timeout Action cannot be null.");
+    }
+
     // We swap these tokens from being on disk for lock actions, and in memory for logout actions
     // Get them here to set them to their new location after changing the timeout action and clearing if needed
     const accessToken = await this.tokenService.getAccessToken();
@@ -116,6 +124,10 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   private async setVaultTimeout(userId: UserId, timeout: VaultTimeout): Promise<void> {
     if (!userId) {
       throw new Error("User id required. Cannot set vault timeout.");
+    }
+
+    if (timeout == null) {
+      throw new Error("Vault Timeout cannot be null.");
     }
 
     await this.stateProvider.setUserState(VAULT_TIMEOUT, timeout, userId);
@@ -179,6 +191,10 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   private async setVaultTimeoutAction(userId: UserId, action: VaultTimeoutAction): Promise<void> {
     if (!userId) {
       throw new Error("User id required. Cannot set vault timeout action.");
+    }
+
+    if (!action) {
+      throw new Error("Vault Timeout Action cannot be null");
     }
 
     await this.stateProvider.setUserState(VAULT_TIMEOUT_ACTION, action, userId);
