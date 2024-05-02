@@ -5,6 +5,7 @@ import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vaul
 import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
+import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 
 import { BrowserStateService } from "../platform/services/abstractions/browser-state.service";
 
@@ -59,7 +60,7 @@ export default class IdleBackground {
               const timeout = await firstValueFrom(
                 this.vaultTimeoutSettingsService.getVaultTimeoutByUserId$(userId),
               );
-              if (timeout === -2) {
+              if (timeout === VaultTimeoutStringType.OnLocked) {
                 // On System Lock vault timeout option
                 const action = await firstValueFrom(
                   this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),
