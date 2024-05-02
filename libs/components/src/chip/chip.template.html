@@ -1,0 +1,14 @@
+<button
+  bitButton
+  type="button"
+  aria-expanded="false"
+  aria-controls="listbox-id"
+  buttonType="secondary"
+>
+  <span class="tw-pr-1">
+    <ng-content select="[slot=start]"></ng-content>
+  </span>
+  <ng-content></ng-content>
+  <button *ngIf="selected" bitIconButton="bwi-close" size="small" type="button"></button>
+  <button *ngIf="!selected" bitIconButton="bwi-angle-down" size="small" type="button"></button>
+</button>
