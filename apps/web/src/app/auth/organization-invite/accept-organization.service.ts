@@ -95,6 +95,10 @@ export class AcceptOrganizationInviteService {
    * @returns This method returns a promise that should be called to accept the invite OR redirects the user to the login page.
    */
   async initializeInvite(invite: OrganizationInvite): Promise<Promise<any>> {
+    if (invite == null) {
+      throw new Error("Invite cannot be null.");
+    }
+
     // Creation of a new org
     if (invite.initOrganization) {
       return this.acceptInitOrganizationFlow(invite);
@@ -212,7 +216,7 @@ export class AcceptOrganizationInviteService {
     );
 
     const storedInvite = await this.getOrganizationInvite();
-    if (storedInvite.email !== invite.email) {
+    if (storedInvite?.email !== invite.email) {
       // clear stored invites if the email doesn't match
       await this.clearOrganizationInvitation();
     }
