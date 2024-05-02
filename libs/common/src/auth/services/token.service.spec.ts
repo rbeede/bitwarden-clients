@@ -1149,6 +1149,63 @@ describe("TokenService", () => {
             singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY).nextMock,
           ).toHaveBeenCalledWith(null);
         });
+
+        it("should try and silently fail to set the refresh token in secure storage, then fallback to disk storage", async () => {
+          // Arrange:
+          // We immediately call to get the refresh token from secure storage after setting it to ensure it was set.
+          // So, set it to return null to mock a failure to set the refresh token in secure storage.
+          // This mocks the windows 10/11 intermittent issue where the token is not set in secure storage successfully.
+          secureStorageService.get.mockResolvedValue(null);
+
+          // Act
+          await (tokenService as any).setRefreshToken(
+            refreshToken,
+            diskVaultTimeoutAction,
+            diskVaultTimeout,
+            userIdFromAccessToken,
+          );
+          // Assert
+
+          // assert that the refresh token was set in secure storage
+          expect(secureStorageService.save).toHaveBeenCalledWith(
+            refreshTokenSecureStorageKey,
+            refreshToken,
+            secureStorageOptions,
+          );
+
+          // assert that we tried to set the refresh token in secure storage, but it failed, so we reverted to disk storage
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK).nextMock,
+          ).toHaveBeenCalledWith(refreshToken);
+        });
+
+        it("should try to set the refresh token in secure storage, throw due to secure storage not being supported, then fallback to disk storage", async () => {
+          // Arrange:
+          // Mock the secure storage service to throw an error when trying to save the refresh token
+          // to simulate linux scenarios where a secure storage provider isn't configured.
+          secureStorageService.save.mockRejectedValue(new Error("Secure storage not supported"));
+
+          // Act
+          await (tokenService as any).setRefreshToken(
+            refreshToken,
+            diskVaultTimeoutAction,
+            diskVaultTimeout,
+            userIdFromAccessToken,
+          );
+          // Assert
+
+          // assert that the refresh token was set in secure storage
+          expect(secureStorageService.save).toHaveBeenCalledWith(
+            refreshTokenSecureStorageKey,
+            refreshToken,
+            secureStorageOptions,
+          );
+
+          // assert that we tried to set the refresh token in secure storage, but it failed, so we reverted to disk storage
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK).nextMock,
+          ).toHaveBeenCalledWith(refreshToken);
+        });
       });
     });
 
