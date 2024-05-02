@@ -318,7 +318,7 @@ export class TokenService implements TokenServiceAbstraction {
           await this.singleUserStateProvider.get(userId, ACCESS_TOKEN_MEMORY).update((_) => null);
         } catch (error) {
           this.logService.error(
-            `SetAccessToken: storing encrypted access token in secure storage failed. Falling back to disk storage."`,
+            `SetAccessToken: storing encrypted access token in secure storage failed. Falling back to disk storage.`,
             error,
           );
 
