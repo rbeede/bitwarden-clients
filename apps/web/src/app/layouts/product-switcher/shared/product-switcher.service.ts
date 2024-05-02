@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
-import { combineLatest, concatMap, Observable } from "rxjs";
+import { ActivatedRoute, ParamMap, Router } from "@angular/router";
+import { combineLatest, concatMap, map, Observable } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import {
@@ -8,6 +8,7 @@ import {
   OrganizationService,
 } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
+import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 
 export type ProductSwitcherItem = {
   /**
@@ -63,6 +64,13 @@ export class ProductSwitcherService {
     bento: ProductSwitcherItem[];
     other: ProductSwitcherItem[];
   }> = combineLatest([this.organizationService.organizations$, this.route.paramMap]).pipe(
+    map(([orgs, paramMap]): [Organization[], ParamMap] => {
+      return [
+        // Sort orgs by name to match the order within the sidebar
+        orgs.sort((a, b) => a.name.localeCompare(b.name)),
+        paramMap,
+      ];
+    }),
     concatMap(async ([orgs, paramMap]) => {
       const routeOrg = orgs.find((o) => o.id === paramMap.get("organizationId"));
 
