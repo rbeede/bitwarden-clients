@@ -1210,7 +1210,7 @@ describe("TokenService", () => {
     });
 
     describe("getRefreshToken", () => {
-      it("should return undefined if no user id is provided and there is no active user in global state", async () => {
+      it("should return null if no user id is provided and there is no active user in global state", async () => {
         // Act
         const result = await (tokenService as any).getRefreshToken();
         // Assert
