@@ -100,7 +100,7 @@
         type="button"
         bitButton
         buttonType="secondary"
-        (click)="changePayment()"
+        [bitAction]="changePayment"
         *ngIf="!showAdjustPayment"
       >
         {{ (paymentSource ? "changePaymentMethod" : "addPaymentMethod") | i18n }}
