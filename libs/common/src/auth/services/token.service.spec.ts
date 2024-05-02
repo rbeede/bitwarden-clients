@@ -29,8 +29,6 @@ import {
   SECURITY_STAMP_MEMORY,
 } from "./token.state";
 
-// TODO: add specific tests for new secure storage scenarios.
-
 describe("TokenService", () => {
   let tokenService: TokenService;
   let singleUserStateProvider: FakeSingleUserStateProvider;
@@ -283,11 +281,11 @@ describe("TokenService", () => {
     });
 
     describe("getAccessToken", () => {
-      it("should return undefined if no user id is provided and there is no active user in global state", async () => {
+      it("should return null if no user id is provided and there is no active user in global state", async () => {
         // Act
         const result = await tokenService.getAccessToken();
         // Assert
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
       });
 
       it("should return null if no access token is found in memory, disk, or secure storage", async () => {
@@ -1123,6 +1121,9 @@ describe("TokenService", () => {
           singleUserStateProvider
             .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
             .stateSubject.next([userIdFromAccessToken, refreshToken]);
+
+          // We immediately call to get the refresh token from secure storage after setting it to ensure it was set.
+          secureStorageService.get.mockResolvedValue(refreshToken);
 
           // Act
           await (tokenService as any).setRefreshToken(
