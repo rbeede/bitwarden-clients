@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { Params } from "@angular/router";
 import { BehaviorSubject, firstValueFrom, map } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -11,10 +10,12 @@ import {
 } from "@bitwarden/common/admin-console/abstractions/organization-user/requests";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -26,25 +27,33 @@ import {
 } from "@bitwarden/common/platform/state";
 import { OrgKey } from "@bitwarden/common/types/key";
 
-export type AcceptOrganizationInviteType = "accept" | "accept-init";
+import { OrganizationInvite } from "./organization-invite";
 
-const ORGANIZATION_INVITE = new KeyDefinition<any>(ORGANIZATION_INVITE_DISK, "organizationInvite", {
-  deserializer: (invite) => invite,
-});
+// We're storing the organization invite for 2 reasons:
+// 1. If the org requires a MP policy check, we need to keep track that the user has already been redirected when they return.
+// 2. The MP policy check happens on login/register flows, we need to store the token to retrieve the policies then.
+export const ORGANIZATION_INVITE = new KeyDefinition<OrganizationInvite>(
+  ORGANIZATION_INVITE_DISK,
+  "organizationInvite",
+  {
+    deserializer: (invite) => OrganizationInvite.fromJSON(invite),
+  },
+);
 
 @Injectable()
 export class AcceptOrganizationInviteService {
   private organizationInvitationState: GlobalState<any>;
   private orgNameSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+  private policyCache: Policy[];
 
   // Fix URL encoding of space issue with Angular
   orgName$ = this.orgNameSubject.pipe(map((orgName) => orgName.replace(/\+/g, " ")));
-  inviteType: AcceptOrganizationInviteType = "accept";
 
   constructor(
     private readonly apiService: ApiService,
     private readonly authService: AuthService,
     private readonly cryptoService: CryptoService,
+    private readonly encryptService: EncryptService,
     private readonly policyApiService: PolicyApiServiceAbstraction,
     private readonly policyService: PolicyService,
     private readonly logService: LogService,
@@ -56,50 +65,60 @@ export class AcceptOrganizationInviteService {
     this.organizationInvitationState = this.globalStateProvider.get(ORGANIZATION_INVITE);
   }
 
-  async getOrganizationInvite(): Promise<any> {
+  /** Returns the currently stored organization invite */
+  async getOrganizationInvite(): Promise<OrganizationInvite> {
     return await firstValueFrom(this.organizationInvitationState.state$);
   }
-  // TODO: add type
-  async setOrganizationInvitation(invite: any): Promise<void> {
+
+  /**
+   * Stores a new organization invite
+   * @param invite an organization invite
+   * @throws if the invite is nullish
+   */
+  async setOrganizationInvitation(invite: OrganizationInvite): Promise<void> {
     if (invite == null) {
       throw new Error("Invite cannot be null. Use clearOrganizationInvitation instead.");
     }
     return await this.organizationInvitationState.update(() => invite);
   }
 
+  /** Clears the currently stored organization invite */
   async clearOrganizationInvitation(): Promise<void> {
     return await this.organizationInvitationState.update(() => null);
   }
 
-  async initializeInvite(qParams: Params): Promise<Promise<any>> {
+  /**
+   * Initializes the organization invite flow. Returns a promise that should be called to accept the invite.
+   * Note: Users might need to pass a MP policy check before accepting an invite to an existing organization. If the user
+   * has not passed this check, they will be logged out and the invite will be stored for later use.
+   * TODO: Check if the organization has a MP policy before redirecting the user.
+   * @param invite an organization invite
+   * @returns This method returns a promise that should be called to accept the invite OR redirects the user to the login page.
+   */
+  async initializeInvite(invite: OrganizationInvite): Promise<Promise<any>> {
     // Creation of a new org
-    const initOrganization =
-      qParams.initOrganization != null && qParams.initOrganization.toLocaleLowerCase() === "true";
-    if (initOrganization) {
-      this.inviteType = "accept-init";
-      return this.acceptInitOrganizationFlow(qParams);
+    if (invite.initOrganization) {
+      return this.acceptInitOrganizationFlow(invite);
     }
 
     // Accepting an org invite from existing org
-    const needsReAuth = (await this.getOrganizationInvite()) == null;
-    if (needsReAuth) {
-      // We must check the MP policy before accepting the invite
+    if (await this.masterPasswordPolicyCheckRequired(invite)) {
       this.authService.logOut(() => {
         /* Do nothing */
       });
-      await this.setOrganizationInvitation(qParams);
+      await this.setOrganizationInvitation(invite);
       return;
     }
 
-    // We know the user has already logged in and passed the MP policy check
-    return this.acceptFlow(qParams);
+    // We know the user has already logged in and passed a MP policy check
+    return this.acceptFlow(invite);
   }
 
-  private async acceptInitOrganizationFlow(qParams: Params): Promise<any> {
-    await this.prepareAcceptInitRequest(qParams).then((request) =>
+  private async acceptInitOrganizationFlow(invite: OrganizationInvite): Promise<any> {
+    await this.prepareAcceptInitRequest(invite).then((request) =>
       this.organizationUserService.postOrganizationUserAcceptInit(
-        qParams.organizationId,
-        qParams.organizationUserId,
+        invite.organizationId,
+        invite.organizationUserId,
         request,
       ),
     );
@@ -108,14 +127,14 @@ export class AcceptOrganizationInviteService {
   }
 
   private async prepareAcceptInitRequest(
-    qParams: Params,
+    invite: OrganizationInvite,
   ): Promise<OrganizationUserAcceptInitRequest> {
     const request = new OrganizationUserAcceptInitRequest();
-    request.token = qParams.token;
+    request.token = invite.token;
 
     const [encryptedOrgKey, orgKey] = await this.cryptoService.makeOrgKey<OrgKey>();
     const [orgPublicKey, encryptedOrgPrivateKey] = await this.cryptoService.makeKeyPair(orgKey);
-    const collection = await this.cryptoService.encrypt(
+    const collection = await this.encryptService.encrypt(
       this.i18nService.t("defaultCollection"),
       orgKey,
     );
@@ -130,11 +149,11 @@ export class AcceptOrganizationInviteService {
     return request;
   }
 
-  private async acceptFlow(qParams: Params): Promise<any> {
-    await this.prepareAcceptRequest(qParams).then((request) =>
+  private async acceptFlow(invite: OrganizationInvite): Promise<any> {
+    await this.prepareAcceptRequest(invite).then((request) =>
       this.organizationUserService.postOrganizationUserAccept(
-        qParams.organizationId,
-        qParams.organizationUserId,
+        invite.organizationId,
+        invite.organizationUserId,
         request,
       ),
     );
@@ -143,12 +162,14 @@ export class AcceptOrganizationInviteService {
     await this.clearOrganizationInvitation();
   }
 
-  private async prepareAcceptRequest(qParams: Params): Promise<OrganizationUserAcceptRequest> {
+  private async prepareAcceptRequest(
+    invite: OrganizationInvite,
+  ): Promise<OrganizationUserAcceptRequest> {
     const request = new OrganizationUserAcceptRequest();
-    request.token = qParams.token;
+    request.token = invite.token;
 
-    if (await this.performResetPasswordAutoEnroll(qParams)) {
-      const response = await this.organizationApiService.getKeys(qParams.organizationId);
+    if (await this.performResetPasswordAutoEnroll(invite)) {
+      const response = await this.organizationApiService.getKeys(invite.organizationId);
 
       if (response == null) {
         throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
@@ -166,29 +187,50 @@ export class AcceptOrganizationInviteService {
     return request;
   }
 
-  private async performResetPasswordAutoEnroll(qParams: Params): Promise<boolean> {
-    let policyList: Policy[] = null;
-    try {
-      const policies = await this.policyApiService.getPoliciesByToken(
-        qParams.organizationId,
-        qParams.token,
-        qParams.email,
-        qParams.organizationUserId,
-      );
-      policyList = Policy.fromListResponse(policies);
-    } catch (e) {
-      this.logService.error(e);
+  private async performResetPasswordAutoEnroll(invite: OrganizationInvite): Promise<boolean> {
+    const policies = await this.getPolicies(invite);
+
+    if (policies == null || policies.length === 0) {
+      return false;
     }
 
-    if (policyList != null) {
-      const result = this.policyService.getResetPasswordPolicyOptions(
-        policyList,
-        qParams.organizationId,
-      );
-      // Return true if policy enabled and auto-enroll enabled
-      return result[1] && result[0].autoEnrollEnabled;
+    const result = this.policyService.getResetPasswordPolicyOptions(
+      policies,
+      invite.organizationId,
+    );
+    // Return true if policy enabled and auto-enroll enabled
+    return result[1] && result[0].autoEnrollEnabled;
+  }
+
+  private async masterPasswordPolicyCheckRequired(invite: OrganizationInvite): Promise<boolean> {
+    const policies = await this.getPolicies(invite);
+
+    if (policies == null || policies.length === 0) {
+      return false;
+    }
+    const hasMasterPasswordPolicy = policies.some(
+      (p) => p.type === PolicyType.MasterPassword && p.enabled,
+    );
+    // if we don't have an org invite stored, we know the user hasn't been redirected yet to check the MP policy
+    const hasNotCheckedMasterPasswordYet = (await this.getOrganizationInvite()) == null;
+    return hasMasterPasswordPolicy && hasNotCheckedMasterPasswordYet;
+  }
+
+  private async getPolicies(invite: OrganizationInvite): Promise<Policy[] | null> {
+    // if policies are not cached, fetch them
+    if (this.policyCache == null) {
+      try {
+        this.policyCache = await this.policyApiService.getPoliciesByToken(
+          invite.organizationId,
+          invite.token,
+          invite.email,
+          invite.organizationUserId,
+        );
+      } catch (e) {
+        this.logService.error(e);
+      }
     }
 
-    return false;
+    return this.policyCache;
   }
 }

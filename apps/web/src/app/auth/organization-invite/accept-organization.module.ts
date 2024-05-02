@@ -3,7 +3,7 @@ import { NgModule } from "@angular/core";
 import { SharedModule } from "../../shared";
 
 import { AcceptOrganizationComponent } from "./accept-organization.component";
-import { AcceptOrganizationInviteService } from "./services/accept-organization.service";
+import { AcceptOrganizationInviteService } from "./accept-organization.service";
 
 @NgModule({
   declarations: [AcceptOrganizationComponent],

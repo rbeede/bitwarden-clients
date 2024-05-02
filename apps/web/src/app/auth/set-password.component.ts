@@ -6,12 +6,15 @@ import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 
 import { RouterService } from "../core";
 
+import { AcceptOrganizationInviteService } from "./organization-invite/accept-organization.service";
+
 @Component({
   selector: "app-set-password",
   templateUrl: "set-password.component.html",
 })
 export class SetPasswordComponent extends BaseSetPasswordComponent {
   routerService = inject(RouterService);
+  acceptOrganizationInviteService = inject(AcceptOrganizationInviteService);
 
   protected override async onSetPasswordSuccess(
     masterKey: MasterKey,
@@ -22,5 +25,6 @@ export class SetPasswordComponent extends BaseSetPasswordComponent {
     // SSO JIT accepts org invites when setting their MP, meaning
     // we can clear the deep linked url for accepting it.
     await this.routerService.getAndClearLoginRedirectUrl();
+    await this.acceptOrganizationInviteService.clearOrganizationInvitation();
   }
 }

@@ -20,8 +20,7 @@ import { StateService } from "@bitwarden/common/platform/abstractions/state.serv
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { DialogService } from "@bitwarden/components";
 
-import { RouterService } from "../../core";
-import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
+import { AcceptOrganizationInviteService } from "../organization-invite/accept-organization.service";
 
 @Component({
   selector: "app-register-form",
@@ -52,8 +51,7 @@ export class RegisterFormComponent extends BaseRegisterComponent {
     logService: LogService,
     auditService: AuditService,
     dialogService: DialogService,
-    private routerService: RouterService,
-    private acceptOrgInviteService: AcceptOrganizationInviteService,
+    acceptOrgInviteService: AcceptOrganizationInviteService,
   ) {
     super(
       formValidationErrorService,
@@ -73,13 +71,13 @@ export class RegisterFormComponent extends BaseRegisterComponent {
     );
     super.modifyRegisterRequest = async (request: RegisterRequest) => {
       // Org invites are deep linked. Non-existent accounts are redirected to the register page.
-      // Org user id and token are passed here only for validation and two factor purposes.
-      // Invite is then accepted after login (on deep link redirect).
+      // Org user id and token are included here only for validation and two factor purposes.
       const orgInvite = await acceptOrgInviteService.getOrganizationInvite();
       if (orgInvite != null) {
         request.organizationUserId = orgInvite.organizationUserId;
         request.token = orgInvite.token;
       }
+      // Invite is accepted after login (on deep link redirect).
     };
   }
 

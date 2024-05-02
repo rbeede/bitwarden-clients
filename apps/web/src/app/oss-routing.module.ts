@@ -119,11 +119,8 @@ const routes: Routes = [
       {
         path: "accept-organization",
         canActivate: [deepLinkGuard()],
+        component: AcceptOrganizationComponent,
         data: { titleId: "joinOrganization", doNotSaveUrl: false },
-        loadComponent: () =>
-          import("./auth/organization-invite/accept-organization.component").then(
-            (mod) => mod.AcceptOrganizationComponent,
-          ),
       },
       {
         path: "accept-emergency",

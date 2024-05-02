@@ -2,7 +2,7 @@ import { StepperSelectionEvent } from "@angular/cdk/stepper";
 import { TitleCasePipe } from "@angular/common";
 import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { UntypedFormBuilder, Validators } from "@angular/forms";
-import { ActivatedRoute, Params, Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
 
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
@@ -20,7 +20,8 @@ import {
   SubscriptionProduct,
   TrialOrganizationType,
 } from "../../billing/accounts/trial-initiation/trial-billing-step.component";
-import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
+import { AcceptOrganizationInviteService } from "../organization-invite/accept-organization.service";
+import { OrganizationInvite } from "../organization-invite/organization-invite";
 
 import { RouterService } from "./../../core/router.service";
 import { VerticalStepperComponent } from "./vertical-stepper/vertical-stepper.component";
@@ -284,33 +285,20 @@ export class TrialInitiationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // TODO (jake): Type correctly
-  private async initPasswordPolicies(invite: Params): Promise<void> {
-    // Verify that the deep link is an organization invite
-    const isOrgInvite =
-      invite.organizationId != null &&
-      invite.token != null &&
-      invite.email != null &&
-      invite.organizationUserId != null;
-
-    if (!isOrgInvite) {
+  private async initPasswordPolicies(invite: OrganizationInvite): Promise<void> {
+    if (invite == null) {
       return;
     }
 
-    if (invite != null) {
-      try {
-        const policies = await this.policyApiService.getPoliciesByToken(
-          invite.organizationId,
-          invite.token,
-          invite.email,
-          invite.organizationUserId,
-        );
-        if (policies.data != null) {
-          this.policies = Policy.fromListResponse(policies);
-        }
-      } catch (e) {
-        this.logService.error(e);
-      }
+    try {
+      this.policies = await this.policyApiService.getPoliciesByToken(
+        invite.organizationId,
+        invite.token,
+        invite.email,
+        invite.organizationUserId,
+      );
+    } catch (e) {
+      this.logService.error(e);
     }
 
     if (this.policies != null) {

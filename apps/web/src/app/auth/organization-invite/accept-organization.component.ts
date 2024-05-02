@@ -7,7 +7,8 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 
 import { BaseAcceptComponent } from "../../common/base.accept.component";
 
-import { AcceptOrganizationInviteService } from "./services/accept-organization.service";
+import { AcceptOrganizationInviteService } from "./accept-organization.service";
+import { OrganizationInvite } from "./organization-invite";
 
 @Component({
   templateUrl: "accept-organization.component.html",
@@ -28,13 +29,14 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
   }
 
   async authedHandler(qParams: Params): Promise<void> {
-    this.actionPromise = await this.acceptOrganizationInviteService.initializeInvite(qParams);
+    const invite = OrganizationInvite.fromParams(qParams);
+    this.actionPromise = await this.acceptOrganizationInviteService.initializeInvite(invite);
     await this.actionPromise;
 
     this.platformUtilService.showToast(
       "success",
       this.i18nService.t("inviteAccepted"),
-      this.acceptOrganizationInviteService.inviteType === "accept-init"
+      invite.initOrganization
         ? this.i18nService.t("inviteInitAcceptedDesc")
         : this.i18nService.t("inviteAcceptedDesc"),
       { timeout: 10000 },
@@ -44,37 +46,31 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
   }
 
   async unauthedHandler(qParams: Params): Promise<void> {
-    await this.acceptOrganizationInviteService.setOrganizationInvitation(qParams);
-    await this.accelerateInviteAcceptIfPossible(qParams);
+    const invite = OrganizationInvite.fromParams(qParams);
+    await this.acceptOrganizationInviteService.setOrganizationInvitation(invite);
+    await this.accelerateInviteAcceptIfPossible(invite);
   }
 
   /**
    * In certain scenarios, we want to accelerate the user through the accept org invite process
    * For example, if the user has a BW account already, we want them to be taken to login instead of creation.
    */
-  private async accelerateInviteAcceptIfPossible(qParams: Params): Promise<void> {
-    // Extract the query params we need to make routing acceleration decisions
-    const orgSsoIdentifier = qParams.orgSsoIdentifier;
-    const orgUserHasExistingUser = this.stringToNullOrBool(qParams.orgUserHasExistingUser);
-
-    // if orgUserHasExistingUser is null, short circuit for backwards compatibility w/ older servers
-    if (orgUserHasExistingUser == null) {
-      return;
-    }
-
+  private async accelerateInviteAcceptIfPossible(invite: OrganizationInvite): Promise<void> {
     // if user exists, send user to login
-    if (orgUserHasExistingUser) {
+    if (invite.orgUserHasExistingUser) {
       await this.router.navigate(["/login"], {
-        queryParams: { email: qParams.email },
+        queryParams: { email: invite.email },
       });
       return;
     }
 
-    if (orgSsoIdentifier) {
+    if (invite.orgSsoIdentifier) {
       // We only send sso org identifier if the org has SSO enabled and the SSO policy required.
       // Will JIT provision the user.
+      // Note: If the organization has Admin Recovery enabled, the user will be accepted into the org
+      // upon enrollment. The user should not be returned here.
       await this.router.navigate(["/sso"], {
-        queryParams: { email: qParams.email, identifier: orgSsoIdentifier },
+        queryParams: { email: invite.email, identifier: invite.orgSsoIdentifier },
       });
       return;
     }
@@ -82,15 +78,8 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
     // if SSO is disabled OR if sso is enabled but the SSO login required policy is not enabled
     // then send user to create account
     await this.router.navigate(["/register"], {
-      queryParams: { email: qParams.email, fromOrgInvite: true },
+      queryParams: { email: invite.email, fromOrgInvite: true },
     });
     return;
-  }
-
-  private stringToNullOrBool(s: string | undefined): boolean | null {
-    if (s === undefined) {
-      return null;
-    }
-    return s.toLowerCase() === "true";
   }
 }

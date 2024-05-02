@@ -12,15 +12,16 @@ import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
-import { PolicyResponse } from "@bitwarden/common/admin-console/models/response/policy.response";
+import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { PlanType } from "@bitwarden/common/billing/enums";
-import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
+import { RouterService } from "../../core";
 import { SharedModule } from "../../shared";
-import { AcceptOrganizationInviteService } from "../organization-invite/services/accept-organization.service";
+import { AcceptOrganizationInviteService } from "../organization-invite/accept-organization.service";
+import { OrganizationInvite } from "../organization-invite/organization-invite";
 
 import { TrialInitiationComponent } from "./trial-initiation.component";
 import { VerticalStepperComponent } from "./vertical-stepper/vertical-stepper.component";
@@ -36,6 +37,7 @@ describe("TrialInitiationComponent", () => {
   let stateServiceMock: MockProxy<StateService>;
   let policyApiServiceMock: MockProxy<PolicyApiServiceAbstraction>;
   let policyServiceMock: MockProxy<PolicyService>;
+  let routerServiceMock: MockProxy<RouterService>;
   let acceptOrgInviteServiceMock: MockProxy<AcceptOrganizationInviteService>;
 
   beforeEach(() => {
@@ -43,6 +45,7 @@ describe("TrialInitiationComponent", () => {
     stateServiceMock = mock<StateService>();
     policyApiServiceMock = mock<PolicyApiServiceAbstraction>();
     policyServiceMock = mock<PolicyService>();
+    routerServiceMock = mock<RouterService>();
     acceptOrgInviteServiceMock = mock<AcceptOrganizationInviteService>();
 
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
@@ -82,6 +85,10 @@ describe("TrialInitiationComponent", () => {
           useClass: VerticalStepperStubComponent,
         },
         {
+          provide: RouterService,
+          useValue: routerServiceMock,
+        },
+        {
           provide: AcceptOrganizationInviteService,
           useValue: acceptOrgInviteServiceMock,
         },
@@ -118,28 +125,24 @@ describe("TrialInitiationComponent", () => {
         token: "token",
         email: "testEmail",
         organizationUserId: "123",
-      });
+      } as OrganizationInvite);
       policyApiServiceMock.getPoliciesByToken.mockReturnValueOnce(
-        Promise.resolve({
-          data: [
-            {
-              id: "345",
-              organizationId: testOrgId,
-              type: 1,
-              data: [
-                {
-                  minComplexity: 4,
-                  minLength: 10,
-                  requireLower: null,
-                  requireNumbers: null,
-                  requireSpecial: null,
-                  requireUpper: null,
-                },
-              ],
-              enabled: true,
+        Promise.resolve([
+          {
+            id: "345",
+            organizationId: testOrgId,
+            type: 1,
+            data: {
+              minComplexity: 4,
+              minLength: 10,
+              requireLower: null,
+              requireNumbers: null,
+              requireSpecial: null,
+              requireUpper: null,
             },
-          ],
-        } as ListResponse<PolicyResponse>),
+            enabled: true,
+          },
+        ] as Policy[]),
       );
       policyServiceMock.masterPasswordPolicyOptions$.mockReturnValue(
         of({
