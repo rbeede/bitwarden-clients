@@ -1,0 +1,27 @@
+<button
+  type="button"
+  class="tw-border tw-border-solid tw-rounded-3xl tw-border-text-muted tw-px-3 tw-py-1.5 tw-inline-flex tw-gap-1.5 tw-items-center focus-visible:tw-ring focus-visible:tw-ring-offset-1 focus-visible:tw-ring-primary-700 focus-visible:tw-z-10"
+  [ngClass]="selected ? 'tw-bg-text-muted tw-text-contrast hover:tw-bg-secondary-700' : 'tw-bg-background tw-text-muted hover:tw-bg-black/5'"
+  aria-expanded="false"
+  aria-controls="listbox-id"
+  buttonType="secondary"
+  [bitMenuTriggerFor]="chipSelectMenu"
+>
+  <span class="tw-pr-1">
+    <ng-content select="[slot=start]"></ng-content>
+  </span>
+  <ng-content></ng-content>
+  <button
+    *ngIf="selected"
+    bitIconButton="bwi-close"
+    buttonType="contrast"
+    size="small"
+    type="button"
+    class="tw-rounded-3xl before:tw-rounded-3xl tw-text-sm"
+    (click)="clear($event)"
+  ></button>
+  <i *ngIf="!selected" class="bwi bwi-angle-down tw-mt-1 tw-p-1"></i>
+</button>
+<bit-menu #chipSelectMenu>
+  <ng-content select="[slot=menuItems]"></ng-content>
+</bit-menu>
