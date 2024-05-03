@@ -13,7 +13,7 @@
       {{ "deleteSelectedConfirmation" | i18n }}
     </ng-container>
     <ng-container *ngIf="permanent">
-      {{ "permanentlyDeleteSelectedItemsDesc" | i18n: cipherIds.length }}
+      {{ "permanentlyDeleteSelectedItemsDesc" | i18n: cipherIds.length + unassignedCiphers.length }}
     </ng-container>
   </span>
   <ng-container bitDialogFooter>
