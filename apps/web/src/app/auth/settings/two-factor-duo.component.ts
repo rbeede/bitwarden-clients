@@ -76,6 +76,10 @@ export class TwoFactorDuoComponent extends TwoFactorBaseComponent {
   }
 
   submit = async () => {
+    this.formGroup.markAllAsTouched();
+    if (this.formGroup.invalid) {
+      return;
+    }
     if (this.enabled) {
       await this.disableDuo();
     } else {

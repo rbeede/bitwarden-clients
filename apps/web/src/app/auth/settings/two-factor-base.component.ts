@@ -42,12 +42,8 @@ export abstract class TwoFactorBaseComponent {
   }
 
   protected async enable(enableFunction: () => Promise<void>) {
-    try {
-      await enableFunction();
-      this.onUpdated.emit(true);
-    } catch (e) {
-      this.logService.error(e);
-    }
+    await enableFunction();
+    this.onUpdated.emit(true);
   }
 
   protected async disable(promise: Promise<unknown>) {
@@ -61,21 +57,17 @@ export abstract class TwoFactorBaseComponent {
       return;
     }
 
-    try {
-      const request = await this.buildRequestModel(TwoFactorProviderRequest);
-      request.type = this.type;
-      if (this.organizationId != null) {
-        promise = this.apiService.putTwoFactorOrganizationDisable(this.organizationId, request);
-      } else {
-        promise = this.apiService.putTwoFactorDisable(request);
-      }
-      await promise;
-      this.enabled = false;
-      this.platformUtilsService.showToast("success", null, this.i18nService.t("twoStepDisabled"));
-      this.onUpdated.emit(false);
-    } catch (e) {
-      this.logService.error(e);
+    const request = await this.buildRequestModel(TwoFactorProviderRequest);
+    request.type = this.type;
+    if (this.organizationId != null) {
+      promise = this.apiService.putTwoFactorOrganizationDisable(this.organizationId, request);
+    } else {
+      promise = this.apiService.putTwoFactorDisable(request);
     }
+    await promise;
+    this.enabled = false;
+    this.platformUtilsService.showToast("success", null, this.i18nService.t("twoStepDisabled"));
+    this.onUpdated.emit(false);
   }
 
   protected async buildRequestModel<T extends SecretVerificationRequest>(
