@@ -102,7 +102,7 @@ export class EncString implements Encrypted {
     }
   }
 
-  static parseEncryptedString(encryptedString: string): {
+  private static parseEncryptedString(encryptedString: string): {
     encType: EncryptionType;
     encPieces: string[];
   } {
