@@ -13,7 +13,7 @@
     <ng-template body>
       <tr bitRow *ngFor="let p of policies">
         <td bitCell *ngIf="p.display(organization)">
-          <a href="#" appStopClick (click)="edit(p)">{{ p.name | i18n }}</a>
+          <button type="button" bitLink (click)="edit(p)">{{ p.name | i18n }}</button>
           <span bitBadge variant="success" *ngIf="policiesEnabledMap.get(p.type)">{{
             "on" | i18n
           }}</span>
