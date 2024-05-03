@@ -1,4 +1,14 @@
-import { concatMap, zip, map, firstValueFrom, combineLatest } from "rxjs";
+import {
+  concatMap,
+  zip,
+  map,
+  firstValueFrom,
+  combineLatest,
+  pairwise,
+  of,
+  concat,
+  Observable,
+} from "rxjs";
 
 import { PolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
 import { PasswordGeneratorPolicyOptions } from "../../admin-console/models/domain/password-generator-policy-options";
@@ -11,12 +21,14 @@ import {
   GeneratorHistoryService,
   GeneratorService,
   GeneratorNavigationService,
+  PolicyEvaluator,
 } from "./abstractions";
 import { PasswordGenerationServiceAbstraction } from "./abstractions/password-generation.service.abstraction";
 import { DefaultGeneratorService } from "./default-generator.service";
 import { LocalGeneratorHistoryService } from "./history/local-generator-history.service";
 import { GeneratorNavigation } from "./navigation";
 import { DefaultGeneratorNavigationService } from "./navigation/default-generator-navigation.service";
+import { GeneratorNavigationPolicy } from "./navigation/generator-navigation-policy";
 import {
   PassphraseGenerationOptions,
   PassphraseGeneratorPolicy,
@@ -35,6 +47,7 @@ type MappedOptions = {
   generator: GeneratorNavigation;
   password: PasswordGenerationOptions;
   passphrase: PassphraseGenerationOptions;
+  policyUpdated: boolean;
 };
 
 export function legacyPasswordGenerationServiceFactory(
@@ -99,21 +112,111 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
     return this.passphrases.generate(options);
   }
 
-  getOptions$() {
-    const options$ = this.accountService.activeAccount$.pipe(
+  private getRawOptions$() {
+    // give the typechecker a nudge to avoid "implicit any" errors
+    type RawOptionsIntermediateType = [
+      PasswordGenerationOptions,
+      PasswordGenerationOptions,
+      [PolicyEvaluator<PasswordGeneratorPolicy, PasswordGenerationOptions>, number],
+      PassphraseGenerationOptions,
+      PassphraseGenerationOptions,
+      [PolicyEvaluator<PassphraseGeneratorPolicy, PassphraseGenerationOptions>, number],
+      GeneratorNavigation,
+      GeneratorNavigation,
+      [PolicyEvaluator<GeneratorNavigationPolicy, GeneratorNavigation>, number],
+    ];
+
+    function withSequenceNumber<T>(observable$: Observable<T>) {
+      return observable$.pipe(map((evaluator, i) => [evaluator, i] as const));
+    }
+
+    // initial array ensures that destructuring never fails; sequence numbers
+    // set to `-1` so that the first update reflects that the policy changed from
+    // "unknown" to "whatever was provided by the service". This needs to be called
+    // each time the active user changes or the `concat` will block.
+    function initial$() {
+      const initial: RawOptionsIntermediateType = [
+        null,
+        null,
+        [null, -1],
+        null,
+        null,
+        [null, -1],
+        null,
+        null,
+        [null, -1],
+      ];
+
+      return of(initial);
+    }
+
+    function intermediatePairsToRawOptions([previous, current]: [
+      RawOptionsIntermediateType,
+      RawOptionsIntermediateType,
+    ]) {
+      const [, , [, passwordPrevious], , , [, passphrasePrevious], , , [, generatorPrevious]] =
+        previous;
+      const [
+        passwordOptions,
+        passwordDefaults,
+        [passwordEvaluator, passwordCurrent],
+        passphraseOptions,
+        passphraseDefaults,
+        [passphraseEvaluator, passphraseCurrent],
+        generatorOptions,
+        generatorDefaults,
+        [generatorEvaluator, generatorCurrent],
+      ] = current;
+
+      // when any of the sequence numbers change, the emission occurs as the result of
+      // a policy update
+      const policyEmitted =
+        passwordPrevious < passwordCurrent ||
+        passphrasePrevious < passphraseCurrent ||
+        generatorPrevious < generatorCurrent;
+
+      const result = [
+        passwordOptions,
+        passwordDefaults,
+        passwordEvaluator,
+        passphraseOptions,
+        passphraseDefaults,
+        passphraseEvaluator,
+        generatorOptions,
+        generatorDefaults,
+        generatorEvaluator,
+        policyEmitted,
+      ] as const;
+
+      return result;
+    }
+
+    const rawOptions$ = this.accountService.activeAccount$.pipe(
       concatMap((activeUser) =>
-        combineLatest([
-          this.passwords.options$(activeUser.id),
-          this.passwords.defaults$(activeUser.id),
-          this.passwords.evaluator$(activeUser.id),
-          this.passphrases.options$(activeUser.id),
-          this.passphrases.defaults$(activeUser.id),
-          this.passphrases.evaluator$(activeUser.id),
-          this.navigation.options$(activeUser.id),
-          this.navigation.defaults$(activeUser.id),
-          this.navigation.evaluator$(activeUser.id),
-        ]),
+        concat(
+          initial$(),
+          combineLatest([
+            this.passwords.options$(activeUser.id),
+            this.passwords.defaults$(activeUser.id),
+            withSequenceNumber(this.passwords.evaluator$(activeUser.id)),
+            this.passphrases.options$(activeUser.id),
+            this.passphrases.defaults$(activeUser.id),
+            withSequenceNumber(this.passphrases.evaluator$(activeUser.id)),
+            this.navigation.options$(activeUser.id),
+            this.navigation.defaults$(activeUser.id),
+            withSequenceNumber(this.navigation.evaluator$(activeUser.id)),
+          ]),
+        ),
       ),
+      pairwise(),
+      map(intermediatePairsToRawOptions),
+    );
+
+    return rawOptions$;
+  }
+
+  getOptions$() {
+    const options$ = this.getRawOptions$().pipe(
       map(
         ([
           passwordOptions,
@@ -125,11 +228,13 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
           generatorOptions,
           generatorDefaults,
           generatorEvaluator,
+          policyUpdated,
         ]) => {
           const options = this.toPasswordGeneratorOptions({
             password: passwordEvaluator.applyPolicy(passwordOptions ?? passwordDefaults),
             passphrase: passphraseEvaluator.applyPolicy(passphraseOptions ?? passphraseDefaults),
             generator: generatorEvaluator.applyPolicy(generatorOptions ?? generatorDefaults),
+            policyUpdated,
           });
 
           const policy = Object.assign(
@@ -139,7 +244,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
             generatorEvaluator.policy,
           );
 
-          return [options, policy] as [PasswordGenerationOptions, PasswordGeneratorPolicyOptions];
+          return [options, policy] as [PasswordGeneratorOptions, PasswordGeneratorPolicyOptions];
         },
       ),
     );
@@ -190,7 +295,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
       // callers assume this function updates the options parameter
       Object.assign(options, sanitized),
       policy,
-    ] as [PasswordGenerationOptions, PasswordGeneratorPolicyOptions];
+    ] as [PasswordGeneratorOptions, PasswordGeneratorPolicyOptions];
   }
 
   async saveOptions(options: PasswordGeneratorOptions) {
@@ -236,6 +341,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
         capitalize: options.capitalize,
         includeNumber: options.includeNumber,
       },
+      policyUpdated: false,
     };
   }
 
@@ -257,6 +363,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
       wordSeparator: options.passphrase.wordSeparator,
       capitalize: options.passphrase.capitalize,
       includeNumber: options.passphrase.includeNumber,
+      policyUpdated: options.policyUpdated,
     };
   }
 

@@ -216,6 +216,7 @@ describe("LegacyPasswordGenerationService", () => {
         wordSeparator: "-",
         capitalize: true,
         includeNumber: false,
+        policyUpdated: true,
       });
     });
 
@@ -238,6 +239,7 @@ describe("LegacyPasswordGenerationService", () => {
         type: DefaultGeneratorNavigation.type,
         ...DefaultPassphraseGenerationOptions,
         ...DefaultPasswordGenerationOptions,
+        policyUpdated: true,
       });
     });
 

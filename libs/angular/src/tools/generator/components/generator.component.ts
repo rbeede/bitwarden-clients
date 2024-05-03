@@ -140,12 +140,12 @@ export class GeneratorComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     // look upon my works, ye mighty, and despair!
-    combineLatest(
+    combineLatest([
       this.route.queryParams.pipe(first()),
       this.accountService.activeAccount$.pipe(first()),
       this.passwordGenerationService.getOptions$(),
       this.usernameGenerationService.getOptions$(),
-    )
+    ])
       .pipe(
         map(([qParams, account, [passwordOptions, passwordPolicy], usernameOptions]) => ({
           navigationType: qParams.type as GeneratorType,
@@ -163,26 +163,13 @@ export class GeneratorComponent implements OnInit, OnDestroy {
 
         this.cascadeOptions(options.navigationType, options.accountEmail);
 
-        this.isInitialized$.next(true);
-      });
-
-    // only perform this regeneration on the first load to avoid
-    // multiple-generation issues due to `this.regenerate()` calls
-    // elsewhere. The main downside is a generation won't occur
-    // immediately after the policy updates. The user needs to
-    // interact with the generator.
-    this.isInitialized$
-      .pipe(
-        skipWhile((initialized) => !initialized),
-        first(),
-        takeUntil(this.destroy$),
-      )
-      .subscribe(() => {
-        if (this.regenerateWithoutButtonPress()) {
+        if (this.regenerateWithoutButtonPress() && options.passwordOptions.policyUpdated) {
           this.regenerate().catch((e) => {
             this.logService.error(e);
           });
         }
+
+        this.isInitialized$.next(true);
       });
 
     // once initialization is complete, `ngOnInit` should return.
