@@ -1,4 +1,4 @@
-import { concatMap, zip, map, firstValueFrom } from "rxjs";
+import { concatMap, zip, map, firstValueFrom, combineLatest } from "rxjs";
 
 import { PolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
 import { PasswordGeneratorPolicyOptions } from "../../admin-console/models/domain/password-generator-policy-options";
@@ -102,7 +102,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
   getOptions$() {
     const options$ = this.accountService.activeAccount$.pipe(
       concatMap((activeUser) =>
-        zip(
+        combineLatest([
           this.passwords.options$(activeUser.id),
           this.passwords.defaults$(activeUser.id),
           this.passwords.evaluator$(activeUser.id),
@@ -112,7 +112,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
           this.navigation.options$(activeUser.id),
           this.navigation.defaults$(activeUser.id),
           this.navigation.evaluator$(activeUser.id),
-        ),
+        ]),
       ),
       map(
         ([

@@ -1,4 +1,4 @@
-import { zip, firstValueFrom, map, concatMap } from "rxjs";
+import { zip, firstValueFrom, map, concatMap, combineLatest } from "rxjs";
 
 import { ApiService } from "../../abstractions/api.service";
 import { PolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
@@ -208,7 +208,7 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
   getOptions$() {
     const options$ = this.accountService.activeAccount$.pipe(
       concatMap((account) =>
-        zip(
+        combineLatest([
           this.navigation.options$(account.id),
           this.navigation.defaults$(account.id),
           this.catchall.options$(account.id),
@@ -229,7 +229,7 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
           this.forwardEmail.defaults$(account.id),
           this.simpleLogin.options$(account.id),
           this.simpleLogin.defaults$(account.id),
-        ),
+        ]),
       ),
       map(
         ([
