@@ -416,6 +416,7 @@ export class TokenService implements TokenServiceAbstraction {
         if (this.encryptService.stringIsEncString(accessTokenDisk)) {
           this.logService.error(
             "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
+            error,
           );
           this.messageSender.send("logout", {
             userId,
