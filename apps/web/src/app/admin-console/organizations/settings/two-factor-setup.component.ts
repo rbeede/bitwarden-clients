@@ -79,7 +79,7 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
         const duoComp = await this.openModal(this.duoModalRef, TwoFactorDuoComponent);
         duoComp.auth(result);
         duoComp.onUpdated.pipe(takeUntil(this.destroy$)).subscribe((enabled: boolean) => {
-          this.updateStatus(enabled, TwoFactorProviderType.Duo);
+          this.updateStatus(enabled, TwoFactorProviderType.OrganizationDuo);
         });
         break;
       }
