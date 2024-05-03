@@ -183,8 +183,6 @@ export class Main {
       new ElectronMainMessagingService(this.windowMain),
     );
 
-    // TODO: figure out circular dependency issue here with state service
-
     this.tokenService = new TokenService(
       singleUserStateProvider,
       globalStateProvider,
