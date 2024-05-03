@@ -7,8 +7,9 @@ const sharedConfig = require("../../libs/shared/jest.config.angular");
 /** @type {import('jest').Config} */
 module.exports = {
   ...sharedConfig,
-  preset: "jest-preset-angular",
-  setupFilesAfterEnv: ["../../libs/common/test.setup.ts"],
+  displayName: "bit-common tests",
+  preset: "ts-jest",
+  testEnvironment: "jsdom",
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions?.paths || {}, {
     prefix: "<rootDir>/",
   }),
