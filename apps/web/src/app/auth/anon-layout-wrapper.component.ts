@@ -1,11 +1,9 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 
+import { AnonLayoutComponent } from "@bitwarden/auth/angular";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-
-import { Icon } from "../../../../components/src/icon";
-
-import { AnonLayoutComponent } from "./anon-layout.component";
+import { Icon } from "@bitwarden/components";
 
 @Component({
   standalone: true,
