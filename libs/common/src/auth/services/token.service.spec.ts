@@ -50,6 +50,9 @@ describe("TokenService", () => {
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwibmJmIjoxNzA5MzI0MTExLCJpYXQiOjE3MDkzMjQxMTEsImV4cCI6MTcwOTMyNzcxMSwic2NvcGUiOlsiYXBpIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbIkFwcGxpY2F0aW9uIl0sImNsaWVudF9pZCI6IndlYiIsInN1YiI6ImVjZTcwYTEzLTcyMTYtNDNjNC05OTc3LWIxMDMwMTQ2ZTFlNyIsImF1dGhfdGltZSI6MTcwOTMyNDEwNCwiaWRwIjoiYml0d2FyZGVuIiwicHJlbWl1bSI6ZmFsc2UsImVtYWlsIjoiZXhhbXBsZUBiaXR3YXJkZW4uY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJzc3RhbXAiOiJHWTdKQU82NENLS1RLQkI2WkVBVVlMMldPUVU3QVNUMiIsIm5hbWUiOiJUZXN0IFVzZXIiLCJvcmdvd25lciI6WyI5MmI0OTkwOC1iNTE0LTQ1YTgtYmFkYi1iMTAzMDE0OGZlNTMiLCIzOGVkZTMyMi1iNGI0LTRiZDgtOWUwOS1iMTA3MDExMmRjMTEiLCJiMmQwNzAyOC1hNTgzLTRjM2UtOGQ2MC1iMTA3MDExOThjMjkiLCJiZjkzNGJhMi0wZmQ0LTQ5ZjItYTk1ZS1iMTA3MDExZmM5ZTYiLCJjMGI3Zjc1ZC0wMTVmLTQyYzktYjNhNi1iMTA4MDE3NjA3Y2EiXSwiZGV2aWNlIjoiNGI4NzIzNjctMGRhNi00MWEwLWFkY2ItNzdmMmZlZWZjNGY0IiwianRpIjoiNzUxNjFCRTQxMzFGRjVBMkRFNTExQjhDNEUyRkY4OUEifQ.n7roP8sSbfwcYdvRxZNZds27IK32TW6anorE6BORx_Q";
 
+  const encryptedAccessToken =
+    "2.rFNYSTJoljn8h6GOSNVYdQ==|4dIp7ONJzC+Kx1ClA+1aIAb7EqCQ4OjnADCYdCPg7BKkdheG+yM62ZiONFk+S6at84M+RnGWWO04aIjinTdJhlhyUmszePNATxIfX60Y+bFKQhlMuCtZpYdEmQDzXVgT43YRbf/6NnN9WzhefLqeMiocwoIJTEpLptb+Zcm7T3MJpkX4dR9w5LUOxUTNFEGd5PlWaI8FBavOkNsrzY5skRK70pvFABET5IDeRlKhi8NwbzvTzkO3SisLRzih+djiz5nEZf0+ujeGAp6P+o7l0mB0sXVsNJzcuE4S9QtHLnx31N6z3mQm5pOgP4EmEOdRIcQGc1p7dL1vXcXtaTJLtfKXoJjJbYT3wplnY9Pf8+2FVxdbM3bRB2yVsnEzgLcf9UchKThQSdOy8+5TO/prDbUt5mDpO4GmRltom5ncda8yJaD3Hw1DO7fa0Xh+kfeByxb1AwBC+GTPfqmo5uqr0J4dZsf9cGlPMTElwR3GYmD60OcQ6iDX36CZZjqqJqBwKSpepDXV39p9G347e6YAAvJenLDKtdjgfWXCMXbkwETbMgYooFDRd60KYsGIXV16UwzJSvczgTY2d+hYb2Cl0lClequaiwcRxLVtW2xau6qoEPjTqJjJi9I0Cs2WNL4LRH96Ir14a3bEtnTvkO1NjN+bQNon+KksaP2BqTbuiAfZbBP/cL4S1Oew4G00PSLZUGV5S1BI0ooJy6e2NLQJlYqfCeKM6RgpvgfOiXlZddVgkkB6lohLjyVvcSZNuKPjs1wZMZ9C76bKb6o39NFK8G3/YScELFf9gkueWjmhcjrs22+xNDn5rxXeedwIkVW9UJVNLc//eGxLfp70y8fNDcyTPRN1UUpqT8+wSz+9ZHl4DLUK0DE2jIveEDke8vi4MK/XLMC/c50rr1NCEuVy6iA3nwiOzVo/GNfeKTpzMcR/D9A0gxkC9GyZ3riSsMQsGNXhZCZLdsFYp0gLiiJxVilMUfyTWaygsNm87GPY3ep3GEHcq/pCuxrpLQQYT3V1j95WJvFxb8dSLiPHb8STR0GOZhe7SquI5LIRmYCFTo+3VBnItYeuin9i2xCIqWz886xIyllHN2BIPILbA1lCOsCsz1BRRGNqtLvmTeVRO8iujsHWBJicVgSI7/dgSJwcdOv2t4TIVtnN1hJkQnz+HZcJ2FYK/VWlo4UQYYoML52sBd1sSz/n8/8hrO2N4X9frHHNCrcxeoyChTKo2cm4rAxHylLbCZYvGt/KIW9x3AFkPBMr7tAc3yq98J0Crna8ukXc3F3uGb5QXLnBi//3zBDN6RCv7ByaFW5G0I+pglBegzeFBqKH8xwfy76B2e2VLFF8rz/r/wQzlumGFypsRhAoGxrkZyzjec/k+RNR0arf7TTX7ymC1cueTnItRDx89veW6WLlF53NpAGqC8GJSp4T2FGIIk01y29j6Ji7GOlQ8BUbyLWYjMfHf3khRzAfr6UC2QgVvKWQTKET4Y/b1nZCnwxeW8wC80GHtYGuarsU+KlsEw4242cjyIN1GobrWaA2GTOedQDEMWUA64McAw5fAvMEEao5DM7i57tMzJHeKfruyMuXYQkBca094vmATjJ/T+kIrWGIcmxCT/Fp2SW1hcxr6Ciwuog84LVfbVlUl2MAj3eC/xqL/5HP6Q3ObD0ld444GV+HSrQUqfIvEIn9gFmalW6TGugyhfROACCogoXbeIr1AyMUNDnl4EWlPl6u7SQvPX+itKyq4qhaK2J0W6f7ElLVQ5GbC2uwARuhXOi7mqEZ5FP0V675C5NPZOl2ZEd6BhmuyhGkmQEtEvw0DCKnbKM7bKMk90Y599DSnuEna4BNFBVjJ7k+BuNhXUKO+iNcDZT0pCQhOKRVLWsaqVff3BsuQ4zMEOVnccJwwAVipwSRyxZi8bF+Wyun6BVI8pz1CBvRMy+6ifmIq2awEL8NnV65hF2jyZDEVwsnrvCyT7MlM8l5C3MhqH/MgMcKqOsUz+P6Jv5sBi4WvojsaHzqxQ6miBHpHhGDpYH5K53LVs36henB/tOUTcg5ZnO4ZM67jjB7Oz7to+QnJsldp5Bdwvi1XD/4jeh/Llezu5/KwwytSHnZG1z6dZA7B8rKwnI+yN2Qnfi70h68jzGZ1xCOFPz9KMorNKP3XLw8x2g9H6lEBXdV95uc/TNw+WTJbvKRawns/DZhM1u/g13lU6JG19cht3dh/DlKRcJpj1AdOAxPiUubTSkhBmdwRj2BTTHrVlF3/9ladTP4s4f6Zj9TtQvR9CREVe7CboGflxDYC+Jww3PU50XLmxQjkuV5MkDAmBVcyFCFOcHhDRoxet4FX9ec0wjNeDpYtkI8B/qUS1Rp+is1jOxr4/ni|pabwMkF/SdYKdDlow4uKxaObrAP0urmv7N7fA9bedec=";
+
   const accessTokenDecoded: DecodedAccessToken = {
     iss: "http://localhost",
     nbf: 1709324111,
@@ -507,6 +510,79 @@ describe("TokenService", () => {
 
           // Assert
           expect(result).toEqual(accessTokenJwt);
+        });
+
+        it("should log the error and log the user out if the access token key cannot be retrieved from secure storage when the access token is encrypted", async () => {
+          // This tests the intermittent windows 10/11 scenario in which the access token key was stored successfully in secure storage and the
+          // access token was encrypted with it and stored on disk successfully. However, on retrieval the access token key isn't able to
+          // retrieved for whatever reason.
+
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, encryptedAccessToken]);
+
+          // No access token key set
+
+          encryptService.stringIsEncString.mockReturnValue(true);
+
+          // Act
+          const result = await tokenService.getAccessToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+
+          // assert that we logged the error
+          expect(logService.error).toHaveBeenCalledWith(
+            "Access token key not found to decrypt encrypted access token. Logging user out.",
+          );
+
+          // assert that we logged the user out
+          expect(messagingService.send).toHaveBeenCalledWith("logout", {
+            userId: userIdFromAccessToken,
+            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          });
+        });
+
+        it("should log the error and log the user out if secure storage errors on trying to get an access token key", async () => {
+          // This tests the linux scenario where users might not have secure storage support configured.
+
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, encryptedAccessToken]);
+
+          // Mock linux secure storage error
+          const secureStorageError = "Secure storage error";
+          secureStorageService.get.mockRejectedValue(new Error(secureStorageError));
+
+          encryptService.stringIsEncString.mockReturnValue(true);
+
+          // Act
+          const result = await tokenService.getAccessToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+
+          // assert that we logged the error
+          expect(logService.error).toHaveBeenCalledWith(
+            "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
+            new Error(secureStorageError),
+          );
+
+          // assert that we logged the user out
+          expect(messagingService.send).toHaveBeenCalledWith("logout", {
+            userId: userIdFromAccessToken,
+            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          });
         });
       });
     });
