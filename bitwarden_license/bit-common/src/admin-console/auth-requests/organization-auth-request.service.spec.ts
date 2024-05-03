@@ -92,6 +92,24 @@ describe("OrganizationAuthRequestService", () => {
     });
   });
 
+  describe("approvePendingRequests", () => {
+    it("should approve the specified pending auth requests", async () => {
+      jest.spyOn(organizationAuthRequestApiService, "approvePendingRequests");
+
+      await organizationAuthRequestService.approvePendingRequests(
+        "organizationId",
+        "requestId1",
+        "requestId2",
+      );
+
+      expect(organizationAuthRequestApiService.approvePendingRequests).toHaveBeenCalledWith(
+        "organizationId",
+        "requestId1",
+        "requestId2",
+      );
+    });
+  });
+
   describe("approvePendingRequest", () => {
     it("should approve the specified pending auth request", async () => {
       jest.spyOn(organizationAuthRequestApiService, "approvePendingRequest");
