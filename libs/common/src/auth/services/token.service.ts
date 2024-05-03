@@ -211,9 +211,6 @@ export class TokenService implements TokenServiceAbstraction {
     // So, let's add a check to ensure we can read the value after writing it.
     const accessTokenKey = await this.getAccessTokenKey(userId);
 
-    // TODO: remove this test code
-    // accessTokenKey = null;
-
     if (!accessTokenKey) {
       throw new Error("New Access token key unable to be retrieved from secure storage.");
     }
@@ -242,9 +239,6 @@ export class TokenService implements TokenServiceAbstraction {
     // distro doesn't have a secure storage provider
     let accessTokenKey: AccessTokenKey = await this.getAccessTokenKey(userId);
 
-    // TODO: remove this test code
-    // accessTokenKey = null;
-
     if (!accessTokenKey) {
       // Otherwise, create a new one and save it to secure storage, then return it
       accessTokenKey = await this.createAndSaveAccessTokenKey(userId);
@@ -260,15 +254,13 @@ export class TokenService implements TokenServiceAbstraction {
   }
 
   private async decryptAccessToken(
+    accessTokenKey: AccessTokenKey,
     encryptedAccessToken: EncString,
-    userId: UserId,
   ): Promise<string | null> {
-    const accessTokenKey = await this.getAccessTokenKey(userId);
-
     if (!accessTokenKey) {
-      // If we don't have an accessTokenKey, then that means we don't have an access token as it hasn't been set yet
-      // and we have to return null here to properly indicate the user isn't logged in.
-      return null;
+      throw new Error(
+        "decryptAccessToken: Access token key required. Cannot decrypt access token.",
+      );
     }
 
     const decryptedAccessToken = await this.encryptService.decryptToUtf8(
@@ -307,6 +299,7 @@ export class TokenService implements TokenServiceAbstraction {
             accessToken,
             userId,
           );
+
           // Save the encrypted access token to disk
           await this.singleUserStateProvider
             .get(userId, ACCESS_TOKEN_DISK)
@@ -433,9 +426,6 @@ export class TokenService implements TokenServiceAbstraction {
         return accessTokenDisk;
       }
 
-      // TODO: remove this test code
-      // accessTokenKey = null;
-
       if (!accessTokenKey) {
         if (EncString.isSerializedEncString(accessTokenDisk)) {
           // The access token is encrypted but we don't have the key to decrypt it for
@@ -458,8 +448,8 @@ export class TokenService implements TokenServiceAbstraction {
         const encryptedAccessTokenEncString = new EncString(accessTokenDisk as EncryptedString);
 
         const decryptedAccessToken = await this.decryptAccessToken(
+          accessTokenKey,
           encryptedAccessTokenEncString,
-          userId,
         );
         return decryptedAccessToken;
       } catch (error) {
