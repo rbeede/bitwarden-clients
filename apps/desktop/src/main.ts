@@ -177,6 +177,18 @@ export class Main {
     // Note: secure storage service is not available and should not be called in the main background process.
     const illegalSecureStorageService = new IllegalSecureStorageService();
 
+    this.desktopSettingsService = new DesktopSettingsService(stateProvider);
+    const biometricStateService = new DefaultBiometricStateService(stateProvider);
+
+    this.windowMain = new WindowMain(
+      biometricStateService,
+      this.logService,
+      this.storageService,
+      this.desktopSettingsService,
+      (arg) => this.processDeepLink(arg),
+      (win) => this.trayMain.setupWindowListeners(win),
+    );
+
     const messageSubject = new Subject<Message<object>>();
     this.messagingService = MessageSender.combine(
       new SubjectMessageSender(messageSubject), // For local messages
@@ -216,25 +228,12 @@ export class Main {
       this.migrationRunner,
     );
 
-    this.desktopSettingsService = new DesktopSettingsService(stateProvider);
-
     this.messagingMain = new MessagingMain(this, this.stateService, this.desktopSettingsService);
 
     messageSubject.asObservable().subscribe((message) => {
       this.messagingMain.onMessage(message);
     });
 
-    const biometricStateService = new DefaultBiometricStateService(stateProvider);
-
-    this.windowMain = new WindowMain(
-      this.stateService,
-      biometricStateService,
-      this.logService,
-      this.storageService,
-      this.desktopSettingsService,
-      (arg) => this.processDeepLink(arg),
-      (win) => this.trayMain.setupWindowListeners(win),
-    );
     this.updaterMain = new UpdaterMain(this.i18nService, this.windowMain);
     this.trayMain = new TrayMain(this.windowMain, this.i18nService, this.desktopSettingsService);
 
