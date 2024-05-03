@@ -183,9 +183,7 @@ export class Main {
       new ElectronMainMessagingService(this.windowMain),
     );
 
-    messageSubject.asObservable().subscribe((message) => {
-      this.messagingMain.onMessage(message);
-    });
+    // TODO: figure out circular dependency issue here with state service
 
     this.tokenService = new TokenService(
       singleUserStateProvider,
@@ -222,6 +220,12 @@ export class Main {
 
     this.desktopSettingsService = new DesktopSettingsService(stateProvider);
 
+    this.messagingMain = new MessagingMain(this, this.stateService, this.desktopSettingsService);
+
+    messageSubject.asObservable().subscribe((message) => {
+      this.messagingMain.onMessage(message);
+    });
+
     const biometricStateService = new DefaultBiometricStateService(stateProvider);
 
     this.windowMain = new WindowMain(
@@ -233,7 +237,6 @@ export class Main {
       (arg) => this.processDeepLink(arg),
       (win) => this.trayMain.setupWindowListeners(win),
     );
-    this.messagingMain = new MessagingMain(this, this.stateService, this.desktopSettingsService);
     this.updaterMain = new UpdaterMain(this.i18nService, this.windowMain);
     this.trayMain = new TrayMain(this.windowMain, this.i18nService, this.desktopSettingsService);
 
