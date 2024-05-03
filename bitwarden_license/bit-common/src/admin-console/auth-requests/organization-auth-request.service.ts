@@ -23,6 +23,13 @@ export class OrganizationAuthRequestService {
     await this.organizationAuthRequestApiService.denyPendingRequests(organizationId, ...requestIds);
   }
 
+  async approvePendingRequests(organizationId: string, ...requestIds: string[]): Promise<void> {
+    await this.organizationAuthRequestApiService.approvePendingRequests(
+      organizationId,
+      ...requestIds,
+    );
+  }
+
   async approvePendingRequest(organizationId: string, authRequest: PendingAuthRequestView) {
     const details = await this.organizationUserService.getOrganizationUserResetPasswordDetails(
       organizationId,
