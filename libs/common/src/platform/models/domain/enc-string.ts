@@ -105,7 +105,7 @@ export class EncString implements Encrypted {
   private static parseEncryptedString(encryptedString: string): {
     encType: EncryptionType;
     encPieces: string[];
-  } {
+  } | null {
     const headerPieces = encryptedString.split(".");
     let encType: EncryptionType;
     let encPieces: string[] = null;
@@ -113,9 +113,14 @@ export class EncString implements Encrypted {
     if (headerPieces.length === 2) {
       try {
         encType = parseInt(headerPieces[0], null);
+
+        if (isNaN(encType)) {
+          return null;
+        }
+
         encPieces = headerPieces[1].split("|");
       } catch (e) {
-        return;
+        return null;
       }
     } else {
       encPieces = encryptedString.split("|");
@@ -132,9 +137,17 @@ export class EncString implements Encrypted {
   }
 
   static isSerializedEncString(s: string): boolean {
-    const { encType, encPieces } = this.parseEncryptedString(s);
+    if (s == null) {
+      return false;
+    }
 
-    return EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[encType] === encPieces.length;
+    const result = this.parseEncryptedString(s);
+
+    if (result == null) {
+      return false;
+    }
+
+    return EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[result.encType] === result.encPieces.length;
   }
 
   async decrypt(orgId: string, key: SymmetricCryptoKey = null): Promise<string> {
