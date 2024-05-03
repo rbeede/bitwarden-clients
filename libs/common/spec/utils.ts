@@ -1,10 +1,10 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { Observable } from "rxjs";
 
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 
 import { EncryptionType } from "../src/platform/enums";
 import { Utils } from "../src/platform/misc/utils";
+import { EncString } from "../src/platform/models/domain/enc-string";
 
 function newGuid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
