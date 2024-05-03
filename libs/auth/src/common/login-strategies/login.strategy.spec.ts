@@ -284,6 +284,7 @@ describe("LoginStrategy", () => {
       const result = await passwordLoginStrategy.logIn(credentials);
 
       expect(result).toEqual({
+        userId: userId,
         forcePasswordReset: ForceSetPasswordReason.AdminForcePasswordReset,
         resetMasterPassword: true,
         twoFactorProviders: null,

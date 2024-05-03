@@ -96,11 +96,11 @@ export class UserApiLoginStrategy extends LoginStrategy {
     return authResult;
   }
 
-  protected override async setMasterKey(response: IdentityTokenResponse) {
+  protected override async setMasterKey(response: IdentityTokenResponse, userId: UserId) {
     if (response.apiUseKeyConnector) {
       const env = await firstValueFrom(this.environmentService.environment$);
       const keyConnectorUrl = env.getKeyConnectorUrl();
-      await this.keyConnectorService.setMasterKeyFromUrl(keyConnectorUrl);
+      await this.keyConnectorService.setMasterKeyFromUrl(keyConnectorUrl, userId);
     }
   }
 
@@ -111,11 +111,10 @@ export class UserApiLoginStrategy extends LoginStrategy {
     await this.cryptoService.setMasterKeyEncryptedUserKey(response.key);
 
     if (response.apiUseKeyConnector) {
-      const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
       const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
       if (masterKey) {
         const userKey = await this.cryptoService.decryptUserKeyWithMasterKey(masterKey);
-        await this.cryptoService.setUserKey(userKey);
+        await this.cryptoService.setUserKey(userKey, userId);
       }
     }
   }
@@ -126,6 +125,7 @@ export class UserApiLoginStrategy extends LoginStrategy {
     );
   }
 
+  // Overridden to save client ID and secret to token service
   protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
     const userId = await super.saveAccountInformation(tokenResponse);
 
