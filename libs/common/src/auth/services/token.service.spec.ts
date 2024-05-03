@@ -528,8 +528,6 @@ describe("TokenService", () => {
 
           // No access token key set
 
-          encryptService.stringIsEncString.mockReturnValue(true);
-
           // Act
           const result = await tokenService.getAccessToken(userIdFromAccessToken);
 
@@ -563,8 +561,6 @@ describe("TokenService", () => {
           // Mock linux secure storage error
           const secureStorageError = "Secure storage error";
           secureStorageService.get.mockRejectedValue(new Error(secureStorageError));
-
-          encryptService.stringIsEncString.mockReturnValue(true);
 
           // Act
           const result = await tokenService.getAccessToken(userIdFromAccessToken);

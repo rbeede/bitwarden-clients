@@ -413,7 +413,7 @@ export class TokenService implements TokenServiceAbstraction {
       try {
         accessTokenKey = await this.getAccessTokenKey(userId);
       } catch (error) {
-        if (this.encryptService.stringIsEncString(accessTokenDisk)) {
+        if (EncString.isSerializedEncString(accessTokenDisk)) {
           this.logService.error(
             "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
             error,
@@ -437,7 +437,7 @@ export class TokenService implements TokenServiceAbstraction {
       // accessTokenKey = null;
 
       if (!accessTokenKey) {
-        if (this.encryptService.stringIsEncString(accessTokenDisk)) {
+        if (EncString.isSerializedEncString(accessTokenDisk)) {
           // The access token is encrypted but we don't have the key to decrypt it for
           // whatever reason so we have to log the user out.
           this.logService.error(
