@@ -69,8 +69,8 @@ describe("AcceptOrganizationInviteService", () => {
     );
   });
 
-  describe("initializeInvite", () => {
-    it("returns a promise that initializes an organization when given an invite where initOrganization is true", async () => {
+  describe("validateAndAcceptInvite", () => {
+    it("initializes an organization when given an invite where initOrganization is true", async () => {
       cryptoService.makeOrgKey.mockResolvedValue([
         { encryptedString: "string" } as EncString,
         "orgPrivateKey" as unknown as OrgKey,
@@ -82,10 +82,12 @@ describe("AcceptOrganizationInviteService", () => {
       encryptService.encrypt.mockResolvedValue({ encryptedString: "string" } as EncString);
       const invite = createOrgInvite({ initOrganization: true });
 
-      const result = await sut.initializeInvite(invite);
-      await result;
+      const result = await sut.validateAndAcceptInvite(invite);
 
+      expect(result).toBe(true);
       expect(organizationUserService.postOrganizationUserAcceptInit).toHaveBeenCalled();
+      expect(apiService.refreshIdentityToken).toHaveBeenCalled();
+      expect(globalState.nextMock).toHaveBeenCalledWith(null);
       expect(organizationUserService.postOrganizationUserAccept).not.toHaveBeenCalled();
       expect(authService.logOut).not.toHaveBeenCalled();
     });
@@ -99,25 +101,28 @@ describe("AcceptOrganizationInviteService", () => {
         } as Policy,
       ]);
 
-      await sut.initializeInvite(invite);
+      const result = await sut.validateAndAcceptInvite(invite);
 
+      expect(result).toBe(false);
       expect(authService.logOut).toHaveBeenCalled();
       expect(globalState.nextMock).toHaveBeenCalledWith(invite);
     });
 
-    it("returns a promise that accepts the invitation request when the organization doesn't have a master password policy", async () => {
+    it("accepts the invitation request when the organization doesn't have a master password policy", async () => {
       const invite = createOrgInvite();
       policyApiService.getPoliciesByToken.mockResolvedValue([]);
 
-      const result = await sut.initializeInvite(invite);
-      await result;
+      const result = await sut.validateAndAcceptInvite(invite);
 
+      expect(result).toBe(true);
       expect(organizationUserService.postOrganizationUserAccept).toHaveBeenCalled();
+      expect(apiService.refreshIdentityToken).toHaveBeenCalled();
+      expect(globalState.nextMock).toHaveBeenCalledWith(null);
       expect(organizationUserService.postOrganizationUserAcceptInit).not.toHaveBeenCalled();
       expect(authService.logOut).not.toHaveBeenCalled();
     });
 
-    it("returns a promise that accepts the invitation request when the org has a master password policy, but the user has already passed it", async () => {
+    it("accepts the invitation request when the org has a master password policy, but the user has already passed it", async () => {
       const invite = createOrgInvite();
       policyApiService.getPoliciesByToken.mockResolvedValue([
         {
@@ -135,9 +140,9 @@ describe("AcceptOrganizationInviteService", () => {
         false,
       ]);
 
-      const result = await sut.initializeInvite(invite);
-      await result;
+      const result = await sut.validateAndAcceptInvite(invite);
 
+      expect(result).toBe(true);
       expect(organizationUserService.postOrganizationUserAccept).toHaveBeenCalled();
       expect(organizationUserService.postOrganizationUserAcceptInit).not.toHaveBeenCalled();
       expect(authService.logOut).not.toHaveBeenCalled();

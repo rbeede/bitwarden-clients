@@ -42,7 +42,7 @@ export const ORGANIZATION_INVITE = new KeyDefinition<OrganizationInvite>(
 
 @Injectable()
 export class AcceptOrganizationInviteService {
-  private organizationInvitationState: GlobalState<any>;
+  private organizationInvitationState: GlobalState<OrganizationInvite>;
   private orgNameSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
   private policyCache: Policy[];
 
@@ -79,46 +79,48 @@ export class AcceptOrganizationInviteService {
     if (invite == null) {
       throw new Error("Invite cannot be null. Use clearOrganizationInvitation instead.");
     }
-    return await this.organizationInvitationState.update(() => invite);
+    await this.organizationInvitationState.update(() => invite);
   }
 
   /** Clears the currently stored organization invite */
   async clearOrganizationInvitation(): Promise<void> {
-    return await this.organizationInvitationState.update(() => null);
+    await this.organizationInvitationState.update(() => null);
   }
 
   /**
-   * Initializes the organization invite flow. Returns a promise that should be called to accept the invite.
+   * Validates and accepts the organization invitation if possible.
    * Note: Users might need to pass a MP policy check before accepting an invite to an existing organization. If the user
    * has not passed this check, they will be logged out and the invite will be stored for later use.
    * @param invite an organization invite
-   * @returns This method returns a promise that should be called to accept the invite OR redirects the user to the login page.
+   * @returns a promise that resolves a boolean indicating if the invite was accepted.
    */
-  async initializeInvite(invite: OrganizationInvite): Promise<Promise<any>> {
+  async validateAndAcceptInvite(invite: OrganizationInvite): Promise<boolean> {
     if (invite == null) {
       throw new Error("Invite cannot be null.");
     }
 
     // Creation of a new org
     if (invite.initOrganization) {
-      return this.acceptInitOrganizationFlow(invite);
+      await this.acceptAndInitOrganization(invite);
+      return true;
     }
 
     // Accepting an org invite from existing org
     if (await this.masterPasswordPolicyCheckRequired(invite)) {
+      await this.setOrganizationInvitation(invite);
       this.authService.logOut(() => {
         /* Do nothing */
       });
-      await this.setOrganizationInvitation(invite);
-      return;
+      return false;
     }
 
     // We know the user has already logged in and passed a MP policy check
-    return this.acceptFlow(invite);
+    await this.accept(invite);
+    return true;
   }
 
-  private async acceptInitOrganizationFlow(invite: OrganizationInvite): Promise<any> {
-    await this.prepareAcceptInitRequest(invite).then((request) =>
+  private async acceptAndInitOrganization(invite: OrganizationInvite): Promise<void> {
+    await this.prepareAcceptAndInitRequest(invite).then((request) =>
       this.organizationUserService.postOrganizationUserAcceptInit(
         invite.organizationId,
         invite.organizationUserId,
@@ -129,7 +131,7 @@ export class AcceptOrganizationInviteService {
     await this.clearOrganizationInvitation();
   }
 
-  private async prepareAcceptInitRequest(
+  private async prepareAcceptAndInitRequest(
     invite: OrganizationInvite,
   ): Promise<OrganizationUserAcceptInitRequest> {
     const request = new OrganizationUserAcceptInitRequest();
@@ -152,7 +154,7 @@ export class AcceptOrganizationInviteService {
     return request;
   }
 
-  private async acceptFlow(invite: OrganizationInvite): Promise<any> {
+  private async accept(invite: OrganizationInvite): Promise<void> {
     await this.prepareAcceptRequest(invite).then((request) =>
       this.organizationUserService.postOrganizationUserAccept(
         invite.organizationId,
@@ -171,7 +173,7 @@ export class AcceptOrganizationInviteService {
     const request = new OrganizationUserAcceptRequest();
     request.token = invite.token;
 
-    if (await this.performResetPasswordAutoEnroll(invite)) {
+    if (await this.resetPasswordEnrollRequired(invite)) {
       const response = await this.organizationApiService.getKeys(invite.organizationId);
 
       if (response == null) {
@@ -190,7 +192,7 @@ export class AcceptOrganizationInviteService {
     return request;
   }
 
-  private async performResetPasswordAutoEnroll(invite: OrganizationInvite): Promise<boolean> {
+  private async resetPasswordEnrollRequired(invite: OrganizationInvite): Promise<boolean> {
     const policies = await this.getPolicies(invite);
 
     if (policies == null || policies.length === 0) {
