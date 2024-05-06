@@ -2023,50 +2023,6 @@ describe("CollectAutofillContentService", () => {
     });
   });
 
-  describe("buildTreeWalkerNodesQueryResults", () => {
-    it("will recursively call itself if a shadowDOM element is found and will observe the element for mutations", () => {
-      collectAutofillContentService["mutationObserver"] = mock<MutationObserver>({
-        observe: jest.fn(),
-      });
-      jest.spyOn(collectAutofillContentService as any, "buildTreeWalkerNodesQueryResults");
-      const shadowRoot = document.createElement("div");
-      jest
-        .spyOn(collectAutofillContentService as any, "getShadowRoot")
-        .mockReturnValueOnce(shadowRoot);
-      const callbackFilter = jest.fn();
-
-      collectAutofillContentService["buildTreeWalkerNodesQueryResults"](
-        document.body,
-        [],
-        callbackFilter,
-        true,
-      );
-
-      expect(collectAutofillContentService["buildTreeWalkerNodesQueryResults"]).toBeCalledTimes(2);
-      expect(collectAutofillContentService["mutationObserver"].observe).toBeCalled();
-    });
-
-    it("will not observe the shadowDOM element if required to skip", () => {
-      collectAutofillContentService["mutationObserver"] = mock<MutationObserver>({
-        observe: jest.fn(),
-      });
-      const shadowRoot = document.createElement("div");
-      jest
-        .spyOn(collectAutofillContentService as any, "getShadowRoot")
-        .mockReturnValueOnce(shadowRoot);
-      const callbackFilter = jest.fn();
-
-      collectAutofillContentService["buildTreeWalkerNodesQueryResults"](
-        document.body,
-        [],
-        callbackFilter,
-        false,
-      );
-
-      expect(collectAutofillContentService["mutationObserver"].observe).not.toBeCalled();
-    });
-  });
-
   describe("setupMutationObserver", () => {
     it("sets up a mutation observer and observes the document element", () => {
       jest.spyOn(MutationObserver.prototype, "observe");
