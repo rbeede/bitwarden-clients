@@ -578,18 +578,11 @@ export class TokenService implements TokenServiceAbstraction {
           return refreshTokenSecureStorage;
         }
 
-        // If we can't read the refresh token from secure storage when it was supposed to be there, throw an error
-        throw new Error("Refresh token not found in secure storage.");
+        this.logService.error(
+          "Refresh token not found in secure storage. Access token will fail to refresh upon expiration.",
+        );
       } catch (error) {
-        // This case will be hit in two scenarios:
-        // 1. Linux users who don't have secure storage configured.
-        // 2. Windows users who have intermittent issues with secure storage where it might have gotten set successfully
-        // but we can't read it back out of secure storage.
-        // For both scenarios, we are going to log the error and then log the user out.
-        // Technically, in scenario 2, the user could use the access token successfully for 55 min before the
-        // refresh token is needed, but we are going to log them out immediately to avoid leaving the user in a
-        // 55 min delayed error state. Also, hopefully the immediate read of the refresh token after setting it
-        // in the set method will help prevent this from happening.
+        // This case will be hit for Linux users who don't have secure storage configured.
 
         this.logService.error(`Failed to retrieve refresh token from secure storage`, error);
 

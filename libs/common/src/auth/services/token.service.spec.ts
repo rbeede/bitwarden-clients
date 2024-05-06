@@ -1552,7 +1552,7 @@ describe("TokenService", () => {
           expect(result).toBeNull();
         });
 
-        it("should should trigger a log out if the refresh token is not found in secure storage when it should be", async () => {
+        it("should should return null and log if the refresh token is not found in secure storage when it should be", async () => {
           // This scenario mocks the case where we have intermittent windows 10/11 issues w/ secure storage not
           // returning the refresh token when it should be there.
           // Arrange
@@ -1572,16 +1572,9 @@ describe("TokenService", () => {
           // Assert
           expect(result).toBeNull();
 
-          // expect that we logged an error and logged the user out
           expect(logService.error).toHaveBeenCalledWith(
-            `Failed to retrieve refresh token from secure storage`,
-            new Error("Refresh token not found in secure storage."),
+            "Refresh token not found in secure storage. Access token will fail to refresh upon expiration.",
           );
-
-          expect(messagingService.send).toHaveBeenCalledWith("logout", {
-            userId: userIdFromAccessToken,
-            reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
-          });
         });
 
         it("should should trigger a log out if the refresh token retrieval out of secure storage errors", async () => {
