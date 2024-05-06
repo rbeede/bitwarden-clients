@@ -1713,7 +1713,7 @@ export class ApiService implements ApiServiceAbstraction {
       return this.doApiTokenRefresh();
     }
 
-    throw new Error("Cannot refresh token, no refresh token or api keys are stored");
+    throw new Error("Cannot refresh access token, no refresh token or api keys are stored.");
   }
 
   protected async doRefreshToken(): Promise<void> {
