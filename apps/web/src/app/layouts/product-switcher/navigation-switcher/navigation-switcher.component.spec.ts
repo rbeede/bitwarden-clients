@@ -114,6 +114,27 @@ describe("NavigationProductSwitcherComponent", () => {
         "Alternate name Supporting Text",
       );
     });
+
+    it("shows Organizations first in the other products list", () => {
+      mockProducts$.next({
+        bento: [],
+        other: [
+          { name: "AA Product", icon: "bwi-lock", marketingRoute: "https://www.example.com/" },
+          { name: "Test Product", icon: "bwi-lock", marketingRoute: "https://www.example.com/" },
+          { name: "Organizations", icon: "bwi-lock", marketingRoute: "https://www.example.com/" },
+        ],
+      });
+
+      fixture.detectChanges();
+
+      const links = fixture.nativeElement.querySelectorAll("a");
+
+      expect(links.length).toBe(3);
+
+      expect(links[0].textContent).toContain("Organizations");
+      expect(links[1].textContent).toContain("AA Product");
+      expect(links[2].textContent).toContain("Test Product");
+    });
   });
 
   describe("available products", () => {
