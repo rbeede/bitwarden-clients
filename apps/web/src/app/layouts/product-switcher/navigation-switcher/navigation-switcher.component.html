@@ -1,9 +1,11 @@
 <div class="tw-mt-auto">
+  <!-- [attr.icon] is used to keep the icon attribute on the bit-nav-item after prod mode is enabled. Matches other navigation items and assists in automated testing. -->
   <bit-nav-item
     *ngFor="let product of accessibleProducts$ | async"
     [icon]="product.icon"
     [text]="product.name"
     [route]="product.appRoute"
+    [attr.icon]="product.icon"
   >
   </bit-nav-item>
   <ng-container *ngIf="moreProducts$ | async as moreProducts">
