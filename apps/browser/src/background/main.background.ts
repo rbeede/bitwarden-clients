@@ -572,8 +572,11 @@ export default class MainBackground {
       this.environmentService,
       this.appIdService,
       this.stateService,
+      this.i18nService,
+      this.logService,
       (expired: boolean) => this.logout(expired),
     );
+
     this.domainSettingsService = new DefaultDomainSettingsService(this.stateProvider);
     this.fileUploadService = new FileUploadService(this.logService);
     this.cipherFileUploadService = new CipherFileUploadService(

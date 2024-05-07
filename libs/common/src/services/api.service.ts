@@ -115,6 +115,8 @@ import { ProfileResponse } from "../models/response/profile.response";
 import { UserKeyResponse } from "../models/response/user-key.response";
 import { AppIdService } from "../platform/abstractions/app-id.service";
 import { EnvironmentService } from "../platform/abstractions/environment.service";
+import { I18nService } from "../platform/abstractions/i18n.service";
+import { LogService } from "../platform/abstractions/log.service";
 import { PlatformUtilsService } from "../platform/abstractions/platform-utils.service";
 import { StateService } from "../platform/abstractions/state.service";
 import { Utils } from "../platform/misc/utils";
@@ -157,6 +159,8 @@ export class ApiService implements ApiServiceAbstraction {
     private environmentService: EnvironmentService,
     private appIdService: AppIdService,
     private stateService: StateService,
+    private i18nService: I18nService,
+    private logService: LogService,
     private logoutCallback: (expired: boolean) => Promise<void>,
     private customUserAgent: string = null,
   ) {
@@ -1712,6 +1716,16 @@ export class ApiService implements ApiServiceAbstraction {
     if (!Utils.isNullOrWhitespace(clientId) && !Utils.isNullOrWhitespace(clientSecret)) {
       return this.doApiTokenRefresh();
     }
+
+    // Surface an error to the user.
+    this.platformUtilsService.showToast(
+      "error",
+      this.i18nService.t("errorRefreshingAccessToken"),
+      this.i18nService.t("errorRefreshingAccessTokenDesc"),
+    );
+
+    // Log the error so it isn't lost. The error throw below is lost.
+    this.logService.error("Cannot refresh access token, no refresh token or api keys are stored.");
 
     throw new Error("Cannot refresh access token, no refresh token or api keys are stored.");
   }
