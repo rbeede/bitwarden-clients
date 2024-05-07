@@ -1,4 +1,4 @@
-import { DialogConfig, DialogRef, DIALOG_DATA } from "@angular/cdk/dialog";
+import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { Component, Inject } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
@@ -58,6 +58,10 @@ export class BulkDeleteDialogComponent {
     FeatureFlag.FlexibleCollectionsV1,
   );
 
+  private restrictProviderAccess$ = this.configService.getFeatureFlag$(
+    FeatureFlag.RestrictProviderAccess,
+  );
+
   constructor(
     @Inject(DIALOG_DATA) params: BulkDeleteDialogParams,
     private dialogRef: DialogRef<BulkDeleteDialogResult>,
@@ -92,10 +96,11 @@ export class BulkDeleteDialogComponent {
     }
     if (this.cipherIds.length) {
       const flexibleCollectionsV1Enabled = await firstValueFrom(this.flexibleCollectionsV1Enabled$);
+      const restrictProviderAccess = await firstValueFrom(this.restrictProviderAccess$);
 
       if (
         !this.organization ||
-        !this.organization.canEditAllCiphers(flexibleCollectionsV1Enabled)
+        !this.organization.canEditAllCiphers(flexibleCollectionsV1Enabled, restrictProviderAccess)
       ) {
         deletePromises.push(this.deleteCiphers());
       } else {
@@ -129,7 +134,11 @@ export class BulkDeleteDialogComponent {
 
   private async deleteCiphers(): Promise<any> {
     const flexibleCollectionsV1Enabled = await firstValueFrom(this.flexibleCollectionsV1Enabled$);
-    const asAdmin = this.organization?.canEditAllCiphers(flexibleCollectionsV1Enabled);
+    const restrictProviderAccess = await firstValueFrom(this.restrictProviderAccess$);
+    const asAdmin = this.organization?.canEditAllCiphers(
+      flexibleCollectionsV1Enabled,
+      restrictProviderAccess,
+    );
     if (this.permanent) {
       await this.cipherService.deleteManyWithServer(this.cipherIds, asAdmin);
     } else {
