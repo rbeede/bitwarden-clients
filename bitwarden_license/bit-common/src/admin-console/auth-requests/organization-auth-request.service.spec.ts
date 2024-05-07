@@ -5,6 +5,7 @@ import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 
+import { AdminAuthRequestUpdateWithIdRequest } from "./admin-auth-request-update.request";
 import { OrganizationAuthRequestApiService } from "./organization-auth-request-api.service";
 import { OrganizationAuthRequestService } from "./organization-auth-request.service";
 import { PendingAuthRequestView } from "./pending-auth-request.view";
@@ -96,16 +97,40 @@ describe("OrganizationAuthRequestService", () => {
     it("should approve the specified pending auth requests", async () => {
       jest.spyOn(organizationAuthRequestApiService, "approvePendingRequests");
 
-      await organizationAuthRequestService.approvePendingRequests(
-        "organizationId",
-        "requestId1",
-        "requestId2",
+      const organizationId = "organizationId";
+
+      const organizationUserResetPasswordDetailsResponse =
+        new OrganizationUserResetPasswordDetailsResponse({
+          resetPasswordKey: "resetPasswordKey",
+          encryptedPrivateKey: "encryptedPrivateKey",
+        });
+
+      organizationUserService.getOrganizationUserResetPasswordDetails.mockResolvedValue(
+        organizationUserResetPasswordDetailsResponse,
       );
 
+      const encryptedUserKey = new EncString("encryptedUserKey");
+      cryptoService.rsaDecrypt.mockResolvedValue(new Uint8Array(32));
+      cryptoService.rsaEncrypt.mockResolvedValue(encryptedUserKey);
+
+      const mockPendingAuthRequest = new PendingAuthRequestView();
+      mockPendingAuthRequest.id = "requestId1";
+      mockPendingAuthRequest.organizationUserId = "organizationUserId1";
+      mockPendingAuthRequest.publicKey = "publicKey1";
+
+      await organizationAuthRequestService.approvePendingRequests(organizationId, [
+        mockPendingAuthRequest,
+      ]);
+
       expect(organizationAuthRequestApiService.approvePendingRequests).toHaveBeenCalledWith(
-        "organizationId",
-        "requestId1",
-        "requestId2",
+        organizationId,
+        [
+          new AdminAuthRequestUpdateWithIdRequest(
+            mockPendingAuthRequest.id,
+            true,
+            encryptedUserKey.encryptedString,
+          ),
+        ],
       );
     });
   });
