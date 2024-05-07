@@ -502,7 +502,10 @@ export class TokenService implements TokenServiceAbstraction {
             this.refreshTokenSecureStorageKey,
           );
 
-          if (!refreshTokenSecureStorage) {
+          // Only throw if the refresh token was not saved to secure storage
+          // If we only check for a nullish value out of secure storage without considering the input value,
+          // then we would end up falling back to disk storage if the input value was null.
+          if (refreshToken !== null && !refreshTokenSecureStorage) {
             throw new Error("Refresh token failed to save to secure storage.");
           }
 

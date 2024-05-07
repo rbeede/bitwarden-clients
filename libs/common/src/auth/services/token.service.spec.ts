@@ -1346,6 +1346,36 @@ describe("TokenService", () => {
             singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK).nextMock,
           ).toHaveBeenCalledWith(refreshToken);
         });
+
+        it("should not error and fallback to disk storage if passed a null value for the refresh token", async () => {
+          // Arrange
+          secureStorageService.get.mockResolvedValue(null);
+
+          // Act
+          await (tokenService as any).setRefreshToken(
+            null,
+            diskVaultTimeoutAction,
+            diskVaultTimeout,
+            userIdFromAccessToken,
+          );
+
+          // Assert
+          expect(secureStorageService.save).toHaveBeenCalledWith(
+            refreshTokenSecureStorageKey,
+            null,
+            secureStorageOptions,
+          );
+
+          expect(logService.error).not.toHaveBeenCalled();
+
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK).nextMock,
+          ).toHaveBeenCalledWith(null);
+
+          expect(
+            singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY).nextMock,
+          ).toHaveBeenCalledWith(null);
+        });
       });
     });
 
@@ -1609,6 +1639,8 @@ describe("TokenService", () => {
             reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
           });
         });
+
+        // it should
       });
     });
 
