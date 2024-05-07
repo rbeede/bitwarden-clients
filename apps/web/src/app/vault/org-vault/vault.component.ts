@@ -152,7 +152,7 @@ export class VaultComponent implements OnInit, OnDestroy {
    * A list of collections that the user can assign items to and edit those items within.
    * @protected
    */
-  protected editableCollections$: Observable<CollectionView[]>;
+  protected editableCollections$: Observable<CollectionAdminView[]>;
   protected allCollectionsWithoutUnassigned$: Observable<CollectionAdminView[]>;
   private _flexibleCollectionsV1FlagEnabled: boolean;
 
@@ -810,7 +810,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async editCipherCollections(cipher: CipherView) {
-    let collections: CollectionView[] = [];
+    let collections: CollectionAdminView[] = [];
 
     if (this.flexibleCollectionsV1Enabled) {
       // V1 limits admins to only adding items to collections they have access to.
