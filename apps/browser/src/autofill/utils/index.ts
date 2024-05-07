@@ -243,6 +243,7 @@ function nodeIsElement(node: Node): node is Element {
   if (!node) {
     return false;
   }
+
   return node.nodeType === Node.ELEMENT_NODE;
 }
 
