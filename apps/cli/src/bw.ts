@@ -392,7 +392,9 @@ export class Main {
       this.environmentService,
       this.appIdService,
       this.stateService,
-      this.i18nService,
+      () => {
+        throw new Error("Refresh Access token error");
+      },
       this.logService,
       async (expired: boolean) => await this.logout(),
       customUserAgent,

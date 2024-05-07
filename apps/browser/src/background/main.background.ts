@@ -572,7 +572,14 @@ export default class MainBackground {
       this.environmentService,
       this.appIdService,
       this.stateService,
-      this.messagingService,
+      () => {
+        this.messagingService.send("showToast", {
+          type: "error",
+          title: this.i18nService.t("errorRefreshingAccessToken"),
+          message: this.i18nService.t("errorRefreshingAccessTokenDesc"),
+        });
+        return Promise.resolve();
+      },
       this.logService,
       (expired: boolean) => this.logout(expired),
     );

@@ -144,12 +144,6 @@ export class AppComponent implements OnInit, OnDestroy {
             // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.router.navigate(["/update-temp-password"]);
-          } else if (msg.command === "refreshAccessTokenError") {
-            this.toastService.showToast({
-              variant: "error",
-              title: this.i18nService.t("errorRefreshingAccessToken"),
-              message: this.i18nService.t("errorRefreshingAccessTokenDesc"),
-            });
           }
         }),
         takeUntil(this.destroy$),

@@ -234,6 +234,7 @@ import { SyncNotifierService } from "@bitwarden/common/vault/services/sync/sync-
 import { SyncService } from "@bitwarden/common/vault/services/sync/sync.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
+import { ToastService } from "@bitwarden/components";
 import {
   ImportApiService,
   ImportApiServiceAbstraction,
@@ -276,6 +277,7 @@ import {
   WINDOW,
   INTRAPROCESS_MESSAGING_SUBJECT,
   CLIENT_TYPE,
+  REFRESH_ACCESS_TOKEN_ERROR_CALLBACK,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
 
@@ -566,6 +568,18 @@ const safeProviders: SafeProvider[] = [
     deps: [CryptoServiceAbstraction, StateServiceAbstraction, ApiServiceAbstraction],
   }),
   safeProvider({
+    provide: REFRESH_ACCESS_TOKEN_ERROR_CALLBACK,
+    useFactory: (toastService: ToastService, i18nService: I18nServiceAbstraction) => () => {
+      toastService.showToast({
+        variant: "error",
+        title: i18nService.t("errorRefreshingAccessToken"),
+        message: i18nService.t("errorRefreshingAccessTokenDesc"),
+      });
+      return Promise.resolve();
+    },
+    deps: [ToastService, I18nServiceAbstraction],
+  }),
+  safeProvider({
     provide: ApiServiceAbstraction,
     useClass: ApiService,
     deps: [
@@ -574,7 +588,7 @@ const safeProviders: SafeProvider[] = [
       EnvironmentService,
       AppIdServiceAbstraction,
       StateServiceAbstraction,
-      MessageSender,
+      REFRESH_ACCESS_TOKEN_ERROR_CALLBACK,
       LogService,
       LOGOUT_CALLBACK,
     ],

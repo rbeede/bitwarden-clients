@@ -454,13 +454,6 @@ export class AppComponent implements OnInit, OnDestroy {
           case "deepLink":
             this.processDeepLink(message.urlString);
             break;
-          case "refreshAccessTokenError":
-            this.toastService.showToast({
-              variant: "error",
-              title: this.i18nService.t("errorRefreshingAccessToken"),
-              message: this.i18nService.t("errorRefreshingAccessTokenDesc"),
-            });
-            break;
         }
       });
     });
