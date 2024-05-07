@@ -2,7 +2,8 @@ import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
@@ -32,12 +33,13 @@ export class UserKeyRotationService {
     private sendService: SendService,
     private emergencyAccessService: EmergencyAccessService,
     private resetPasswordService: OrganizationUserResetPasswordService,
-    private deviceTrustCryptoService: DeviceTrustCryptoServiceAbstraction,
+    private deviceTrustService: DeviceTrustServiceAbstraction,
     private cryptoService: CryptoService,
     private encryptService: EncryptService,
     private stateService: StateService,
     private accountService: AccountService,
     private configService: ConfigService,
+    private kdfConfigService: KdfConfigService,
   ) {}
 
   /**
@@ -53,8 +55,7 @@ export class UserKeyRotationService {
     const masterKey = await this.cryptoService.makeMasterKey(
       masterPassword,
       await this.stateService.getEmail(),
-      await this.stateService.getKdfType(),
-      await this.stateService.getKdfConfig(),
+      await this.kdfConfigService.getKdfConfig(),
     );
 
     if (!masterKey) {
@@ -91,7 +92,7 @@ export class UserKeyRotationService {
     await this.apiService.postUserKeyUpdate(request);
 
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    await this.deviceTrustCryptoService.rotateDevicesTrust(
+    await this.deviceTrustService.rotateDevicesTrust(
       activeAccount.id,
       newUserKey,
       masterPasswordHash,
