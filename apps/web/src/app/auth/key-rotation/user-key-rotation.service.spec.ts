@@ -82,7 +82,6 @@ describe("KeyRotationService", () => {
       mockEncryptService,
       mockStateService,
       mockAccountService,
-      mockConfigService,
       mockKdfConfigService,
     );
   });

@@ -5,7 +5,6 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
@@ -38,7 +37,6 @@ export class UserKeyRotationService {
     private encryptService: EncryptService,
     private stateService: StateService,
     private accountService: AccountService,
-    private configService: ConfigService,
     private kdfConfigService: KdfConfigService,
   ) {}
 
