@@ -1,4 +1,4 @@
-import { Subject, firstValueFrom, merge, timeout } from "rxjs";
+import { Subject, filter, firstValueFrom, map, merge, timeout } from "rxjs";
 
 import {
   PinCryptoServiceAbstraction,
@@ -106,14 +106,12 @@ import { DefaultConfigService } from "@bitwarden/common/platform/services/config
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { EncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/encrypt.service.implementation";
-import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/multithread-encrypt.service.implementation";
 import { FileUploadService } from "@bitwarden/common/platform/services/file-upload/file-upload.service";
 import { KeyGenerationService } from "@bitwarden/common/platform/services/key-generation.service";
-import { MemoryStorageService } from "@bitwarden/common/platform/services/memory-storage.service";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
 import { SystemService } from "@bitwarden/common/platform/services/system.service";
-import { UserKeyInitService } from "@bitwarden/common/platform/services/user-key-init.service";
+import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import { WebCryptoFunctionService } from "@bitwarden/common/platform/services/web-crypto-function.service";
 import {
   ActiveUserStateProvider,
@@ -213,11 +211,14 @@ import { UpdateBadge } from "../platform/listeners/update-badge";
 /* eslint-disable no-restricted-imports */
 import { ChromeMessageSender } from "../platform/messaging/chrome-message.sender";
 /* eslint-enable no-restricted-imports */
+import { OffscreenDocumentService } from "../platform/offscreen-document/abstractions/offscreen-document";
+import { DefaultOffscreenDocumentService } from "../platform/offscreen-document/offscreen-document.service";
 import { BrowserStateService as StateServiceAbstraction } from "../platform/services/abstractions/browser-state.service";
 import { BrowserCryptoService } from "../platform/services/browser-crypto.service";
 import { BrowserEnvironmentService } from "../platform/services/browser-environment.service";
 import BrowserLocalStorageService from "../platform/services/browser-local-storage.service";
 import BrowserMemoryStorageService from "../platform/services/browser-memory-storage.service";
+import { BrowserMultithreadEncryptServiceImplementation } from "../platform/services/browser-multithread-encrypt.service.implementation";
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import { DefaultBrowserStateService } from "../platform/services/default-browser-state.service";
 import I18nService from "../platform/services/i18n.service";
@@ -334,9 +335,10 @@ export default class MainBackground {
   billingAccountProfileStateService: BillingAccountProfileStateService;
   // eslint-disable-next-line rxjs/no-exposed-subjects -- Needed to give access to services module
   intraprocessMessagingSubject: Subject<Message<object>>;
-  userKeyInitService: UserKeyInitService;
+  userAutoUnlockKeyService: UserAutoUnlockKeyService;
   scriptInjectorService: BrowserScriptInjectorService;
   kdfConfigService: kdfConfigServiceAbstraction;
+  offscreenDocumentService: OffscreenDocumentService;
 
   onUpdatedRan: boolean;
   onReplacedRan: boolean;
@@ -356,10 +358,7 @@ export default class MainBackground {
   private isSafari: boolean;
   private nativeMessagingBackground: NativeMessagingBackground;
 
-  constructor(
-    public isPrivateMode: boolean = false,
-    public popupOnlyContext: boolean = false,
-  ) {
+  constructor(public popupOnlyContext: boolean = false) {
     // Services
     const lockedCallback = async (userId?: string) => {
       if (this.notificationsService != null) {
@@ -397,11 +396,14 @@ export default class MainBackground {
       ),
     );
 
+    this.offscreenDocumentService = new DefaultOffscreenDocumentService();
+
     this.platformUtilsService = new BackgroundPlatformUtilsService(
       this.messagingService,
       (clipboardValue, clearMs) => this.clearClipboard(clipboardValue, clearMs),
       async () => this.biometricUnlock(),
       self,
+      this.offscreenDocumentService,
     );
 
     // Creates a session key for mv3 storage of large memory items
@@ -443,10 +445,14 @@ export default class MainBackground {
     this.secureStorageService = this.storageService; // secure storage is not supported in browsers, so we use local storage and warn users when it is used
     this.memoryStorageForStateProviders = BrowserApi.isManifestVersion(3)
       ? new BrowserMemoryStorageService() // mv3 stores to storage.session
-      : new BackgroundMemoryStorageService(); // mv2 stores to memory
+      : popupOnlyContext
+        ? new ForegroundMemoryStorageService()
+        : new BackgroundMemoryStorageService(); // mv2 stores to memory
     this.memoryStorageService = BrowserApi.isManifestVersion(3)
       ? this.memoryStorageForStateProviders // manifest v3 can reuse the same storage. They are split for v2 due to lacking a good sync mechanism, which isn't true for v3
-      : new MemoryStorageService();
+      : popupOnlyContext
+        ? new ForegroundMemoryStorageService()
+        : new BackgroundMemoryStorageService();
     this.largeObjectMemoryStorageForStateProviders = BrowserApi.isManifestVersion(3)
       ? mv3MemoryStorageCreator() // mv3 stores to local-backed session storage
       : this.memoryStorageForStateProviders; // mv2 stores to the same location
@@ -469,14 +475,14 @@ export default class MainBackground {
       storageServiceProvider,
     );
 
-    this.encryptService =
-      flagEnabled("multithreadDecryption") && BrowserApi.isManifestVersion(2)
-        ? new MultithreadEncryptServiceImplementation(
-            this.cryptoFunctionService,
-            this.logService,
-            true,
-          )
-        : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
+    this.encryptService = flagEnabled("multithreadDecryption")
+      ? new BrowserMultithreadEncryptServiceImplementation(
+          this.cryptoFunctionService,
+          this.logService,
+          true,
+          this.offscreenDocumentService,
+        )
+      : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,
@@ -625,6 +631,7 @@ export default class MainBackground {
       this.stateProvider,
       this.secureStorageService,
       this.userDecryptionOptionsService,
+      this.logService,
     );
 
     this.devicesService = new DevicesServiceImplementation(this.devicesApiService);
@@ -737,7 +744,6 @@ export default class MainBackground {
       this.cipherService,
       this.folderService,
       this.collectionService,
-      this.cryptoService,
       this.platformUtilsService,
       this.messagingService,
       this.searchService,
@@ -808,7 +814,10 @@ export default class MainBackground {
     );
     this.totpService = new TotpService(this.cryptoFunctionService, this.logService);
 
-    this.scriptInjectorService = new BrowserScriptInjectorService();
+    this.scriptInjectorService = new BrowserScriptInjectorService(
+      this.platformUtilsService,
+      this.logService,
+    );
     this.autofillService = new AutofillService(
       this.cipherService,
       this.autofillSettingsService,
@@ -902,6 +911,7 @@ export default class MainBackground {
       this.autofillSettingsService,
       this.vaultTimeoutSettingsService,
       this.biometricStateService,
+      this.accountService,
     );
 
     // Other fields
@@ -920,7 +930,6 @@ export default class MainBackground {
         this.autofillService,
         this.platformUtilsService as BrowserPlatformUtilsService,
         this.notificationsService,
-        this.stateService,
         this.autofillSettingsService,
         this.systemService,
         this.environmentService,
@@ -929,6 +938,7 @@ export default class MainBackground {
         this.configService,
         this.fido2Background,
         messageListener,
+        this.accountService,
       );
       this.nativeMessagingBackground = new NativeMessagingBackground(
         this.accountService,
@@ -1018,10 +1028,10 @@ export default class MainBackground {
         },
         this.authService,
         this.cipherService,
-        this.stateService,
         this.totpService,
         this.eventCollectionService,
         this.userVerificationService,
+        this.accountService,
       );
 
       this.contextMenusBackground = new ContextMenusBackground(contextMenuClickedHandler);
@@ -1055,20 +1065,17 @@ export default class MainBackground {
         this.cipherService,
       );
 
-      if (BrowserApi.isManifestVersion(2)) {
+      if (chrome.webRequest != null && chrome.webRequest.onAuthRequired != null) {
         this.webRequestBackground = new WebRequestBackground(
           this.platformUtilsService,
           this.cipherService,
           this.authService,
+          chrome.webRequest,
         );
       }
     }
 
-    this.userKeyInitService = new UserKeyInitService(
-      this.accountService,
-      this.cryptoService,
-      this.logService,
-    );
+    this.userAutoUnlockKeyService = new UserAutoUnlockKeyService(this.cryptoService);
   }
 
   async bootstrap() {
@@ -1079,7 +1086,18 @@ export default class MainBackground {
 
     // This is here instead of in in the InitService b/c we don't plan for
     // side effects to run in the Browser InitService.
-    this.userKeyInitService.listenForActiveUserChangesToSetUserKey();
+    const accounts = await firstValueFrom(this.accountService.accounts$);
+
+    const setUserKeyInMemoryPromises = [];
+    for (const userId of Object.keys(accounts) as UserId[]) {
+      // For each acct, we must await the process of setting the user key in memory
+      // if the auto user key is set to avoid race conditions of any code trying to access
+      // the user key from mem.
+      setUserKeyInMemoryPromises.push(
+        this.userAutoUnlockKeyService.setUserKeyInMemoryIfAutoUserKeySet(userId),
+      );
+    }
+    await Promise.all(setUserKeyInMemoryPromises);
 
     await (this.i18nService as I18nService).init();
     (this.eventUploadService as EventUploadService).init(true);
@@ -1098,31 +1116,11 @@ export default class MainBackground {
     await this.tabsBackground.init();
     this.contextMenusBackground?.init();
     await this.idleBackground.init();
-    if (BrowserApi.isManifestVersion(2)) {
-      await this.webRequestBackground.init();
-    }
-
-    if (this.platformUtilsService.isFirefox() && !this.isPrivateMode) {
-      // Set Private Mode windows to the default icon - they do not share state with the background page
-      const privateWindows = await BrowserApi.getPrivateModeWindows();
-      privateWindows.forEach(async (win) => {
-        await new UpdateBadge(self).setBadgeIcon("", win.id);
-      });
-
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      BrowserApi.onWindowCreated(async (win) => {
-        if (win.incognito) {
-          await new UpdateBadge(self).setBadgeIcon("", win.id);
-        }
-      });
-    }
+    this.webRequestBackground?.startListening();
 
     return new Promise<void>((resolve) => {
       setTimeout(async () => {
-        if (!this.isPrivateMode) {
-          await this.refreshBadge();
-        }
+        await this.refreshBadge();
         await this.fullSync(true);
         setTimeout(() => this.notificationsService.init(), 2500);
         resolve();
@@ -1161,7 +1159,12 @@ export default class MainBackground {
    */
   async switchAccount(userId: UserId) {
     try {
-      await this.stateService.setActiveUser(userId);
+      const currentlyActiveAccount = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((account) => account?.id)),
+      );
+      // can be removed once password generation history is migrated to state providers
+      await this.stateService.clearDecryptedData(currentlyActiveAccount);
+      await this.accountService.switchAccount(userId);
 
       if (userId == null) {
         this.loginEmailService.setRememberEmail(false);
@@ -1198,31 +1201,46 @@ export default class MainBackground {
   }
 
   async logout(expired: boolean, userId?: UserId) {
-    userId ??= (
-      await firstValueFrom(
-        this.accountService.activeAccount$.pipe(
-          timeout({
-            first: 2000,
-            with: () => {
-              throw new Error("No active account found to logout");
-            },
-          }),
-        ),
-      )
-    )?.id;
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(
+        map((a) => a?.id),
+        timeout({
+          first: 2000,
+          with: () => {
+            throw new Error("No active account found to logout");
+          },
+        }),
+      ),
+    );
 
-    await this.eventUploadService.uploadEvents(userId as UserId);
+    const userBeingLoggedOut = userId ?? activeUserId;
+
+    await this.eventUploadService.uploadEvents(userBeingLoggedOut);
+
+    // HACK: We shouldn't wait for the authentication status to change but instead subscribe to the
+    // authentication status to do various actions.
+    const logoutPromise = firstValueFrom(
+      this.authService.authStatusFor$(userBeingLoggedOut).pipe(
+        filter((authenticationStatus) => authenticationStatus === AuthenticationStatus.LoggedOut),
+        timeout({
+          first: 5_000,
+          with: () => {
+            throw new Error("The logout process did not complete in a reasonable amount of time.");
+          },
+        }),
+      ),
+    );
 
     await Promise.all([
-      this.syncService.setLastSync(new Date(0), userId),
-      this.cryptoService.clearKeys(userId),
-      this.cipherService.clear(userId),
-      this.folderService.clear(userId),
-      this.collectionService.clear(userId),
-      this.passwordGenerationService.clear(userId),
-      this.vaultTimeoutSettingsService.clear(userId),
+      this.syncService.setLastSync(new Date(0), userBeingLoggedOut),
+      this.cryptoService.clearKeys(userBeingLoggedOut),
+      this.cipherService.clear(userBeingLoggedOut),
+      this.folderService.clear(userBeingLoggedOut),
+      this.collectionService.clear(userBeingLoggedOut),
+      this.passwordGenerationService.clear(userBeingLoggedOut),
+      this.vaultTimeoutSettingsService.clear(userBeingLoggedOut),
       this.vaultFilterService.clear(),
-      this.biometricStateService.logout(userId),
+      this.biometricStateService.logout(userBeingLoggedOut),
       /* We intentionally do not clear:
        *  - autofillSettingsService
        *  - badgeSettingsService
@@ -1233,16 +1251,28 @@ export default class MainBackground {
     //Needs to be checked before state is cleaned
     const needStorageReseed = await this.needsStorageReseed();
 
-    const newActiveUser = await this.stateService.clean({ userId: userId });
+    const newActiveUser =
+      userBeingLoggedOut === activeUserId
+        ? await firstValueFrom(this.accountService.nextUpAccount$.pipe(map((a) => a?.id)))
+        : null;
 
-    await this.stateEventRunnerService.handleEvent("logout", userId);
+    await this.stateService.clean({ userId: userBeingLoggedOut });
+    await this.accountService.clean(userBeingLoggedOut);
 
+    await this.stateEventRunnerService.handleEvent("logout", userBeingLoggedOut);
+
+    // HACK: Wait for the user logging outs authentication status to transition to LoggedOut
+    await logoutPromise;
+
+    await this.switchAccount(newActiveUser);
     if (newActiveUser != null) {
       // we have a new active user, do not continue tearing down application
-      await this.switchAccount(newActiveUser as UserId);
       this.messagingService.send("switchAccountFinish");
     } else {
-      this.messagingService.send("doneLoggingOut", { expired: expired, userId: userId });
+      this.messagingService.send("doneLoggingOut", {
+        expired: expired,
+        userId: userBeingLoggedOut,
+      });
     }
 
     if (needStorageReseed) {
