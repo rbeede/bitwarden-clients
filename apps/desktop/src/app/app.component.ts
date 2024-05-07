@@ -26,7 +26,6 @@ import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-con
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
-import { LogoutReason } from "@bitwarden/common/auth/enums/logout-reason.enum";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -212,7 +211,7 @@ export class AppComponent implements OnInit, OnDestroy {
             break;
           case "logout":
             this.loading = message.userId == null || message.userId === this.activeUserId;
-            await this.logOut(!!message.expired, message.userId, message.reason);
+            await this.logOut(!!message.expired, message.userId);
             this.loading = false;
             break;
           case "lockVault":
@@ -569,17 +568,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // Even though the userId parameter is no longer optional doesn't mean a message couldn't be
   // passing null-ish values to us.
-  private async logOut(expired: boolean, userId: UserId, reason?: LogoutReason) {
-    if (reason) {
-      this.toastService.showToast({
-        variant: "error",
-        title: this.i18nService.t("loggedOut"),
-        message: this.i18nService.t(reason),
-      });
-      // delay the logout to allow the toast to be displayed before the process reload destroys the toast.
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
+  private async logOut(expired: boolean, userId: UserId) {
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
     );
