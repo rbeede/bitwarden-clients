@@ -186,6 +186,9 @@ export class GeneratorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroy$.next();
+    this.destroy$.complete();
+    this.isInitialized$.complete();
+    this._passwordOptionsMinLengthForReader.complete();
   }
 
   async typeChanged() {
