@@ -1016,7 +1016,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     if (!this.mutationsQueue.length) {
-      globalThis.requestIdleCallback(this.processMutations, { timeout: 200 });
+      globalThis.requestIdleCallback(this.processMutations, { timeout: 500 });
     }
 
     this.mutationsQueue.push(mutations);
