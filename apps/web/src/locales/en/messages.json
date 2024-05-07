@@ -8075,5 +8075,11 @@
   },
   "manageBillingFromProviderPortalMessage": {
     "message": "Manage billing from the Provider Portal"
+  },
+  "upgradeOrganizationCloseSecurityGaps": {
+    "message": "Close security gaps with monitoring reports"
+  },
+  "upgradeOrganizationCloseSecurityGapsDesc": {
+    "message": "Stay ahead of security vulnerabilities by upgrading to a paid plan for enhanced monitoring."
   }
 }

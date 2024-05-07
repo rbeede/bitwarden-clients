@@ -27,15 +27,25 @@ export class IsPaidOrgGuard implements CanActivate {
       // Users without billing permission can't access billing
       if (!org.canEditSubscription) {
         await this.dialogService.openSimpleDialog({
-          title: { key: "upgradeOrganization" },
-          content: { key: "notAvailableForFreeOrganization" },
+          title: { key: "upgradeOrganizationCloseSecurityGaps" },
+          content: { key: "upgradeOrganizationCloseSecurityGapsDesc" },
           acceptButtonText: { key: "ok" },
           cancelButtonText: null,
           type: "info",
         });
         return false;
       } else {
-        this.messagingService.send("upgradeOrganization", { organizationId: org.id });
+        const upgradeConfirmed = await this.dialogService.openSimpleDialog({
+          title: { key: "upgradeOrganizationCloseSecurityGaps" },
+          content: { key: "upgradeOrganizationCloseSecurityGapsDesc" },
+          acceptButtonText: { key: "upgradeOrganization" },
+          type: "info",
+        });
+        if (upgradeConfirmed) {
+          // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          this.router.navigate(["organizations", org.id, "billing", "subscription"]);
+        }
       }
     }
 
