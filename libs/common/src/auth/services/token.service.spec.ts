@@ -13,7 +13,6 @@ import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
 import { CsprngArray } from "../../types/csprng";
 import { UserId } from "../../types/guid";
-import { LogoutReason } from "../enums/logout-reason.enum";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
 import { AccessTokenKey, DecodedAccessToken, TokenService } from "./token.service";
@@ -536,7 +535,7 @@ describe("TokenService", () => {
           // assert that we logged the user out
           expect(messagingService.send).toHaveBeenCalledWith("logout", {
             userId: userIdFromAccessToken,
-            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+            reason: "accessTokenUnableToBeDecrypted",
           });
         });
 
@@ -571,7 +570,7 @@ describe("TokenService", () => {
           // assert that we logged the user out
           expect(messagingService.send).toHaveBeenCalledWith("logout", {
             userId: userIdFromAccessToken,
-            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+            reason: "accessTokenUnableToBeDecrypted",
           });
         });
       });
@@ -1428,7 +1427,7 @@ describe("TokenService", () => {
           // assert that we logged the user out
           expect(messagingService.send).toHaveBeenCalledWith("logout", {
             userId: userIdFromAccessToken,
-            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+            reason: "accessTokenUnableToBeDecrypted",
           });
         });
       });
@@ -1691,7 +1690,7 @@ describe("TokenService", () => {
 
           expect(messagingService.send).toHaveBeenCalledWith("logout", {
             userId: userIdFromAccessToken,
-            reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
+            reason: "refreshTokenSecureStorageRetrievalFailure",
           });
         });
       });

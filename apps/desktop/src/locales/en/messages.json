@@ -2312,10 +2312,10 @@
   "important": {
     "message": "Important:"
   },
-  "logoutReasonAccessTokenUnableToBeDecrypted": {
+  "accessTokenUnableToBeDecrypted": {
     "message": "You have been logged out because your access token could not be decrypted. Please log in again to resolve this issue."
   },
-  "logoutReasonRefreshTokenSecureStorageRetrievalFailure": {
+  "refreshTokenSecureStorageRetrievalFailure": {
     "message": "You have been logged out because your refresh token could not be retrieved. Please log in again to resolve this issue."
   },
   "masterPasswordHint": {

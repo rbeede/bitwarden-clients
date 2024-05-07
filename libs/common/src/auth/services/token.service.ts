@@ -21,7 +21,6 @@ import {
 } from "../../platform/state";
 import { UserId } from "../../types/guid";
 import { TokenService as TokenServiceAbstraction } from "../abstractions/token.service";
-import { LogoutReason } from "../enums/logout-reason.enum";
 
 import { ACCOUNT_ACTIVE_ACCOUNT_ID } from "./account.service";
 import {
@@ -413,7 +412,7 @@ export class TokenService implements TokenServiceAbstraction {
           );
           this.messageSender.send("logout", {
             userId,
-            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+            reason: "accessTokenUnableToBeDecrypted",
           });
           return null;
         }
@@ -435,7 +434,7 @@ export class TokenService implements TokenServiceAbstraction {
           );
           this.messageSender.send("logout", {
             userId,
-            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+            reason: "accessTokenUnableToBeDecrypted",
           });
           return null;
         }
@@ -459,7 +458,7 @@ export class TokenService implements TokenServiceAbstraction {
         this.logService.error(`Failed to decrypt access token`, error);
         this.messageSender.send("logout", {
           userId,
-          reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          reason: "accessTokenUnableToBeDecrypted",
         });
         return null;
       }
@@ -594,7 +593,7 @@ export class TokenService implements TokenServiceAbstraction {
         // logout reason if we do so.
         this.messageSender.send("logout", {
           userId,
-          reason: LogoutReason.REFRESH_TOKEN_SECURE_STORAGE_RETRIEVAL_FAILED,
+          reason: "refreshTokenSecureStorageRetrievalFailure",
         });
       }
     }
