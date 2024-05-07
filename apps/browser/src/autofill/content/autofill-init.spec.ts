@@ -24,6 +24,9 @@ describe("AutofillInit", () => {
       },
     });
     autofillInit = new AutofillInit(autofillOverlayContentService);
+    jest
+      .spyOn(autofillInit["collectAutofillContentService"] as any, "recursivelyQueryShadowRoots")
+      .mockReturnValue([]);
     window.IntersectionObserver = jest.fn(() => mock<IntersectionObserver>());
   });
 

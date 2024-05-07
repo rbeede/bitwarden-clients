@@ -18,6 +18,7 @@ import {
   nodeIsElement,
   elementIsInputElement,
   elementIsTextAreaElement,
+  nodeIsFormElement,
 } from "../utils";
 
 import { AutofillOverlayContentService } from "./abstractions/autofill-overlay-content.service";
@@ -43,6 +44,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   private updateAutofillElementsAfterMutationTimeout: number | NodeJS.Timeout;
   private readonly updateAfterMutationTimeoutDelay = 1000;
   private readonly formFieldQueryString;
+  private readonly nonInputFormFieldTags = new Set(["textarea", "select"]);
   private readonly ignoredInputTypes = new Set([
     "hidden",
     "submit",
@@ -952,7 +954,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
       return true;
     }
 
-    return ["textarea", "select"].includes(nodeTagName) && !nodeHasBwIgnoreAttribute;
+    return this.nonInputFormFieldTags.has(nodeTagName) && !nodeHasBwIgnoreAttribute;
   }
 
   /**
@@ -1014,7 +1016,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     if (!this.mutationsQueue.length) {
-      globalThis.requestAnimationFrame(this.processMutations);
+      globalThis.requestIdleCallback(this.processMutations, { timeout: 200 });
     }
 
     this.mutationsQueue.push(mutations);
@@ -1090,13 +1092,20 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
         continue;
       }
 
+      if (nodeIsFormElement(node) || this.isNodeFormFieldElement(node)) {
+        mutatedElements.push(node as HTMLElement);
+      }
+
       const autofillElements = this.deepQueryElements<HTMLElement>(
         node,
         `form, ${this.formFieldQueryString}`,
       );
       if (autofillElements.length) {
+        mutatedElements = mutatedElements.concat(autofillElements);
+      }
+
+      if (mutatedElements.length) {
         isElementMutated = true;
-        mutatedElements = autofillElements;
       }
     }
 
@@ -1131,11 +1140,12 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
         continue;
       }
 
-      globalThis.requestAnimationFrame(() => {
+      globalThis.requestIdleCallback(
         // We are setting this item to a -1 index because we do not know its position in the DOM.
         // This value should be updated with the next call to collect page details.
-        void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1);
-      });
+        () => void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1),
+        { timeout: 1000 },
+      );
     }
   }
 

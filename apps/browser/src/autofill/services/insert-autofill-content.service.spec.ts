@@ -76,6 +76,9 @@ describe("InsertAutofillContentService", () => {
     document.body.innerHTML = mockLoginForm;
     confirmSpy = jest.spyOn(globalThis, "confirm");
     windowLocationSpy = jest.spyOn(globalThis, "location", "get");
+    jest
+      .spyOn(collectAutofillContentService as any, "recursivelyQueryShadowRoots")
+      .mockReturnValue([]);
     insertAutofillContentService = new InsertAutofillContentService(
       domElementVisibilityService,
       collectAutofillContentService,
