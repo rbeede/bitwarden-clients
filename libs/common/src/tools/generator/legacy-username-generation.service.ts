@@ -206,6 +206,7 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
   }
 
   getOptions$() {
+    // look upon my works, ye mighty, and despair!
     const options$ = this.accountService.activeAccount$.pipe(
       concatMap((account) =>
         combineLatest([

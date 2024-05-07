@@ -139,7 +139,6 @@ export class GeneratorComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    // look upon my works, ye mighty, and despair!
     combineLatest([
       this.route.queryParams.pipe(first()),
       this.accountService.activeAccount$.pipe(first()),

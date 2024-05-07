@@ -191,6 +191,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
       return result;
     }
 
+    // look upon my works, ye mighty, and despair!
     const rawOptions$ = this.accountService.activeAccount$.pipe(
       concatMap((activeUser) =>
         concat(
