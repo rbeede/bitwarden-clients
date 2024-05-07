@@ -9,3 +9,13 @@ export class AdminAuthRequestUpdateRequest {
     public encryptedUserKey?: string,
   ) {}
 }
+
+export class AdminAuthRequestUpdateWithIdRequest extends AdminAuthRequestUpdateRequest {
+  constructor(
+    public id: string,
+    public requestApproved: boolean,
+    public encryptedUserKey?: string,
+  ) {
+    super(requestApproved, encryptedUserKey);
+  }
+}

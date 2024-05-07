@@ -1,6 +1,8 @@
+import { AdminAuthRequestUpdateWithIdRequest } from "./admin-auth-request-update.request";
+
 export class BulkApproveAuthRequestsRequest {
-  private ids: string[];
-  constructor(authRequestIds: string[]) {
-    this.ids = authRequestIds;
+  private requests: AdminAuthRequestUpdateWithIdRequest[];
+  constructor(requests: AdminAuthRequestUpdateWithIdRequest[]) {
+    this.requests = requests;
   }
 }
