@@ -35,7 +35,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.FlexibleCollectionsV1]: FALSE,
   [FeatureFlag.VaultOnboarding]: FALSE,
   [FeatureFlag.GeneratorToolsModernization]: FALSE,
-  [FeatureFlag.KeyRotationImprovements]: FALSE,
   [FeatureFlag.FlexibleCollectionsMigration]: FALSE,
   [FeatureFlag.ShowPaymentMethodWarningBanners]: FALSE,
   [FeatureFlag.EnableConsolidatedBilling]: FALSE,
