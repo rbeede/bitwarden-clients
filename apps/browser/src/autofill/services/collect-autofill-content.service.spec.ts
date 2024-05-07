@@ -3,6 +3,7 @@ import { mock } from "jest-mock-extended";
 import AutofillField from "../models/autofill-field";
 import AutofillForm from "../models/autofill-form";
 import { createAutofillFieldMock, createAutofillFormMock } from "../spec/autofill-mocks";
+import { mockQuerySelectorAllDefinedCall } from "../spec/testing-utils";
 import {
   ElementWithOpId,
   FillableFormFieldElement,
@@ -30,6 +31,7 @@ describe("CollectAutofillContentService", () => {
   const autofillOverlayContentService = new AutofillOverlayContentService();
   let collectAutofillContentService: CollectAutofillContentService;
   const mockIntersectionObserver = mock<IntersectionObserver>();
+  const mockQuerySelectorAll = mockQuerySelectorAllDefinedCall();
 
   beforeEach(() => {
     globalThis.requestIdleCallback = jest.fn((cb, options) => setTimeout(cb, 100));
@@ -38,15 +40,17 @@ describe("CollectAutofillContentService", () => {
       domElementVisibilityService,
       autofillOverlayContentService,
     );
-    jest
-      .spyOn(collectAutofillContentService as any, "recursivelyQueryShadowRoots")
-      .mockReturnValue([]);
     window.IntersectionObserver = jest.fn(() => mockIntersectionObserver);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
     document.body.innerHTML = "";
+  });
+
+  afterAll(() => {
+    mockQuerySelectorAll.mockRestore();
   });
 
   describe("getPageDetails", () => {

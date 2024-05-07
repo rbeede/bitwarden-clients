@@ -98,6 +98,34 @@ function triggerTabOnRemovedEvent(tabId: number, removeInfo: chrome.tabs.TabRemo
   });
 }
 
+function mockQuerySelectorAllDefinedCall() {
+  const originalDocumentQuerySelectorAll = document.querySelectorAll;
+  document.querySelectorAll = jest.fn((selector) => {
+    return originalDocumentQuerySelectorAll.call(
+      document,
+      selector === ":defined" ? "*" : selector,
+    );
+  });
+
+  const originalShadowRootQuerySelectorAll = ShadowRoot.prototype.querySelectorAll;
+  ShadowRoot.prototype.querySelectorAll = jest.fn((selector) => {
+    return originalShadowRootQuerySelectorAll.call(this, selector === ":defined" ? "*" : selector);
+  });
+
+  const originalElementQuerySelectorAll = Element.prototype.querySelectorAll;
+  Element.prototype.querySelectorAll = jest.fn(function (selector) {
+    return originalElementQuerySelectorAll.call(this, selector === ":defined" ? "*" : selector);
+  });
+
+  return {
+    mockRestore: () => {
+      document.querySelectorAll = originalDocumentQuerySelectorAll;
+      ShadowRoot.prototype.querySelectorAll = originalShadowRootQuerySelectorAll;
+      Element.prototype.querySelectorAll = originalElementQuerySelectorAll;
+    },
+  };
+}
+
 export {
   triggerTestFailure,
   flushPromises,
@@ -111,4 +139,5 @@ export {
   triggerTabOnReplacedEvent,
   triggerTabOnUpdatedEvent,
   triggerTabOnRemovedEvent,
+  mockQuerySelectorAllDefinedCall,
 };

@@ -1,6 +1,7 @@
 import { EVENTS } from "@bitwarden/common/autofill/constants";
 
 import AutofillScript, { FillScript, FillScriptActions } from "../models/autofill-script";
+import { mockQuerySelectorAllDefinedCall } from "../spec/testing-utils";
 import { FillableFormFieldElement, FormElementWithAttribute, FormFieldElement } from "../types";
 
 import AutofillOverlayContentService from "./autofill-overlay-content.service";
@@ -71,14 +72,12 @@ describe("InsertAutofillContentService", () => {
   );
   let insertAutofillContentService: InsertAutofillContentService;
   let fillScript: AutofillScript;
+  const mockQuerySelectorAll = mockQuerySelectorAllDefinedCall();
 
   beforeEach(() => {
     document.body.innerHTML = mockLoginForm;
     confirmSpy = jest.spyOn(globalThis, "confirm");
     windowLocationSpy = jest.spyOn(globalThis, "location", "get");
-    jest
-      .spyOn(collectAutofillContentService as any, "recursivelyQueryShadowRoots")
-      .mockReturnValue([]);
     insertAutofillContentService = new InsertAutofillContentService(
       domElementVisibilityService,
       collectAutofillContentService,
@@ -102,9 +101,14 @@ describe("InsertAutofillContentService", () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    jest.clearAllTimers();
     windowLocationSpy.mockRestore();
     confirmSpy.mockRestore();
     document.body.innerHTML = "";
+  });
+
+  afterAll(() => {
+    mockQuerySelectorAll.mockRestore();
   });
 
   describe("fillForm", () => {

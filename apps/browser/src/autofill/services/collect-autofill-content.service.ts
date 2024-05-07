@@ -213,10 +213,6 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    * @param root - The root element to start the query from
    */
   private queryShadowRoots(root: Document | ShadowRoot | Element): ShadowRoot[] {
-    if (!root.querySelector(":defined")) {
-      return [];
-    }
-
     const shadowRoots: ShadowRoot[] = [];
     const potentialShadowRoots = root.querySelectorAll(":defined");
     for (let index = 0; index < potentialShadowRoots.length; index++) {
@@ -439,7 +435,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
 
     if (!autofillFieldBase.viewable) {
       this.elementInitializingIntersectionObserver.add(element);
-      this.intersectionObserver.observe(element);
+      this.intersectionObserver?.observe(element);
     }
 
     if (elementIsSpanElement(element)) {
@@ -1413,7 +1409,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
         cachedAutofillFieldElement,
       );
 
-      this.intersectionObserver.unobserve(entry.target);
+      this.intersectionObserver?.unobserve(entry.target);
     }
   };
 
