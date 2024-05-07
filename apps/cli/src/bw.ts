@@ -392,6 +392,8 @@ export class Main {
       this.environmentService,
       this.appIdService,
       this.stateService,
+      this.i18nService,
+      this.logService,
       async (expired: boolean) => await this.logout(),
       customUserAgent,
     );

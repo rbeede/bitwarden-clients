@@ -5,6 +5,8 @@ import * as fe from "node-fetch";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
@@ -22,6 +24,8 @@ export class NodeApiService extends ApiService {
     environmentService: EnvironmentService,
     appIdService: AppIdService,
     stateService: StateService,
+    i18nService: I18nService,
+    logService: LogService,
     logoutCallback: (expired: boolean) => Promise<void>,
     customUserAgent: string = null,
   ) {
@@ -31,6 +35,8 @@ export class NodeApiService extends ApiService {
       environmentService,
       appIdService,
       stateService,
+      i18nService,
+      logService,
       logoutCallback,
       customUserAgent,
     );
