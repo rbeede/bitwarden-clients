@@ -83,8 +83,11 @@ export class BulkDeleteDialogComponent {
   protected submit = async () => {
     const deletePromises: Promise<void>[] = [];
 
-    // Unassigned ciphers under an Owner/Admin will call the deleteCiphersAdmin method
-    if (this.unassignedCiphers.length && this.organization.isAdmin) {
+    // Unassigned ciphers under an Owner/Admin OR Custom Users With Edit will call the deleteCiphersAdmin method
+    if (
+      this.unassignedCiphers.length &&
+      (this.organization.isAdmin || this.organization.permissions.editAnyCollection)
+    ) {
       deletePromises.push(this.deleteCiphersAdmin(this.unassignedCiphers));
     }
     if (this.cipherIds.length) {
