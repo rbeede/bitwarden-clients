@@ -1,6 +1,13 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRoute, ParamMap, Router } from "@angular/router";
-import { combineLatest, concatMap, map, Observable } from "rxjs";
+import {
+  ActivatedRoute,
+  Event,
+  NavigationEnd,
+  NavigationStart,
+  ParamMap,
+  Router,
+} from "@angular/router";
+import { combineLatest, concatMap, filter, map, Observable, startWith } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import {
@@ -63,16 +70,36 @@ export class ProductSwitcherService {
   products$: Observable<{
     bento: ProductSwitcherItem[];
     other: ProductSwitcherItem[];
-  }> = combineLatest([this.organizationService.organizations$, this.route.paramMap]).pipe(
-    map(([orgs, paramMap]): [Organization[], ParamMap] => {
+  }> = combineLatest([
+    this.organizationService.organizations$,
+    this.route.paramMap,
+    this.router.events.pipe(
+      // Product paths need to be updated when routes change, but the router event isn't actually needed
+      startWith(null), // Start with a null event to trigger the initial combineLatest
+      filter((e) => e instanceof NavigationEnd || e instanceof NavigationStart || e === null),
+    ),
+  ]).pipe(
+    map(([orgs, ...rest]): [Organization[], ParamMap, Event | null] => {
       return [
         // Sort orgs by name to match the order within the sidebar
         orgs.sort((a, b) => a.name.localeCompare(b.name)),
-        paramMap,
+        ...rest,
       ];
     }),
     concatMap(async ([orgs, paramMap]) => {
-      const routeOrg = orgs.find((o) => o.id === paramMap.get("organizationId"));
+      let routeOrg = orgs.find((o) => o.id === paramMap.get("organizationId"));
+
+      let organizationIdViaPath: string | null = null;
+
+      if (["/sm/", "/organizations/"].some((path) => this.router.url.includes(path))) {
+        // Grab the organization ID from the URL
+        organizationIdViaPath = this.router.url.split("/")[2] ?? null;
+      }
+
+      // When the user is already viewing an organization within an application use it as the active route org
+      if (organizationIdViaPath && !routeOrg) {
+        routeOrg = orgs.find((o) => o.id === organizationIdViaPath);
+      }
 
       // If the active route org doesn't have access to SM, find the first org that does.
       const smOrg =

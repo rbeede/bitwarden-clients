@@ -1,7 +1,7 @@
 import { TestBed } from "@angular/core/testing";
 import { ActivatedRoute, Router, convertToParamMap } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
-import { firstValueFrom, of } from "rxjs";
+import { Observable, firstValueFrom, of } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -13,25 +13,18 @@ import { ProductSwitcherService } from "./product-switcher.service";
 
 describe("ProductSwitcherService", () => {
   let service: ProductSwitcherService;
-  let router: MockProxy<Router>;
+  let router: { url: string; events: Observable<unknown> };
   let organizationService: MockProxy<OrganizationService>;
   let providerService: MockProxy<ProviderService>;
   let activeRouteParams = convertToParamMap({ organizationId: "1234" });
-
-  const setRouterURL = (path: string) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    // `url` is a read-only property in practice but is mocked here for testing purposes
-    router.url = path;
-  };
 
   beforeEach(() => {
     router = mock<Router>();
     organizationService = mock<OrganizationService>();
     providerService = mock<ProviderService>();
 
-    setRouterURL("/");
-
+    router.url = "/";
+    router.events = of({});
     organizationService.organizations$ = of([{}] as Organization[]);
     providerService.getAll.mockResolvedValue([] as Provider[]);
 
@@ -44,6 +37,7 @@ describe("ProductSwitcherService", () => {
           provide: ActivatedRoute,
           useValue: {
             paramMap: of(activeRouteParams),
+            url: of([]),
           },
         },
         {
@@ -145,7 +139,7 @@ describe("ProductSwitcherService", () => {
     });
 
     it("marks Secret Manager as active", async () => {
-      setRouterURL("/sm/");
+      router.url = "/sm/";
 
       service = TestBed.inject(ProductSwitcherService);
 
@@ -159,7 +153,7 @@ describe("ProductSwitcherService", () => {
     it("marks Admin Console as active", async () => {
       organizationService.organizations$ = of([{ id: "1234", isOwner: true }] as Organization[]);
       activeRouteParams = convertToParamMap({ organizationId: "1" });
-      setRouterURL("/organizations/");
+      router.url = "/organizations/";
 
       service = TestBed.inject(ProductSwitcherService);
 
@@ -172,7 +166,7 @@ describe("ProductSwitcherService", () => {
 
     it("marks Provider Portal as active", async () => {
       providerService.getAll.mockResolvedValue([{ id: "67899" }] as Provider[]);
-      setRouterURL("/providers/");
+      router.url = "/providers/";
 
       service = TestBed.inject(ProductSwitcherService);
 
@@ -182,5 +176,41 @@ describe("ProductSwitcherService", () => {
 
       expect(isActive).toBe(true);
     });
+  });
+
+  describe("current org path", () => {
+    it("updates secrets manager path when the org id is found in the path", async () => {
+      router.url = "/sm/4243";
+
+      organizationService.organizations$ = of([
+        { id: "23443234", canAccessSecretsManager: true, enabled: true, name: "Org 2" },
+        { id: "4243", canAccessSecretsManager: true, enabled: true, name: "Org 32" },
+      ] as Organization[]);
+
+      service = TestBed.inject(ProductSwitcherService);
+
+      const products = await firstValueFrom(service.products$);
+
+      const { appRoute } = products.bento.find((p) => p.name === "Secrets Manager");
+
+      expect(appRoute).toEqual(["/sm", "4243"]);
+    });
+  });
+
+  it("updates admin console path when the org id is found in the path", async () => {
+    router.url = "/organizations/111-22-33";
+
+    organizationService.organizations$ = of([
+      { id: "111-22-33", isOwner: true, name: "Test Org" },
+      { id: "4243", isOwner: true, name: "My Org" },
+    ] as Organization[]);
+
+    service = TestBed.inject(ProductSwitcherService);
+
+    const products = await firstValueFrom(service.products$);
+
+    const { appRoute } = products.bento.find((p) => p.name === "Admin Console");
+
+    expect(appRoute).toEqual(["/organizations", "111-22-33"]);
   });
 });
