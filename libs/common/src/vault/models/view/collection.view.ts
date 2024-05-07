@@ -56,7 +56,10 @@ export class CollectionView implements View, ITreeNodeObject {
     return org?.canEditAnyCollection(false) || (org?.canEditAssignedCollections && this.assigned);
   }
 
-  // For editing collection details, not the items within it.
+  /**
+   * Returns true if the user can edit a collection (including user and group access) from the individual vault.
+   * Does not include admin permissions.
+   */
   canEdit(org: Organization, flexibleCollectionsV1Enabled: boolean): boolean {
     if (org != null && org.id !== this.organizationId) {
       throw new Error(
@@ -64,12 +67,13 @@ export class CollectionView implements View, ITreeNodeObject {
       );
     }
 
-    return org?.flexibleCollections
-      ? org?.canEditAnyCollection(flexibleCollectionsV1Enabled) || this.manage
-      : org?.canEditAnyCollection(flexibleCollectionsV1Enabled) || org?.canEditAssignedCollections;
+    return this.manage;
   }
 
-  // For deleting a collection, not the items within it.
+  /**
+   * Returns true if the user can delete a collection from the individual vault.
+   * Does not include admin permissions.
+   */
   canDelete(org: Organization): boolean {
     if (org != null && org.id !== this.organizationId) {
       throw new Error(
@@ -77,9 +81,7 @@ export class CollectionView implements View, ITreeNodeObject {
       );
     }
 
-    return org?.flexibleCollections
-      ? org?.canDeleteAnyCollection || (!org?.limitCollectionCreationDeletion && this.manage)
-      : org?.canDeleteAnyCollection || org?.canDeleteAssignedCollections;
+    return !org?.limitCollectionCreationDeletion && this.manage;
   }
 
   static fromJSON(obj: Jsonify<CollectionView>) {
