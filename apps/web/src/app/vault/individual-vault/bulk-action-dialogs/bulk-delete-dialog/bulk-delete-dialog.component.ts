@@ -86,11 +86,12 @@ export class BulkDeleteDialogComponent {
 
   protected submit = async () => {
     const deletePromises: Promise<void>[] = [];
+    const restrictProviderAccess = await firstValueFrom(this.restrictProviderAccess$);
 
     // Unassigned ciphers under an Owner/Admin OR Custom Users With Edit will call the deleteCiphersAdmin method
     if (
       this.unassignedCiphers.length &&
-      (this.organization.isAdmin || this.organization.permissions.editAnyCollection)
+      this.organization.canEditUnassignedCiphers(restrictProviderAccess)
     ) {
       deletePromises.push(this.deleteCiphersAdmin(this.unassignedCiphers));
     }
