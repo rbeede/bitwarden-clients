@@ -1999,17 +1999,6 @@ describe("CollectAutofillContentService", () => {
       expect(shadowRoot).toEqual(null);
     });
 
-    it("returns null if the passed node contains children elements", () => {
-      const element = document.createElement("div");
-      element.innerHTML = "<p>Hello, world!</p>";
-      const shadowRoot = collectAutofillContentService["getShadowRoot"](element);
-
-      // eslint-disable-next-line
-      // @ts-ignore
-      expect(chrome.dom.openOrClosedShadowRoot).not.toBeCalled();
-      expect(shadowRoot).toEqual(null);
-    });
-
     it("returns an open shadow root if the passed node has a shadowDOM element", () => {
       const element = document.createElement("div");
       element.attachShadow({ mode: "open" });

@@ -213,13 +213,20 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    * @param root - The root element to start the query from
    */
   private queryShadowRoots(root: Document | ShadowRoot | Element): ShadowRoot[] {
-    if (!root.querySelector(":defined:empty")) {
+    if (!root.querySelector(":defined")) {
       return [];
     }
 
-    return Array.from(root.querySelectorAll(":defined:empty"))
-      .filter((element) => element.shadowRoot !== null)
-      .map((element) => this.getShadowRoot(element));
+    const shadowRoots: ShadowRoot[] = [];
+    const potentialShadowRoots = root.querySelectorAll(":defined");
+    for (let index = 0; index < potentialShadowRoots.length; index++) {
+      const shadowRoot = this.getShadowRoot(potentialShadowRoots[index]);
+      if (shadowRoot) {
+        shadowRoots.push(shadowRoot);
+      }
+    }
+
+    return shadowRoots;
   }
 
   /**
@@ -358,7 +365,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   ): FormFieldElement[] {
     let formFieldElements = previouslyFoundFormFieldElements;
     if (!formFieldElements) {
-      formFieldElements = this.deepQueryElements(document, this.formFieldQueryString);
+      formFieldElements = this.deepQueryElements(document, this.formFieldQueryString, true);
     }
 
     if (!fieldsLimit || formFieldElements.length <= fieldsLimit) {
@@ -935,6 +942,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     const queriedElements = this.deepQueryElements<HTMLElement>(
       document,
       `form, ${this.formFieldQueryString}`,
+      true,
     );
     const formElements: HTMLFormElement[] = [];
     const formFieldElements: FormFieldElement[] = [];
@@ -991,7 +999,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    * @param {Node} node
    */
   private getShadowRoot(node: Node): ShadowRoot | null {
-    if (!nodeIsElement(node) || node.childNodes.length !== 0) {
+    if (!nodeIsElement(node)) {
       return null;
     }
 
@@ -1132,6 +1140,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
       const autofillElements = this.deepQueryElements<HTMLElement>(
         node,
         `form, ${this.formFieldQueryString}`,
+        true,
       );
       if (autofillElements.length) {
         mutatedElements = mutatedElements.concat(autofillElements);
