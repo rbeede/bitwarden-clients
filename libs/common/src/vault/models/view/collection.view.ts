@@ -58,7 +58,7 @@ export class CollectionView implements View, ITreeNodeObject {
 
   /**
    * Returns true if the user can edit a collection (including user and group access) from the individual vault.
-   * Does not include admin permissions.
+   * Does not include admin permissions - see {@link CollectionAdminView.canEdit}.
    */
   canEdit(org: Organization, flexibleCollectionsV1Enabled: boolean): boolean {
     if (org != null && org.id !== this.organizationId) {
@@ -72,7 +72,7 @@ export class CollectionView implements View, ITreeNodeObject {
 
   /**
    * Returns true if the user can delete a collection from the individual vault.
-   * Does not include admin permissions.
+   * Does not include admin permissions - see {@link CollectionAdminView.canDelete}.
    */
   canDelete(org: Organization): boolean {
     if (org != null && org.id !== this.organizationId) {
