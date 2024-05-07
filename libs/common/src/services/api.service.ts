@@ -115,10 +115,10 @@ import { ProfileResponse } from "../models/response/profile.response";
 import { UserKeyResponse } from "../models/response/user-key.response";
 import { AppIdService } from "../platform/abstractions/app-id.service";
 import { EnvironmentService } from "../platform/abstractions/environment.service";
-import { I18nService } from "../platform/abstractions/i18n.service";
 import { LogService } from "../platform/abstractions/log.service";
 import { PlatformUtilsService } from "../platform/abstractions/platform-utils.service";
 import { StateService } from "../platform/abstractions/state.service";
+import { CommandDefinition, MessageSender } from "../platform/messaging";
 import { Utils } from "../platform/misc/utils";
 import { UserId } from "../types/guid";
 import { AttachmentRequest } from "../vault/models/request/attachment.request";
@@ -142,6 +142,11 @@ import {
 } from "../vault/models/response/collection.response";
 import { SyncResponse } from "../vault/models/response/sync.response";
 
+// TODO: platform to investigate why we can't do CommandDefinition<void>
+export const REFRESH_ACCESS_TOKEN_ERROR_MSG_CMD = new CommandDefinition<object>(
+  "refreshAccessTokenError",
+);
+
 /**
  * @deprecated The `ApiService` class is deprecated and calls should be extracted into individual
  * api services. The `send` method is still allowed to be used within api services. For background
@@ -159,7 +164,7 @@ export class ApiService implements ApiServiceAbstraction {
     private environmentService: EnvironmentService,
     private appIdService: AppIdService,
     private stateService: StateService,
-    private i18nService: I18nService,
+    private messageSender: MessageSender,
     private logService: LogService,
     private logoutCallback: (expired: boolean) => Promise<void>,
     private customUserAgent: string = null,
@@ -1718,12 +1723,8 @@ export class ApiService implements ApiServiceAbstraction {
       return this.doApiTokenRefresh();
     }
 
-    // Surface an error to the user.
-    this.platformUtilsService.showToast(
-      "error",
-      this.i18nService.t("errorRefreshingAccessToken"),
-      this.i18nService.t("errorRefreshingAccessTokenDesc"),
-    );
+    // Send message which each client can handle to surface an error message to the user.
+    this.messageSender.send(REFRESH_ACCESS_TOKEN_ERROR_MSG_CMD, null);
 
     throw new Error("Cannot refresh access token, no refresh token or api keys are stored.");
   }

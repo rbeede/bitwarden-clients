@@ -574,7 +574,7 @@ const safeProviders: SafeProvider[] = [
       EnvironmentService,
       AppIdServiceAbstraction,
       StateServiceAbstraction,
-      I18nServiceAbstraction,
+      MessageSender,
       LogService,
       LOGOUT_CALLBACK,
     ],

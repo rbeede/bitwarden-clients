@@ -572,7 +572,7 @@ export default class MainBackground {
       this.environmentService,
       this.appIdService,
       this.stateService,
-      this.i18nService,
+      this.messagingService,
       this.logService,
       (expired: boolean) => this.logout(expired),
     );

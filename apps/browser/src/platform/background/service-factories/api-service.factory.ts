@@ -16,8 +16,8 @@ import {
   environmentServiceFactory,
   EnvironmentServiceInitOptions,
 } from "./environment-service.factory";
-import { i18nServiceFactory, I18nServiceInitOptions } from "./i18n-service.factory";
 import { logServiceFactory, LogServiceInitOptions } from "./log-service.factory";
+import { messageSenderFactory, MessageSenderInitOptions } from "./message-sender.factory";
 import {
   PlatformUtilsServiceInitOptions,
   platformUtilsServiceFactory,
@@ -37,7 +37,7 @@ export type ApiServiceInitOptions = ApiServiceFactoryOptions &
   EnvironmentServiceInitOptions &
   AppIdServiceInitOptions &
   StateServiceInitOptions &
-  I18nServiceInitOptions &
+  MessageSenderInitOptions &
   LogServiceInitOptions;
 
 export function apiServiceFactory(
@@ -55,7 +55,7 @@ export function apiServiceFactory(
         await environmentServiceFactory(cache, opts),
         await appIdServiceFactory(cache, opts),
         await stateServiceFactory(cache, opts),
-        await i18nServiceFactory(cache, opts),
+        await messageSenderFactory(cache, opts),
         await logServiceFactory(cache, opts),
         opts.apiServiceOptions.logoutCallback,
         opts.apiServiceOptions.customUserAgent,
