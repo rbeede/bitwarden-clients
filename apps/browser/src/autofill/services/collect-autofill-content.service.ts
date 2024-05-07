@@ -145,7 +145,9 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   }
 
   /**
-   * Deep queries the DOM for elements that match the given query string.
+   * Queries all elements in the DOM that match the given query string.
+   * Also, recursively queries all shadow roots for the element.
+   *
    * @param root - The root element to start the query from
    * @param queryString - The query string to match elements against
    * @param isObservingShadowRoot - Determines whether to observe shadow roots
