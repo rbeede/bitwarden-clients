@@ -307,7 +307,7 @@ export class TokenService implements TokenServiceAbstraction {
 
           // TODO: PM-6408 - https://bitwarden.atlassian.net/browse/PM-6408
           // 2024-02-20: Remove access token from memory so that we migrate to encrypt the access token over time.
-          // Remove this call to remove the access token from memory after 3 releases.
+          // Remove this call to remove the access token from memory after 3 months.
           await this.singleUserStateProvider.get(userId, ACCESS_TOKEN_MEMORY).update((_) => null);
         } catch (error) {
           this.logService.error(
@@ -511,7 +511,7 @@ export class TokenService implements TokenServiceAbstraction {
 
           // TODO: PM-6408 - https://bitwarden.atlassian.net/browse/PM-6408
           // 2024-02-20: Remove refresh token from memory and disk so that we migrate to secure storage over time.
-          // Remove these 2 calls to remove the refresh token from memory and disk after 3 releases.
+          // Remove these 2 calls to remove the refresh token from memory and disk after 3 months.
           await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_DISK).update((_) => null);
           await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_MEMORY).update((_) => null);
         } catch (error) {
