@@ -250,6 +250,7 @@ export class ApiService implements ApiServiceAbstraction {
     try {
       await this.doAuthRefresh();
     } catch (e) {
+      this.logService.error("Error refreshing access token: ", e);
       return Promise.reject(null);
     }
   }
@@ -1723,9 +1724,6 @@ export class ApiService implements ApiServiceAbstraction {
       this.i18nService.t("errorRefreshingAccessToken"),
       this.i18nService.t("errorRefreshingAccessTokenDesc"),
     );
-
-    // Log the error so it isn't lost. The error throw below is lost.
-    this.logService.error("Cannot refresh access token, no refresh token or api keys are stored.");
 
     throw new Error("Cannot refresh access token, no refresh token or api keys are stored.");
   }
