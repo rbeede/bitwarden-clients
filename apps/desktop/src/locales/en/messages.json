@@ -1213,7 +1213,7 @@
     }
   },
   "errorRefreshingAccessToken":{
-    "message": "Access token Refresh Error"
+    "message": "Access Token Refresh Error"
   },
   "errorRefreshingAccessTokenDesc":{
     "message": "No refresh token or API keys found. Please try logging out and logging back in."
