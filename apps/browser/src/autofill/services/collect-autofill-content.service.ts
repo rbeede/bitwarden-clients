@@ -42,6 +42,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   private elementInitializingIntersectionObserver: Set<Element> = new Set();
   private mutationObserver: MutationObserver;
   private updateAutofillElementsAfterMutationTimeout: number | NodeJS.Timeout;
+  private mutationsQueue: MutationRecord[][] = [];
   private readonly updateAfterMutationTimeoutDelay = 1000;
   private readonly formFieldQueryString;
   private readonly nonInputFormFieldTags = new Set(["textarea", "select"]);
@@ -65,7 +66,6 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     for (const type of this.ignoredInputTypes) {
       inputQuery += `:not([type="${type}"])`;
     }
-
     this.formFieldQueryString = `${inputQuery}, textarea:not([data-bwignore]), select:not([data-bwignore]), span[data-bwautofill]`;
   }
 
@@ -144,6 +144,12 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     return fieldElementsWithOpid[0];
   }
 
+  /**
+   * Deep queries the DOM for elements that match the given query string.
+   * @param root - The root element to start the query from
+   * @param queryString - The query string to match elements against
+   * @param isObservingShadowRoot - Determines whether to observe shadow roots
+   */
   deepQueryElements<T>(
     root: Document | ShadowRoot | Element,
     queryString: string,
@@ -159,6 +165,12 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     return elements;
   }
 
+  /**
+   * Queries the DOM for elements based on the given query string.
+   *
+   * @param root - The root element to start the query from
+   * @param queryString - The query string to match elements against
+   */
   private queryElements<T>(root: Document | ShadowRoot | Element, queryString: string): T[] {
     if (!root.querySelector(queryString)) {
       return [];
@@ -167,6 +179,14 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     return Array.from(root.querySelectorAll(queryString)) as T[];
   }
 
+  /**
+   * Recursively queries all shadow roots found within the given root element.
+   * Will also set up a mutation observer on the shadow root if the
+   * `isObservingShadowRoot` parameter is set to true.
+   *
+   * @param root - The root element to start the query from
+   * @param isObservingShadowRoot - Determines whether to observe shadow roots
+   */
   private recursivelyQueryShadowRoots(
     root: Document | ShadowRoot | Element,
     isObservingShadowRoot = false,
@@ -187,6 +207,11 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     return shadowRoots;
   }
 
+  /**
+   * Queries any immediate shadow roots found within the given root element.
+   *
+   * @param root - The root element to start the query from
+   */
   private queryShadowRoots(root: Document | ShadowRoot | Element): ShadowRoot[] {
     if (!root.querySelector(":defined:empty")) {
       return [];
@@ -1000,8 +1025,6 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     });
   }
 
-  private mutationsQueue: MutationRecord[][] = [];
-
   /**
    * Handles observed DOM mutations and identifies if a mutation is related to
    * an autofill element. If so, it will update the autofill element data.
@@ -1018,39 +1041,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     if (!this.mutationsQueue.length) {
       globalThis.requestIdleCallback(this.processMutations, { timeout: 500 });
     }
-
     this.mutationsQueue.push(mutations);
-  };
-
-  private processMutations = () => {
-    for (let queueIndex = 0; queueIndex < this.mutationsQueue.length; queueIndex++) {
-      const mutationRecord = this.mutationsQueue[queueIndex];
-      for (let mutationIndex = 0; mutationIndex < mutationRecord.length; mutationIndex++) {
-        const mutation = mutationRecord[mutationIndex];
-        if (
-          mutation.type === "childList" &&
-          (this.isAutofillElementNodeMutated(mutation.removedNodes, true) ||
-            this.isAutofillElementNodeMutated(mutation.addedNodes))
-        ) {
-          this.domRecentlyMutated = true;
-          if (this.autofillOverlayContentService) {
-            this.autofillOverlayContentService.pageDetailsUpdateRequired = true;
-          }
-          this.noFieldsFound = false;
-          continue;
-        }
-
-        if (mutation.type === "attributes") {
-          this.handleAutofillElementAttributeMutation(mutation);
-        }
-      }
-    }
-
-    if (this.domRecentlyMutated) {
-      this.updateAutofillElementsAfterMutation();
-    }
-
-    this.mutationsQueue = [];
   };
 
   /**
@@ -1071,6 +1062,48 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     this.autofillFieldElements.clear();
 
     this.updateAutofillElementsAfterMutation();
+  }
+
+  /**
+   * Processes queue mutations within a requestIdleCallback.
+   */
+  private processMutations = () => {
+    for (let queueIndex = 0; queueIndex < this.mutationsQueue.length; queueIndex++) {
+      this.processMutationRecord(this.mutationsQueue[queueIndex]);
+    }
+
+    if (this.domRecentlyMutated) {
+      this.updateAutofillElementsAfterMutation();
+    }
+
+    this.mutationsQueue = [];
+  };
+
+  /**
+   * Processes a mutation record and updates the autofill elements if necessary.
+   *
+   * @param mutations - The mutation record to process
+   */
+  private processMutationRecord(mutations: MutationRecord[]) {
+    for (let mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++) {
+      const mutation = mutations[mutationIndex];
+      if (
+        mutation.type === "childList" &&
+        (this.isAutofillElementNodeMutated(mutation.removedNodes, true) ||
+          this.isAutofillElementNodeMutated(mutation.addedNodes))
+      ) {
+        this.domRecentlyMutated = true;
+        if (this.autofillOverlayContentService) {
+          this.autofillOverlayContentService.pageDetailsUpdateRequired = true;
+        }
+        this.noFieldsFound = false;
+        continue;
+      }
+
+      if (mutation.type === "attributes") {
+        this.handleAutofillElementAttributeMutation(mutation);
+      }
+    }
   }
 
   /**
