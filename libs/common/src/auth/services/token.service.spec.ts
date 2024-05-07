@@ -1347,6 +1347,35 @@ describe("TokenService", () => {
           ).toHaveBeenCalledWith(refreshToken);
         });
 
+        it("returns the unencrypted access token if secure storage retrieval fails but access token is still pre-migration", async () => {
+          // This tests the linux scenario where users might not have secure storage support configured.
+
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, accessTokenJwt]);
+
+          // Mock linux secure storage error
+          const secureStorageError = "Secure storage error";
+          secureStorageService.get.mockRejectedValue(new Error(secureStorageError));
+
+          // Act
+          const result = await tokenService.getAccessToken(userIdFromAccessToken);
+
+          // Assert
+          // assert that we returned the unencrypted, pre-migration access token
+          expect(result).toBe(accessTokenJwt);
+
+          // assert that we did not log an error or log the user out
+          expect(logService.error).not.toHaveBeenCalled();
+
+          expect(messagingService.send).not.toHaveBeenCalledWith("logout", expect.anything());
+        });
+
         it("should not error and fallback to disk storage if passed a null value for the refresh token", async () => {
           // Arrange
           secureStorageService.get.mockResolvedValue(null);
@@ -1375,6 +1404,38 @@ describe("TokenService", () => {
           expect(
             singleUserStateProvider.getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY).nextMock,
           ).toHaveBeenCalledWith(null);
+        });
+
+        it("logs the error and logs the user out if the access token cannot be decrypted", async () => {
+          // Arrange
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+            .stateSubject.next([userIdFromAccessToken, undefined]);
+
+          singleUserStateProvider
+            .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
+            .stateSubject.next([userIdFromAccessToken, encryptedAccessToken]);
+
+          secureStorageService.get.mockResolvedValue(accessTokenKeyB64);
+          encryptService.decryptToUtf8.mockRejectedValue(new Error("Decryption error"));
+
+          // Act
+          const result = await tokenService.getAccessToken(userIdFromAccessToken);
+
+          // Assert
+          expect(result).toBeNull();
+
+          // assert that we logged the error
+          expect(logService.error).toHaveBeenCalledWith(
+            "Failed to decrypt access token",
+            new Error("Decryption error"),
+          );
+
+          // assert that we logged the user out
+          expect(messagingService.send).toHaveBeenCalledWith("logout", {
+            userId: userIdFromAccessToken,
+            reason: LogoutReason.ACCESS_TOKEN_DECRYPTION_FAILED,
+          });
         });
       });
     });
