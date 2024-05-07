@@ -76,6 +76,7 @@ export class EncString implements Encrypted {
     }
 
     const { encType, encPieces } = EncString.parseEncryptedString(this.encryptedString);
+
     this.encryptionType = encType;
 
     if (encPieces.length !== EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[encType]) {
@@ -105,7 +106,7 @@ export class EncString implements Encrypted {
   private static parseEncryptedString(encryptedString: string): {
     encType: EncryptionType;
     encPieces: string[];
-  } | null {
+  } {
     const headerPieces = encryptedString.split(".");
     let encType: EncryptionType;
     let encPieces: string[] = null;
@@ -113,14 +114,9 @@ export class EncString implements Encrypted {
     if (headerPieces.length === 2) {
       try {
         encType = parseInt(headerPieces[0], null);
-
-        if (isNaN(encType)) {
-          return null;
-        }
-
         encPieces = headerPieces[1].split("|");
       } catch (e) {
-        return null;
+        return { encType: NaN, encPieces: [] };
       }
     } else {
       encPieces = encryptedString.split("|");
@@ -141,13 +137,13 @@ export class EncString implements Encrypted {
       return false;
     }
 
-    const result = this.parseEncryptedString(s);
+    const { encType, encPieces } = this.parseEncryptedString(s);
 
-    if (result == null) {
+    if (isNaN(encType) || encPieces.length === 0) {
       return false;
     }
 
-    return EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[result.encType] === result.encPieces.length;
+    return EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE[encType] === encPieces.length;
   }
 
   async decrypt(orgId: string, key: SymmetricCryptoKey = null): Promise<string> {
