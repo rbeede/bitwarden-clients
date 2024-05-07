@@ -1071,7 +1071,8 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   }
 
   /**
-   * Processes queue mutations within a requestIdleCallback.
+   * Handles the processing of all mutations in the mutations queue. Will trigger
+   * within an idle callback to help with performance and prevent excessive updates.
    */
   private processMutations = () => {
     for (let queueIndex = 0; queueIndex < this.mutationsQueue.length; queueIndex++) {
@@ -1115,8 +1116,8 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   /**
    * Checks if the passed nodes either contain or are autofill elements.
    *
-   * @param nodes
-   * @param isRemovingNodes
+   * @param nodes - The nodes to check
+   * @param isRemovingNodes - Whether the nodes are being removed
    */
   private isAutofillElementNodeMutated(nodes: NodeList, isRemovingNodes = false): boolean {
     if (!nodes.length) {
