@@ -23,8 +23,6 @@ import { Devices } from "@bitwarden/web-vault/app/admin-console/icons";
 import { LooseComponentsModule } from "@bitwarden/web-vault/app/shared";
 import { SharedModule } from "@bitwarden/web-vault/app/shared/shared.module";
 
-import { OrganizationsRoutingModule } from "../../organizations-routing.module";
-
 const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ApiService,
@@ -52,7 +50,7 @@ const safeProviders: SafeProvider[] = [
   templateUrl: "./device-approvals.component.html",
   standalone: true,
   providers: safeProviders,
-  imports: [SharedModule, OrganizationsRoutingModule, NoItemsModule, LooseComponentsModule],
+  imports: [SharedModule, NoItemsModule, LooseComponentsModule],
 })
 export class DeviceApprovalsComponent implements OnInit, OnDestroy {
   tableDataSource = new TableDataSource<PendingAuthRequestView>();
