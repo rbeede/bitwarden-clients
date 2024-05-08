@@ -58,6 +58,9 @@ export interface CollectionDialogParams {
   showOrgSelector?: boolean;
   collectionIds?: string[];
   readonly?: boolean;
+  isFlexibleCollectionsV1Enabled?: boolean;
+  isAllowAdminAccessEnabled?: boolean;
+  isAddAccessCollection?: boolean;
 }
 
 export interface CollectionDialogResult {
@@ -99,6 +102,7 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
   });
   protected PermissionMode = PermissionMode;
   protected showDeleteButton = false;
+  protected showAddAccessWarning = false;
 
   constructor(
     @Inject(DIALOG_DATA) private params: CollectionDialogParams,
@@ -119,6 +123,7 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.showAddAccessWarning = this.handleAddAccessWarning();
     // Opened from the individual vault
     if (this.params.showOrgSelector) {
       this.showOrgSelector = true;
@@ -361,6 +366,15 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private handleAddAccessWarning(): boolean {
+    const { isAddAccessCollection, isAllowAdminAccessEnabled, isFlexibleCollectionsV1Enabled } =
+      this.params;
+
+    if (isFlexibleCollectionsV1Enabled && isAddAccessCollection && !isAllowAdminAccessEnabled) {
+      return true;
+    }
   }
 
   private handleFormGroupReadonly(readonly: boolean) {
