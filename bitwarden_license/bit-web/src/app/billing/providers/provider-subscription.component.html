@@ -1,1 +1,17 @@
 <app-header></app-header>
+<bit-container>
+  <ng-container *ngIf="!firstLoaded && loading">
+    <i class="bwi bwi-spinner bwi-spin text-muted" title="{{ 'loading' | i18n }}"></i>
+    <span class="sr-only">{{ "loading" | i18n }}</span>
+  </ng-container>
+  <ng-container *ngIf="sub && firstLoaded">
+    <ng-container *ngIf="!(showUpdatedSubscriptionStatusSection$ | async)">
+      <bit-callout
+        type="warning"
+        title="{{ 'canceled' | i18n }}"
+        *ngIf="sub.Status == && subscription.cancelled"
+        >{{ "subscriptionCanceled" | i18n }}</bit-callout
+      >
+    </ng-container>
+  </ng-container>
+</bit-container>
