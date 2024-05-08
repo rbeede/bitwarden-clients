@@ -120,7 +120,7 @@
         "
         [canViewCollectionInfo]="selectedCollection.node?.canViewCollectionInfo(organization)"
         (viewCollectionClicked)="
-          editCollection(selectedCollection.node, CollectionDialogTabType.Info, $event.readonly)
+          editCollection(selectedCollection.node, $event.tab, $event.readonly)
         "
       >
       </collection-access-restricted>

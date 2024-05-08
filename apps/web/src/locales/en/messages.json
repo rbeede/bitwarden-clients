@@ -7638,9 +7638,6 @@
   "success": {
     "message": "Success"
   },
-  "viewCollection": {
-    "message": "View collection"
-  },
   "restrictedGroupAccess": {
     "message": "You cannot add yourself to groups."
   },
