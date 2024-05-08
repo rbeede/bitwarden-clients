@@ -63,7 +63,7 @@
 </td>
 <td bitCell [ngClass]="RowHeightClass" class="tw-text-right">
   <button
-    *ngIf="canEditCollection || canDeleteCollection"
+    *ngIf="canEditCollection || canDeleteCollection || canViewCollectionInfo"
     [disabled]="disabled"
     [bitMenuTriggerFor]="collectionOptions"
     size="small"
