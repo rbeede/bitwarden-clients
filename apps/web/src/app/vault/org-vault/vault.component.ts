@@ -1175,6 +1175,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       data: {
         organizationId: this.organization?.id,
         parentCollectionId: this.selectedCollection?.node.id,
+        limitNestedCollections: this.flexibleCollectionsV1Enabled, // Only limited in org vault if V1 is enabled
       },
     });
 
@@ -1198,6 +1199,7 @@ export class VaultComponent implements OnInit, OnDestroy {
         organizationId: this.organization?.id,
         initialTab: tab,
         readonly: readonly,
+        limitNestedCollections: this.flexibleCollectionsV1Enabled, // Only limited in org vault if V1 is enabled
       },
     });
 
