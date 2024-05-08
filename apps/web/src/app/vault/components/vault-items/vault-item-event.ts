@@ -5,7 +5,7 @@ import { VaultItem } from "./vault-item";
 
 export type VaultItemEvent =
   | { type: "viewAttachments"; item: CipherView }
-  | { type: "viewCollections"; item: CipherView }
+  | { type: "viewCipherCollections"; item: CipherView }
   | { type: "bulkEditCollectionAccess"; items: CollectionView[] }
   | { type: "viewCollectionAccess"; item: CollectionView }
   | { type: "viewEvents"; item: CipherView }
