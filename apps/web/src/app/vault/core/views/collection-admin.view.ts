@@ -99,7 +99,7 @@ export class CollectionAdminView extends CollectionView {
       return false;
     }
 
-    return this.manage || org.isAdmin || org.permissions.editAnyCollection;
+    return this.manage || org?.isAdmin || org?.permissions.editAnyCollection;
   }
 
   get isUnassignedCollection() {

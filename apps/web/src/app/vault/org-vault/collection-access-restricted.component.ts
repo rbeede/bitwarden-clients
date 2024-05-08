@@ -16,13 +16,24 @@ const icon = svgIcon`<svg xmlns="http://www.w3.org/2000/svg" width="120" height=
   template: `<bit-no-items [icon]="icon" class="tw-mt-2 tw-block">
     <span slot="title" class="tw-mt-4 tw-block">{{ "collectionAccessRestricted" | i18n }}</span>
     <button
+      *ngIf="canEditCollection"
       slot="button"
       bitButton
-      (click)="viewCollectionClicked.emit()"
+      (click)="viewCollectionClicked.emit({ readonly: false })"
       buttonType="secondary"
       type="button"
     >
-      <i aria-hidden="true" class="bwi bwi-pencil-square"></i> {{ buttonText | i18n }}
+      <i aria-hidden="true" class="bwi bwi-pencil-square"></i> {{ "editCollection" | i18n }}
+    </button>
+    <button
+      *ngIf="!canEditCollection && canViewCollectionInfo"
+      slot="button"
+      bitButton
+      (click)="viewCollectionClicked.emit({ readonly: true })"
+      buttonType="secondary"
+      type="button"
+    >
+      <i aria-hidden="true" class="bwi bwi-pencil-square"></i> {{ "viewCollection" | i18n }}
     </button>
   </bit-no-items>`,
 })
@@ -30,10 +41,7 @@ export class CollectionAccessRestrictedComponent {
   protected icon = icon;
 
   @Input() canEditCollection = false;
+  @Input() canViewCollectionInfo = false;
 
-  @Output() viewCollectionClicked = new EventEmitter<void>();
-
-  get buttonText() {
-    return this.canEditCollection ? "editCollection" : "viewCollection";
-  }
+  @Output() viewCollectionClicked = new EventEmitter<{ readonly: boolean }>();
 }
