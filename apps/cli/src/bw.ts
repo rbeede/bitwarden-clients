@@ -13,6 +13,7 @@ import {
   PinCryptoService,
   PinCryptoServiceAbstraction,
   UserDecryptionOptionsService,
+  LogoutReason,
 } from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { EventUploadService as EventUploadServiceAbstraction } from "@bitwarden/common/abstractions/event/event-upload.service";
@@ -396,7 +397,7 @@ export class Main {
         throw new Error("Refresh Access token error");
       },
       this.logService,
-      async (expired: boolean) => await this.logout(),
+      async (logoutReason: LogoutReason) => await this.logout(),
       customUserAgent,
     );
 
@@ -458,7 +459,7 @@ export class Main {
       this.logService,
       this.organizationService,
       this.keyGenerationService,
-      async (expired: boolean) => await this.logout(),
+      async (logoutReason: LogoutReason) => await this.logout(),
       this.stateProvider,
     );
 
@@ -651,7 +652,7 @@ export class Main {
       this.sendApiService,
       this.userDecryptionOptionsService,
       this.avatarService,
-      async (expired: boolean) => await this.logout(),
+      async (logoutReason: LogoutReason) => await this.logout(),
       this.billingAccountProfileStateService,
       this.tokenService,
     );
