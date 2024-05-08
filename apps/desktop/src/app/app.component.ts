@@ -13,6 +13,7 @@ import { filter, firstValueFrom, map, Subject, takeUntil, timeout } from "rxjs";
 import { ModalRef } from "@bitwarden/angular/components/modal/modal.ref";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { FingerprintDialogComponent } from "@bitwarden/auth/angular";
+import { LogoutReason } from "@bitwarden/auth/common";
 import { EventUploadService } from "@bitwarden/common/abstractions/event/event-upload.service";
 import { NotificationsService } from "@bitwarden/common/abstractions/notifications.service";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
@@ -46,7 +47,7 @@ import { CollectionService } from "@bitwarden/common/vault/abstractions/collecti
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
-import { DialogService, ToastService } from "@bitwarden/components";
+import { DialogService, ToastOptions, ToastService } from "@bitwarden/components";
 
 import { DeleteAccountComponent } from "../auth/delete-account.component";
 import { LoginApprovalComponent } from "../auth/login/login-approval.component";
@@ -211,7 +212,7 @@ export class AppComponent implements OnInit, OnDestroy {
             break;
           case "logout":
             this.loading = message.userId == null || message.userId === this.activeUserId;
-            await this.logOut(!!message.expired, message.userId);
+            await this.logOut(message.logoutReason, message.userId);
             this.loading = false;
             break;
           case "lockVault":
@@ -566,9 +567,62 @@ export class AppComponent implements OnInit, OnDestroy {
     this.messagingService.send("updateAppMenu", { updateRequest: updateRequest });
   }
 
+  private async displayLogoutReason(logoutReason: LogoutReason) {
+    let toastOptions: ToastOptions;
+
+    // Since desktop has process reload on logout, some toasts are important enough to delay the logout
+    // until the toast is shown. We would eventually prefer to save off the message in state and show a banner
+    // on the login page after the reload.
+    // Note: most logout reasons are not important enough to delay the logout process so default to false
+    let delayLogoutToShowToast = false;
+    switch (logoutReason) {
+      case "sessionExpired": {
+        toastOptions = {
+          variant: "warning",
+          title: this.i18nService.t("loggedOut"),
+          message: this.i18nService.t("loginExpired"),
+        };
+        break;
+      }
+      case "accessTokenUnableToBeDecrypted": {
+        toastOptions = {
+          variant: "error",
+          title: this.i18nService.t("loggedOut"),
+          message: this.i18nService.t("accessTokenUnableToBeDecrypted"),
+        };
+        delayLogoutToShowToast = true;
+        break;
+      }
+      case "refreshTokenSecureStorageRetrievalFailure": {
+        toastOptions = {
+          variant: "error",
+          title: this.i18nService.t("loggedOut"),
+          message: this.i18nService.t("refreshTokenSecureStorageRetrievalFailure"),
+        };
+        delayLogoutToShowToast = true;
+        break;
+      }
+      default: {
+        toastOptions = {
+          variant: "warning",
+          title: this.i18nService.t("loggedOut"),
+          message: this.i18nService.t("loggedOutDesc"),
+        };
+        break;
+      }
+    }
+
+    const activeToast = this.toastService.showToast(toastOptions);
+    if (delayLogoutToShowToast) {
+      await firstValueFrom(activeToast.onHidden);
+    }
+  }
+
   // Even though the userId parameter is no longer optional doesn't mean a message couldn't be
   // passing null-ish values to us.
-  private async logOut(expired: boolean, userId: UserId) {
+  private async logOut(logoutReason: LogoutReason, userId: UserId) {
+    await this.displayLogoutReason(logoutReason);
+
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
     );
@@ -642,15 +696,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // This must come last otherwise the logout will prematurely trigger
     // a process reload before all the state service user data can be cleaned up
     if (userBeingLoggedOut === activeUserId) {
-      this.authService.logOut(async () => {
-        if (expired) {
-          this.platformUtilsService.showToast(
-            "warning",
-            this.i18nService.t("loggedOut"),
-            this.i18nService.t("loginExpired"),
-          );
-        }
-      });
+      this.authService.logOut(async () => {});
     }
   }
 
@@ -732,7 +778,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         options[1] === "logOut"
-          ? this.logOut(false, userId as UserId)
+          ? this.logOut("vaultTimeout", userId as UserId)
           : await this.vaultTimeoutService.lock(userId);
       }
     }
