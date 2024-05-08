@@ -1,7 +1,7 @@
 import { Observable, combineLatest, firstValueFrom, map } from "rxjs";
 import { Opaque } from "type-fest";
 
-import { decodeJwtTokenToJson } from "@bitwarden/auth/common";
+import { LogoutReason, decodeJwtTokenToJson } from "@bitwarden/auth/common";
 
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
@@ -9,7 +9,6 @@ import { KeyGenerationService } from "../../platform/abstractions/key-generation
 import { LogService } from "../../platform/abstractions/log.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
-import { MessageSender } from "../../platform/messaging";
 import { EncString, EncryptedString } from "../../platform/models/domain/enc-string";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -132,7 +131,7 @@ export class TokenService implements TokenServiceAbstraction {
     private keyGenerationService: KeyGenerationService,
     private encryptService: EncryptService,
     private logService: LogService,
-    private messageSender: MessageSender,
+    private logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>,
   ) {
     this.initializeState();
   }
@@ -410,10 +409,7 @@ export class TokenService implements TokenServiceAbstraction {
             "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
             error,
           );
-          this.messageSender.send("logout", {
-            userId,
-            reason: "accessTokenUnableToBeDecrypted",
-          });
+          await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
           return null;
         }
 
@@ -432,10 +428,9 @@ export class TokenService implements TokenServiceAbstraction {
           this.logService.error(
             "Access token key not found to decrypt encrypted access token. Logging user out.",
           );
-          this.messageSender.send("logout", {
-            userId,
-            reason: "accessTokenUnableToBeDecrypted",
-          });
+
+          await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
+
           return null;
         }
 
@@ -456,10 +451,9 @@ export class TokenService implements TokenServiceAbstraction {
         // We don't try to recover here since we'd like to know
         // if access token and key are getting out of sync.
         this.logService.error(`Failed to decrypt access token`, error);
-        this.messageSender.send("logout", {
-          userId,
-          reason: "accessTokenUnableToBeDecrypted",
-        });
+
+        await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
+
         return null;
       }
     }
@@ -588,13 +582,7 @@ export class TokenService implements TokenServiceAbstraction {
 
         this.logService.error(`Failed to retrieve refresh token from secure storage`, error);
 
-        // This is not ideal as we would like to use the LOGOUT_CALLBACK injection token
-        // instead of directly using the MessagingService here. However, we can't customize the
-        // logout reason if we do so.
-        this.messageSender.send("logout", {
-          userId,
-          reason: "refreshTokenSecureStorageRetrievalFailure",
-        });
+        await this.logoutCallback("refreshTokenSecureStorageRetrievalFailure", userId);
       }
     }
 

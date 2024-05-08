@@ -3,6 +3,7 @@ import * as path from "path";
 import { app } from "electron";
 import { Subject, firstValueFrom } from "rxjs";
 
+import { LogoutReason } from "@bitwarden/auth/common";
 import { TokenService as TokenServiceAbstraction } from "@bitwarden/common/auth/abstractions/token.service";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { TokenService } from "@bitwarden/common/auth/services/token.service";
@@ -203,7 +204,7 @@ export class Main {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
-      this.messagingService,
+      async (logoutReason: LogoutReason) => {},
     );
 
     this.migrationRunner = new MigrationRunner(

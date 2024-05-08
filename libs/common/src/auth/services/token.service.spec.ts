@@ -1,12 +1,13 @@
 import { MockProxy, mock } from "jest-mock-extended";
 import { firstValueFrom } from "rxjs";
 
+import { LogoutReason } from "@bitwarden/auth/common";
+
 import { FakeSingleUserStateProvider, FakeGlobalStateProvider } from "../../../spec";
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
-import { MessagingService } from "../../platform/abstractions/messaging.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
@@ -38,7 +39,7 @@ describe("TokenService", () => {
   let keyGenerationService: MockProxy<KeyGenerationService>;
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
-  let messagingService: MockProxy<MessagingService>;
+  let logoutCallback: jest.Mock<Promise<void>, [logoutReason: LogoutReason, userId?: string]>;
 
   const memoryVaultTimeoutAction = VaultTimeoutAction.LogOut;
   const memoryVaultTimeout = 30;
@@ -99,7 +100,7 @@ describe("TokenService", () => {
     keyGenerationService = mock<KeyGenerationService>();
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
-    messagingService = mock<MessagingService>();
+    logoutCallback = jest.fn();
 
     const supportsSecureStorage = false; // default to false; tests will override as needed
     tokenService = createTokenService(supportsSecureStorage);
@@ -533,10 +534,10 @@ describe("TokenService", () => {
           );
 
           // assert that we logged the user out
-          expect(messagingService.send).toHaveBeenCalledWith("logout", {
-            userId: userIdFromAccessToken,
-            reason: "accessTokenUnableToBeDecrypted",
-          });
+          expect(logoutCallback).toHaveBeenCalledWith(
+            "accessTokenUnableToBeDecrypted",
+            userIdFromAccessToken,
+          );
         });
 
         it("logs the error and logs the user out when secure storage errors on trying to get an access token key", async () => {
@@ -568,10 +569,10 @@ describe("TokenService", () => {
           );
 
           // assert that we logged the user out
-          expect(messagingService.send).toHaveBeenCalledWith("logout", {
-            userId: userIdFromAccessToken,
-            reason: "accessTokenUnableToBeDecrypted",
-          });
+          expect(logoutCallback).toHaveBeenCalledWith(
+            "accessTokenUnableToBeDecrypted",
+            userIdFromAccessToken,
+          );
         });
       });
     });
@@ -1366,7 +1367,7 @@ describe("TokenService", () => {
           // assert that we did not log an error or log the user out
           expect(logService.error).not.toHaveBeenCalled();
 
-          expect(messagingService.send).not.toHaveBeenCalledWith("logout", expect.anything());
+          expect(logoutCallback).not.toHaveBeenCalled();
         });
 
         it("does not error and fallback to disk storage when passed a null value for the refresh token", async () => {
@@ -1425,10 +1426,10 @@ describe("TokenService", () => {
           );
 
           // assert that we logged the user out
-          expect(messagingService.send).toHaveBeenCalledWith("logout", {
-            userId: userIdFromAccessToken,
-            reason: "accessTokenUnableToBeDecrypted",
-          });
+          expect(logoutCallback).toHaveBeenCalledWith(
+            "accessTokenUnableToBeDecrypted",
+            userIdFromAccessToken,
+          );
         });
       });
     });
@@ -1688,10 +1689,10 @@ describe("TokenService", () => {
             new Error(secureStorageSvcMockErrorMsg),
           );
 
-          expect(messagingService.send).toHaveBeenCalledWith("logout", {
-            userId: userIdFromAccessToken,
-            reason: "refreshTokenSecureStorageRetrievalFailure",
-          });
+          expect(logoutCallback).toHaveBeenCalledWith(
+            "refreshTokenSecureStorageRetrievalFailure",
+            userIdFromAccessToken,
+          );
         });
       });
     });
@@ -2651,7 +2652,7 @@ describe("TokenService", () => {
       keyGenerationService,
       encryptService,
       logService,
-      messagingService,
+      logoutCallback,
     );
   }
 });

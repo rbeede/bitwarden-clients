@@ -1,3 +1,4 @@
+import { LogoutReason } from "@bitwarden/auth/common";
 import { TokenService as AbstractTokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { TokenService } from "@bitwarden/common/auth/services/token.service";
 
@@ -23,10 +24,6 @@ import {
   logServiceFactory,
 } from "../../../platform/background/service-factories/log-service.factory";
 import {
-  MessagingServiceInitOptions,
-  messagingServiceFactory,
-} from "../../../platform/background/service-factories/messaging-service.factory";
-import {
   PlatformUtilsServiceInitOptions,
   platformUtilsServiceFactory,
 } from "../../../platform/background/service-factories/platform-utils-service.factory";
@@ -39,7 +36,11 @@ import {
   secureStorageServiceFactory,
 } from "../../../platform/background/service-factories/storage-service.factory";
 
-type TokenServiceFactoryOptions = FactoryOptions;
+type TokenServiceFactoryOptions = FactoryOptions & {
+  tokenServiceOptions: {
+    logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>;
+  };
+};
 
 export type TokenServiceInitOptions = TokenServiceFactoryOptions &
   SingleUserStateProviderInitOptions &
@@ -48,8 +49,7 @@ export type TokenServiceInitOptions = TokenServiceFactoryOptions &
   SecureStorageServiceInitOptions &
   KeyGenerationServiceInitOptions &
   EncryptServiceInitOptions &
-  LogServiceInitOptions &
-  MessagingServiceInitOptions;
+  LogServiceInitOptions;
 
 export function tokenServiceFactory(
   cache: { tokenService?: AbstractTokenService } & CachedServices,
@@ -68,7 +68,7 @@ export function tokenServiceFactory(
         await keyGenerationServiceFactory(cache, opts),
         await encryptServiceFactory(cache, opts),
         await logServiceFactory(cache, opts),
-        await messagingServiceFactory(cache, opts),
+        opts.tokenServiceOptions.logoutCallback,
       ),
   );
 }

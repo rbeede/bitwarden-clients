@@ -520,7 +520,7 @@ export default class MainBackground {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
-      this.messagingService,
+      logoutCallback,
     );
 
     const migrationRunner = new MigrationRunner(

@@ -258,6 +258,9 @@ export class Main {
       p = path.join(process.env.HOME, ".config/Bitwarden CLI");
     }
 
+    const logoutCallback = async (logoutReason: LogoutReason, userId?: UserId) =>
+      await this.logout(logoutReason, userId);
+
     this.platformUtilsService = new CliPlatformUtilsService(ClientType.Cli, packageJson);
     this.logService = new ConsoleLogService(
       this.platformUtilsService.isDev(),
@@ -340,7 +343,7 @@ export class Main {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
-      this.messagingService,
+      logoutCallback,
     );
 
     const migrationRunner = new MigrationRunner(
@@ -397,7 +400,7 @@ export class Main {
         throw new Error("Refresh Access token error");
       },
       this.logService,
-      async (logoutReason: LogoutReason) => await this.logout(),
+      logoutCallback,
       customUserAgent,
     );
 
@@ -459,7 +462,7 @@ export class Main {
       this.logService,
       this.organizationService,
       this.keyGenerationService,
-      async (logoutReason: LogoutReason) => await this.logout(),
+      logoutCallback,
       this.stateProvider,
     );
 
@@ -652,7 +655,7 @@ export class Main {
       this.sendApiService,
       this.userDecryptionOptionsService,
       this.avatarService,
-      async (logoutReason: LogoutReason) => await this.logout(),
+      logoutCallback,
       this.billingAccountProfileStateService,
       this.tokenService,
     );
@@ -733,7 +736,7 @@ export class Main {
     }
   }
 
-  async logout() {
+  async logout(logoutReason: LogoutReason, passedInUserId?: UserId) {
     this.authService.logOut(() => {
       /* Do nothing */
     });
