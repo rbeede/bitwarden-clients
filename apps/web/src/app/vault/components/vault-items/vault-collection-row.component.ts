@@ -30,6 +30,7 @@ export class VaultCollectionRowComponent {
   @Input() showGroups: boolean;
   @Input() canEditCollection: boolean;
   @Input() canDeleteCollection: boolean;
+  @Input() canViewCollectionInfo: boolean;
   @Input() organizations: Organization[];
   @Input() groups: GroupView[];
   @Input() showPermissionsColumn: boolean;

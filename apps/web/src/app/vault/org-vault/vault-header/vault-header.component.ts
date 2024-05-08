@@ -210,6 +210,10 @@ export class VaultHeaderComponent implements OnInit {
     return this.collection.node.canDelete(this.organization);
   }
 
+  get canViewCollectionInfo(): boolean {
+    return this.collection.node.canViewCollectionInfo(this.organization);
+  }
+
   get canCreateCollection(): boolean {
     return this.organization?.canCreateNewCollections;
   }

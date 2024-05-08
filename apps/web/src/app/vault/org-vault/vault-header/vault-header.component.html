@@ -37,7 +37,7 @@
         aria-haspopup="true"
       ></button>
       <bit-menu #editCollectionMenu>
-        <ng-container *ngIf="canEditCollection; else viewOptions">
+        <ng-container *ngIf="canEditCollection">
           <button
             type="button"
             bitMenuItem
@@ -55,7 +55,7 @@
             {{ "access" | i18n }}
           </button>
         </ng-container>
-        <ng-template #viewOptions>
+        <ng-container *ngIf="!canEditCollection && canViewCollectionInfo">
           <button
             type="button"
             bitMenuItem
@@ -72,7 +72,7 @@
             <i class="bwi bwi-fw bwi-users" aria-hidden="true"></i>
             {{ "viewAccess" | i18n }}
           </button>
-        </ng-template>
+        </ng-container>
         <button type="button" *ngIf="canDeleteCollection" bitMenuItem (click)="deleteCollection()">
           <span class="tw-text-danger">
             <i class="bwi bwi-fw bwi-trash" aria-hidden="true"></i>
