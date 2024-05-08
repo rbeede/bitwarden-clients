@@ -163,20 +163,9 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
    * the view is open.
    */
   async isViewOpen(): Promise<boolean> {
-    // chrome.runtime.sendMessage does not timeout on safari and will hang, so we
-    // need to add our own timeout of 1 second
     if (this.isSafari()) {
-      // timeout that returns false if the popup does not respond
-      const timeout = new Promise((resolve) => setTimeout(() => resolve(false), 1000));
-      try {
-        const result = await Promise.race([
-          BrowserApi.sendMessageWithResponse("checkVaultPopupHeartbeat"),
-          timeout,
-        ]);
-        return Boolean(result);
-      } catch (e) {
-        return false;
-      }
+      // Query views on safari since chrome.runtime.sendMessage does not timeout and will hang.
+      return BrowserApi.isPopupOpen();
     }
     return Boolean(await BrowserApi.sendMessageWithResponse("checkVaultPopupHeartbeat"));
   }
