@@ -58,8 +58,6 @@ export interface CollectionDialogParams {
   showOrgSelector?: boolean;
   collectionIds?: string[];
   readonly?: boolean;
-  isFlexibleCollectionsV1Enabled?: boolean;
-  isAllowAdminAccessEnabled?: boolean;
   isAddAccessCollection?: boolean;
 }
 
@@ -123,7 +121,6 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    this.showAddAccessWarning = this.handleAddAccessWarning();
     // Opened from the individual vault
     if (this.params.showOrgSelector) {
       this.showOrgSelector = true;
@@ -257,6 +254,7 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
           this.handleFormGroupReadonly(this.dialogReadonly);
 
           this.loading = false;
+          this.showAddAccessWarning = this.handleAddAccessWarning(flexibleCollectionsV1);
         },
       );
   }
@@ -368,11 +366,12 @@ export class CollectionDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private handleAddAccessWarning(): boolean {
-    const { isAddAccessCollection, isAllowAdminAccessEnabled, isFlexibleCollectionsV1Enabled } =
-      this.params;
-
-    if (isFlexibleCollectionsV1Enabled && isAddAccessCollection && !isAllowAdminAccessEnabled) {
+  private handleAddAccessWarning(flexibleCollectionsV1: boolean): boolean {
+    if (
+      flexibleCollectionsV1 &&
+      !this.organization?.allowAdminAccessToAllCollectionItems &&
+      this.params.isAddAccessCollection
+    ) {
       return true;
     }
   }
