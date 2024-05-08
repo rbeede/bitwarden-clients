@@ -138,7 +138,7 @@ export class AppComponent implements OnDestroy, OnInit {
             this.router.navigate(["/"]);
             break;
           case "logout":
-            await this.logOut(!!message.expired, message.redirect);
+            await this.logOut(message.logoutReason, message.redirect);
             break;
           case "lockVault":
             await this.vaultTimeoutService.lock();
