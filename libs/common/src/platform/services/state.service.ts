@@ -1,4 +1,4 @@
-import { BehaviorSubject, firstValueFrom, map } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 import { Jsonify, JsonValue } from "type-fest";
 
 import { AccountService } from "../../auth/abstractions/account.service";
@@ -14,10 +14,7 @@ import {
   InitOptions,
   StateService as StateServiceAbstraction,
 } from "../abstractions/state.service";
-import {
-  AbstractMemoryStorageService,
-  AbstractStorageService,
-} from "../abstractions/storage.service";
+import { AbstractStorageService } from "../abstractions/storage.service";
 import { HtmlStorageLocation, StorageLocation } from "../enums";
 import { StateFactory } from "../factories/state-factory";
 import { Utils } from "../misc/utils";
@@ -52,9 +49,6 @@ export class StateService<
   TAccount extends Account = Account,
 > implements StateServiceAbstraction<TAccount>
 {
-  protected accountsSubject = new BehaviorSubject<{ [userId: string]: TAccount }>({});
-  accounts$ = this.accountsSubject.asObservable();
-
   private hasBeenInited = false;
   protected isRecoveredSession = false;
 
@@ -64,7 +58,7 @@ export class StateService<
   constructor(
     protected storageService: AbstractStorageService,
     protected secureStorageService: AbstractStorageService,
-    protected memoryStorageService: AbstractMemoryStorageService,
+    protected memoryStorageService: AbstractStorageService,
     protected logService: LogService,
     protected stateFactory: StateFactory<TGlobalState, TAccount>,
     protected accountService: AccountService,
@@ -115,8 +109,6 @@ export class StateService<
         state = await this.syncAccountFromDisk(authenticatedAccounts[i]);
       }
 
-      await this.pushAccounts();
-
       return state;
     });
   }
@@ -153,7 +145,6 @@ export class StateService<
 
     await this.removeAccountFromDisk(options?.userId);
     await this.removeAccountFromMemory(options?.userId);
-    await this.pushAccounts();
   }
 
   /**
@@ -856,7 +847,6 @@ export class StateService<
         });
       });
     }
-    await this.pushAccounts();
   }
 
   protected async scaffoldNewAccountStorage(account: TAccount): Promise<void> {
@@ -932,17 +922,6 @@ export class StateService<
       account,
       this.reconcileOptions({ userId: account.profile.userId }, await this.defaultOnDiskOptions()),
     );
-  }
-
-  protected async pushAccounts(): Promise<void> {
-    await this.state().then((state) => {
-      if (state.accounts == null || Object.keys(state.accounts).length < 1) {
-        this.accountsSubject.next({});
-        return;
-      }
-
-      this.accountsSubject.next(state.accounts);
-    });
   }
 
   protected reconcileOptions(
@@ -1096,8 +1075,6 @@ export class StateService<
 
       return state;
     });
-
-    await this.pushAccounts();
   }
 
   protected createAccount(init: Partial<TAccount> = null): TAccount {
@@ -1131,9 +1108,10 @@ export class StateService<
   }
 
   protected async state(): Promise<State<TGlobalState, TAccount>> {
-    const state = await this.memoryStorageService.get<State<TGlobalState, TAccount>>(keys.state, {
-      deserializer: (s) => State.fromJSON(s, this.accountDeserializer),
-    });
+    let state = await this.memoryStorageService.get<State<TGlobalState, TAccount>>(keys.state);
+    if (this.memoryStorageService.valuesRequireDeserialization) {
+      state = State.fromJSON(state, this.accountDeserializer);
+    }
     return state;
   }
 

@@ -1,4 +1,4 @@
-import { Subject, firstValueFrom, map, merge, timeout } from "rxjs";
+import { Subject, filter, firstValueFrom, map, merge, timeout } from "rxjs";
 
 import {
   PinCryptoServiceAbstraction,
@@ -84,7 +84,6 @@ import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwar
 import { LogService as LogServiceAbstraction } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
-  AbstractMemoryStorageService,
   AbstractStorageService,
   ObservableStorageService,
 } from "@bitwarden/common/platform/abstractions/storage.service";
@@ -246,10 +245,9 @@ export default class MainBackground {
   messagingService: MessageSender;
   storageService: BrowserLocalStorageService;
   secureStorageService: AbstractStorageService;
-  memoryStorageService: AbstractMemoryStorageService;
-  memoryStorageForStateProviders: AbstractMemoryStorageService & ObservableStorageService;
-  largeObjectMemoryStorageForStateProviders: AbstractMemoryStorageService &
-    ObservableStorageService;
+  memoryStorageService: AbstractStorageService;
+  memoryStorageForStateProviders: AbstractStorageService & ObservableStorageService;
+  largeObjectMemoryStorageForStateProviders: AbstractStorageService & ObservableStorageService;
   i18nService: I18nServiceAbstraction;
   platformUtilsService: PlatformUtilsServiceAbstraction;
   logService: LogServiceAbstraction;
@@ -631,6 +629,7 @@ export default class MainBackground {
       this.stateProvider,
       this.secureStorageService,
       this.userDecryptionOptionsService,
+      this.logService,
     );
 
     this.devicesService = new DevicesServiceImplementation(this.devicesApiService);
@@ -1200,31 +1199,46 @@ export default class MainBackground {
   }
 
   async logout(expired: boolean, userId?: UserId) {
-    userId ??= (
-      await firstValueFrom(
-        this.accountService.activeAccount$.pipe(
-          timeout({
-            first: 2000,
-            with: () => {
-              throw new Error("No active account found to logout");
-            },
-          }),
-        ),
-      )
-    )?.id;
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(
+        map((a) => a?.id),
+        timeout({
+          first: 2000,
+          with: () => {
+            throw new Error("No active account found to logout");
+          },
+        }),
+      ),
+    );
 
-    await this.eventUploadService.uploadEvents(userId as UserId);
+    const userBeingLoggedOut = userId ?? activeUserId;
+
+    await this.eventUploadService.uploadEvents(userBeingLoggedOut);
+
+    // HACK: We shouldn't wait for the authentication status to change but instead subscribe to the
+    // authentication status to do various actions.
+    const logoutPromise = firstValueFrom(
+      this.authService.authStatusFor$(userBeingLoggedOut).pipe(
+        filter((authenticationStatus) => authenticationStatus === AuthenticationStatus.LoggedOut),
+        timeout({
+          first: 5_000,
+          with: () => {
+            throw new Error("The logout process did not complete in a reasonable amount of time.");
+          },
+        }),
+      ),
+    );
 
     await Promise.all([
-      this.syncService.setLastSync(new Date(0), userId),
-      this.cryptoService.clearKeys(userId),
-      this.cipherService.clear(userId),
-      this.folderService.clear(userId),
-      this.collectionService.clear(userId),
-      this.passwordGenerationService.clear(userId),
-      this.vaultTimeoutSettingsService.clear(userId),
+      this.syncService.setLastSync(new Date(0), userBeingLoggedOut),
+      this.cryptoService.clearKeys(userBeingLoggedOut),
+      this.cipherService.clear(userBeingLoggedOut),
+      this.folderService.clear(userBeingLoggedOut),
+      this.collectionService.clear(userBeingLoggedOut),
+      this.passwordGenerationService.clear(userBeingLoggedOut),
+      this.vaultTimeoutSettingsService.clear(userBeingLoggedOut),
       this.vaultFilterService.clear(),
-      this.biometricStateService.logout(userId),
+      this.biometricStateService.logout(userBeingLoggedOut),
       /* We intentionally do not clear:
        *  - autofillSettingsService
        *  - badgeSettingsService
@@ -1235,20 +1249,28 @@ export default class MainBackground {
     //Needs to be checked before state is cleaned
     const needStorageReseed = await this.needsStorageReseed();
 
-    const newActiveUser = await firstValueFrom(
-      this.accountService.nextUpAccount$.pipe(map((a) => a?.id)),
-    );
-    await this.stateService.clean({ userId: userId });
-    await this.accountService.clean(userId);
+    const newActiveUser =
+      userBeingLoggedOut === activeUserId
+        ? await firstValueFrom(this.accountService.nextUpAccount$.pipe(map((a) => a?.id)))
+        : null;
 
-    await this.stateEventRunnerService.handleEvent("logout", userId);
+    await this.stateService.clean({ userId: userBeingLoggedOut });
+    await this.accountService.clean(userBeingLoggedOut);
 
+    await this.stateEventRunnerService.handleEvent("logout", userBeingLoggedOut);
+
+    // HACK: Wait for the user logging outs authentication status to transition to LoggedOut
+    await logoutPromise;
+
+    await this.switchAccount(newActiveUser);
     if (newActiveUser != null) {
       // we have a new active user, do not continue tearing down application
-      await this.switchAccount(newActiveUser as UserId);
       this.messagingService.send("switchAccountFinish");
     } else {
-      this.messagingService.send("doneLoggingOut", { expired: expired, userId: userId });
+      this.messagingService.send("doneLoggingOut", {
+        expired: expired,
+        userId: userBeingLoggedOut,
+      });
     }
 
     if (needStorageReseed) {
