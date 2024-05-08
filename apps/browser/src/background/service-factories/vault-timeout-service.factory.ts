@@ -1,3 +1,4 @@
+import { LogoutReason } from "@bitwarden/auth/common";
 import { VaultTimeoutService as AbstractVaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 
 import {
@@ -56,7 +57,7 @@ import {
 type VaultTimeoutServiceFactoryOptions = FactoryOptions & {
   vaultTimeoutServiceOptions: {
     lockedCallback: (userId?: string) => Promise<void>;
-    loggedOutCallback: (expired: boolean, userId?: string) => Promise<void>;
+    loggedOutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>;
   };
 };
 
