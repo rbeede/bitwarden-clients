@@ -1,5 +1,7 @@
 import { firstValueFrom } from "rxjs";
 
+import { LogoutReason } from "@bitwarden/auth/common";
+
 import { ApiService as ApiServiceAbstraction } from "../abstractions/api.service";
 import { OrganizationConnectionType } from "../admin-console/enums";
 import { OrganizationSponsorshipCreateRequest } from "../admin-console/models/request/organization/organization-sponsorship-create.request";
@@ -160,7 +162,7 @@ export class ApiService implements ApiServiceAbstraction {
     private stateService: StateService,
     private refreshAccessTokenErrorCallback: () => Promise<void>,
     private logService: LogService,
-    private logoutCallback: (expired: boolean) => Promise<void>,
+    private logoutCallback: (logoutReason: LogoutReason) => Promise<void>,
     private customUserAgent: string = null,
   ) {
     this.device = platformUtilsService.getDevice();
@@ -1888,7 +1890,7 @@ export class ApiService implements ApiServiceAbstraction {
           responseJson != null &&
           responseJson.error === "invalid_grant")
       ) {
-        await this.logoutCallback(true);
+        await this.logoutCallback("invalidGrantError");
         return null;
       }
     }

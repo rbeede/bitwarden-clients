@@ -84,14 +84,6 @@ export class AppComponent implements OnInit, OnDestroy {
         tap((msg: any) => {
           if (msg.command === "doneLoggingOut") {
             this.authService.logOut(async () => {
-              if (msg.expired) {
-                this.toastService.showToast({
-                  variant: "warning",
-                  title: this.i18nService.t("loggedOut"),
-                  message: this.i18nService.t("loginExpired"),
-                });
-              }
-
               // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
               // eslint-disable-next-line @typescript-eslint/no-floating-promises
               this.router.navigate(["home"]);

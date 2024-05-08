@@ -1,6 +1,6 @@
 import { firstValueFrom } from "rxjs";
 
-import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+import { LogoutReason, UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 
 import { ApiService } from "../../../abstractions/api.service";
 import { InternalOrganizationServiceAbstraction } from "../../../admin-console/abstractions/organization/organization.service.abstraction";
@@ -71,7 +71,7 @@ export class SyncService implements SyncServiceAbstraction {
     private sendApiService: SendApiService,
     private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
     private avatarService: AvatarService,
-    private logoutCallback: (expired: boolean) => Promise<void>,
+    private logoutCallback: (logoutReason: LogoutReason) => Promise<void>,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private tokenService: TokenService,
   ) {}
@@ -313,7 +313,7 @@ export class SyncService implements SyncServiceAbstraction {
     const stamp = await this.tokenService.getSecurityStamp(response.id);
     if (stamp != null && stamp !== response.securityStamp) {
       if (this.logoutCallback != null) {
-        await this.logoutCallback(true);
+        await this.logoutCallback("invalidSecurityStamp");
       }
 
       throw new Error("Stamp has changed");

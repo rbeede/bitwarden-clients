@@ -1,3 +1,4 @@
+import { LogoutReason } from "@bitwarden/auth/common";
 import { ApiService as AbstractApiService } from "@bitwarden/common/abstractions/api.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
 
@@ -26,7 +27,7 @@ import { stateServiceFactory, StateServiceInitOptions } from "./state-service.fa
 type ApiServiceFactoryOptions = FactoryOptions & {
   apiServiceOptions: {
     refreshAccessTokenErrorCallback?: () => Promise<void>;
-    logoutCallback: (expired: boolean) => Promise<void>;
+    logoutCallback: (logoutReason: LogoutReason) => Promise<void>;
     customUserAgent?: string;
   };
 };

@@ -1,5 +1,5 @@
 import { ErrorHandler, LOCALE_ID, NgModule } from "@angular/core";
-import { Subject } from "rxjs";
+import { firstValueFrom, Subject } from "rxjs";
 
 import {
   AuthRequestServiceAbstraction,
@@ -13,6 +13,7 @@ import {
   InternalUserDecryptionOptionsServiceAbstraction,
   UserDecryptionOptionsService,
   UserDecryptionOptionsServiceAbstraction,
+  LogoutReason,
 } from "@bitwarden/auth/common";
 import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
 import { AuditService as AuditServiceAbstraction } from "@bitwarden/common/abstractions/audit.service";
@@ -117,6 +118,7 @@ import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/bill
 import { BillingApiService } from "@bitwarden/common/billing/services/billing-api.service";
 import { OrganizationBillingService } from "@bitwarden/common/billing/services/organization-billing.service";
 import { PaymentMethodWarningsService } from "@bitwarden/common/billing/services/payment-method-warnings.service";
+import { ClientType } from "@bitwarden/common/enums";
 import { AppIdService as AppIdServiceAbstraction } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { ConfigApiServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config-api.service.abstraction";
@@ -234,7 +236,7 @@ import { SyncNotifierService } from "@bitwarden/common/vault/services/sync/sync-
 import { SyncService } from "@bitwarden/common/vault/services/sync/sync.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
-import { ToastService } from "@bitwarden/components";
+import { ToastOptions, ToastService } from "@bitwarden/components";
 import {
   ImportApiService,
   ImportApiServiceAbstraction,
@@ -319,9 +321,65 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: LOGOUT_CALLBACK,
     useFactory:
-      (messagingService: MessagingServiceAbstraction) => (expired: boolean, userId?: string) =>
-        Promise.resolve(messagingService.send("logout", { expired: expired, userId: userId })),
-    deps: [MessagingServiceAbstraction],
+      (
+        messagingService: MessagingServiceAbstraction,
+        toastService: ToastService,
+        i18nService: I18nServiceAbstraction,
+        platformUtilsService: PlatformUtilsServiceAbstraction,
+      ) =>
+      async (logoutReason: LogoutReason, userId?: string) => {
+        const isDesktop = platformUtilsService.getClientType() === ClientType.Desktop;
+
+        let toastOptions: ToastOptions;
+        switch (logoutReason) {
+          case "sessionExpired": {
+            toastOptions = {
+              variant: "warning",
+              title: i18nService.t("loggedOut"),
+              message: i18nService.t("loginExpired"),
+            };
+            break;
+          }
+          case "accessTokenUnableToBeDecrypted": {
+            toastOptions = {
+              variant: "error",
+              title: i18nService.t("loggedOut"),
+              message: i18nService.t("accessTokenUnableToBeDecrypted"),
+            };
+            break;
+          }
+          case "refreshTokenSecureStorageRetrievalFailure": {
+            toastOptions = {
+              variant: "error",
+              title: i18nService.t("loggedOut"),
+              message: i18nService.t("refreshTokenSecureStorageRetrievalFailure"),
+            };
+            break;
+          }
+          default: {
+            toastOptions = {
+              variant: "error",
+              title: i18nService.t("loggedOut"),
+              message: i18nService.t("loggedOutDesc"),
+            };
+            break;
+          }
+        }
+
+        const activeToast = toastService.showToast(toastOptions);
+        if (isDesktop) {
+          // Since desktop has process reload on logout, we need to wait for the toast to be hidden before triggering the logout.
+          await firstValueFrom(activeToast.onHidden);
+        }
+
+        return Promise.resolve(messagingService.send("logout", { userId: userId }));
+      },
+    deps: [
+      MessagingServiceAbstraction,
+      ToastService,
+      I18nServiceAbstraction,
+      PlatformUtilsServiceAbstraction,
+    ],
   }),
   safeProvider({
     provide: LOCKED_CALLBACK,

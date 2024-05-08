@@ -9,6 +9,7 @@ import {
   AuthRequestService,
   LoginEmailServiceAbstraction,
   LoginEmailService,
+  LogoutReason,
 } from "@bitwarden/auth/common";
 import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
 import { AuditService as AuditServiceAbstraction } from "@bitwarden/common/abstractions/audit.service";
@@ -372,8 +373,8 @@ export default class MainBackground {
       }
     };
 
-    const logoutCallback = async (expired: boolean, userId?: UserId) =>
-      await this.logout(expired, userId);
+    const logoutCallback = async (logoutReason: LogoutReason, userId?: UserId) =>
+      await this.logout(logoutReason, userId);
 
     this.logService = new ConsoleLogService(false);
     this.cryptoFunctionService = new WebCryptoFunctionService(self);
@@ -579,7 +580,7 @@ export default class MainBackground {
         return Promise.resolve();
       },
       this.logService,
-      (expired: boolean) => this.logout(expired),
+      (logoutReason: LogoutReason) => this.logout(logoutReason),
     );
 
     this.domainSettingsService = new DefaultDomainSettingsService(this.stateProvider);
@@ -1209,7 +1210,8 @@ export default class MainBackground {
     }
   }
 
-  async logout(expired: boolean, userId?: UserId) {
+  // TODO: figure out what this should look like
+  async logout(logoutReason: LogoutReason, userId?: UserId) {
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(
         map((a) => a?.id),
@@ -1279,7 +1281,6 @@ export default class MainBackground {
       this.messagingService.send("switchAccountFinish");
     } else {
       this.messagingService.send("doneLoggingOut", {
-        expired: expired,
         userId: userBeingLoggedOut,
       });
     }

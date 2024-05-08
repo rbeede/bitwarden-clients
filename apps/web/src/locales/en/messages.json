@@ -584,6 +584,9 @@
   "loggedOut": {
     "message": "Logged out"
   },
+  "loggedOutDesc": {
+    "message": "You have been logged out of your account."
+  },
   "loginExpired": {
     "message": "Your login session has expired."
   },

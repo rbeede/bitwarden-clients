@@ -1,6 +1,7 @@
 import { InjectionToken } from "@angular/core";
 import { Observable, Subject } from "rxjs";
 
+import { LogoutReason } from "@bitwarden/auth/common";
 import { ClientType } from "@bitwarden/common/enums";
 import {
   AbstractStorageService,
@@ -35,7 +36,7 @@ export const MEMORY_STORAGE = new SafeInjectionToken<AbstractStorageService>("ME
 export const SECURE_STORAGE = new SafeInjectionToken<AbstractStorageService>("SECURE_STORAGE");
 export const STATE_FACTORY = new SafeInjectionToken<StateFactory>("STATE_FACTORY");
 export const LOGOUT_CALLBACK = new SafeInjectionToken<
-  (expired: boolean, userId?: string) => Promise<void>
+  (logoutReason: LogoutReason, userId?: string) => Promise<void>
 >("LOGOUT_CALLBACK");
 export const LOCKED_CALLBACK = new SafeInjectionToken<(userId?: string) => Promise<void>>(
   "LOCKED_CALLBACK",

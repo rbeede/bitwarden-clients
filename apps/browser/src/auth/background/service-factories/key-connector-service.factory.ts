@@ -1,3 +1,4 @@
+import { LogoutReason } from "@bitwarden/auth/common";
 import { KeyConnectorService as AbstractKeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/services/key-connector.service";
 
@@ -40,7 +41,7 @@ import { TokenServiceInitOptions, tokenServiceFactory } from "./token-service.fa
 
 type KeyConnectorServiceFactoryOptions = FactoryOptions & {
   keyConnectorServiceOptions: {
-    logoutCallback: (expired: boolean, userId?: string) => Promise<void>;
+    logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>;
   };
 };
 
