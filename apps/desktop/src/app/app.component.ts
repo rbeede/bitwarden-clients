@@ -570,11 +570,6 @@ export class AppComponent implements OnInit, OnDestroy {
   private async displayLogoutReason(logoutReason: LogoutReason) {
     let toastOptions: ToastOptions;
 
-    // Since desktop has process reload on logout, some toasts are important enough to delay the logout
-    // until the toast is shown. We would eventually prefer to save off the message in state and show a banner
-    // on the login page after the reload.
-    // Note: most logout reasons are not important enough to delay the logout process so default to false
-    let delayLogoutToShowToast = false;
     switch (logoutReason) {
       case "sessionExpired": {
         toastOptions = {
@@ -584,22 +579,26 @@ export class AppComponent implements OnInit, OnDestroy {
         };
         break;
       }
+      // We don't expect these scenarios to be common, but we want the user to
+      // understand why they are being logged out before a process reload.
       case "accessTokenUnableToBeDecrypted": {
-        toastOptions = {
-          variant: "error",
-          title: this.i18nService.t("loggedOut"),
-          message: this.i18nService.t("accessTokenUnableToBeDecrypted"),
-        };
-        delayLogoutToShowToast = true;
+        await this.dialogService.openSimpleDialog({
+          title: { key: "loggedOut" },
+          content: { key: "accessTokenUnableToBeDecrypted" },
+          acceptButtonText: { key: "ok" },
+          type: "info",
+        });
+
         break;
       }
       case "refreshTokenSecureStorageRetrievalFailure": {
-        toastOptions = {
-          variant: "error",
-          title: this.i18nService.t("loggedOut"),
-          message: this.i18nService.t("refreshTokenSecureStorageRetrievalFailure"),
-        };
-        delayLogoutToShowToast = true;
+        await this.dialogService.openSimpleDialog({
+          title: { key: "loggedOut" },
+          content: { key: "refreshTokenSecureStorageRetrievalFailure" },
+          acceptButtonText: { key: "ok" },
+          type: "info",
+        });
+
         break;
       }
       default: {
@@ -612,9 +611,8 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     }
 
-    const activeToast = this.toastService.showToast(toastOptions);
-    if (delayLogoutToShowToast) {
-      await firstValueFrom(activeToast.onHidden);
+    if (toastOptions) {
+      this.toastService.showToast(toastOptions);
     }
   }
 
