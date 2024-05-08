@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { ActiveToast, IndividualConfig, ToastrService } from "ngx-toastr";
+import { IndividualConfig, ToastrService } from "ngx-toastr";
 
 import type { ToastComponent } from "./toast.component";
 import { calculateToastTimeout } from "./utils";
@@ -18,7 +18,7 @@ export type ToastOptions = {
 export class ToastService {
   constructor(private toastrService: ToastrService) {}
 
-  showToast(options: ToastOptions): ActiveToast<any> {
+  showToast(options: ToastOptions): void {
     const toastrConfig: Partial<IndividualConfig> = {
       payload: {
         message: options.message,
@@ -31,7 +31,7 @@ export class ToastService {
           : calculateToastTimeout(options.message),
     };
 
-    return this.toastrService.show(null, options.title, toastrConfig);
+    this.toastrService.show(null, options.title, toastrConfig);
   }
 
   /**
