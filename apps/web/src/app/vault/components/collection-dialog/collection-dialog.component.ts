@@ -56,8 +56,6 @@ export interface CollectionDialogParams {
   showOrgSelector?: boolean;
   /**
    * Flag to limit the nested collections to only those the user has explicit CanManage access too.
-   * Should be removed once the FeatureFlag.FlexibleCollectionsV1 is enabled by default (removed) as it should be
-   * the default behavior for both the org and individual vaults.
    */
   limitNestedCollections?: boolean;
   readonly?: boolean;
