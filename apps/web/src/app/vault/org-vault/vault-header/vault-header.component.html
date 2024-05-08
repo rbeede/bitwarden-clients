@@ -55,7 +55,9 @@
             {{ "access" | i18n }}
           </button>
         </ng-container>
-        <ng-container *ngIf="!canEditCollection && canViewCollectionInfo">
+        <ng-container
+          *ngIf="flexibleCollectionsV1Enabled && !canEditCollection && canViewCollectionInfo"
+        >
           <button
             type="button"
             bitMenuItem

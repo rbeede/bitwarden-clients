@@ -67,7 +67,7 @@ export class VaultHeaderComponent implements OnInit {
   protected CollectionDialogTabType = CollectionDialogTabType;
   protected organizations$ = this.organizationService.organizations$;
 
-  private flexibleCollectionsV1Enabled = false;
+  protected flexibleCollectionsV1Enabled = false;
   private restrictProviderAccessFlag = false;
 
   constructor(

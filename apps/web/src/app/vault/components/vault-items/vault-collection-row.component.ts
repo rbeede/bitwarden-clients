@@ -34,6 +34,7 @@ export class VaultCollectionRowComponent {
   @Input() organizations: Organization[];
   @Input() groups: GroupView[];
   @Input() showPermissionsColumn: boolean;
+  @Input() flexibleCollectionsV1Enabled: boolean;
 
   @Output() onEvent = new EventEmitter<VaultItemEvent>();
 
