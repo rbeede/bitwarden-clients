@@ -586,6 +586,7 @@ export class AppComponent implements OnInit, OnDestroy {
           title: { key: "loggedOut" },
           content: { key: "accessTokenUnableToBeDecrypted" },
           acceptButtonText: { key: "ok" },
+          cancelButtonText: null,
           type: "info",
         });
 
@@ -596,6 +597,7 @@ export class AppComponent implements OnInit, OnDestroy {
           title: { key: "loggedOut" },
           content: { key: "refreshTokenSecureStorageRetrievalFailure" },
           acceptButtonText: { key: "ok" },
+          cancelButtonText: null,
           type: "info",
         });
 
