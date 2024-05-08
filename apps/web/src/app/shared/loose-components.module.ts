@@ -1,6 +1,9 @@
 import { NgModule } from "@angular/core";
 
-import { PasswordCalloutComponent } from "@bitwarden/auth/angular";
+import {
+  PasswordCalloutComponent,
+  UserVerificationFormInputComponent,
+} from "@bitwarden/auth/angular";
 import { LayoutComponent, NavigationModule } from "@bitwarden/components";
 
 import { OrganizationLayoutComponent } from "../admin-console/organizations/layouts/organization-layout.component";
@@ -107,6 +110,7 @@ import { SharedModule } from "./shared.module";
     OrganizationBadgeModule,
     PipesModule,
     PasswordCalloutComponent,
+    UserVerificationFormInputComponent,
     DangerZoneComponent,
     LayoutComponent,
     NavigationModule,
