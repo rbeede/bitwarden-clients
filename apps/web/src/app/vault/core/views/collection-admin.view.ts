@@ -92,14 +92,14 @@ export class CollectionAdminView extends CollectionView {
   }
 
   /**
-   * Returns true if the user can view collection info and access in a read-only state
+   * Returns true if the user can view collection info and access in a read-only state from the Admin Console
    */
-  canViewCollectionInfo(org: Organization): boolean {
+  override canViewCollectionInfo(org: Organization | undefined): boolean {
     if (this.isUnassignedCollection) {
       return false;
     }
 
-    return this.manage || org.isAdmin || org.permissions.editAnyCollection;
+    return this.manage || org?.isAdmin || org?.permissions.editAnyCollection;
   }
 
   get isUnassignedCollection() {

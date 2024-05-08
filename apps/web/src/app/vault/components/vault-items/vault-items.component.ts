@@ -8,7 +8,6 @@ import { CollectionView } from "@bitwarden/common/vault/models/view/collection.v
 import { TableDataSource } from "@bitwarden/components";
 
 import { GroupView } from "../../../admin-console/organizations/core";
-import { CollectionAdminView } from "../../core/views/collection-admin.view";
 import { Unassigned } from "../../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 
 import { VaultItem } from "./vault-item";
@@ -166,7 +165,7 @@ export class VaultItemsComponent {
     return collection.canDelete(organization);
   }
 
-  protected canViewCollectionInfo(collection: CollectionAdminView) {
+  protected canViewCollectionInfo(collection: CollectionView) {
     const organization = this.allOrganizations.find((o) => o.id === collection.organizationId);
     return collection.canViewCollectionInfo(organization);
   }
