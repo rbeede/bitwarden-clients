@@ -1,6 +1,9 @@
 import { program } from "commander";
 
+import { Program } from "./program";
 import { ServiceContainer } from "./service-container";
+import { SendProgram } from "./tools/send/send.program";
+import { VaultProgram } from "./vault.program";
 
 export interface ProgramDefinition {
   new (serviceContainer: ServiceContainer): {
@@ -12,13 +15,17 @@ export interface ProgramDefinition {
  * The entrypoint of the BW CLI app
  */
 export class Main {
-  private programs: ProgramDefinition[] = [];
+  private constructor(private readonly programs: ProgramDefinition[]) {}
+
+  static create() {
+    return new Main([]);
+  }
 
   /**
    * Register a program for execution when {@link run} is called.
    */
-  registerProgram(program: ProgramDefinition) {
-    this.programs.push(program);
+  with(program: ProgramDefinition) {
+    return new Main([...this.programs, program]);
   }
 
   /**
@@ -40,3 +47,5 @@ export class Main {
     }
   }
 }
+
+export const ossMain = Main.create().with(Program).with(VaultProgram).with(SendProgram);
