@@ -750,11 +750,16 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async restore(c: CipherView): Promise<boolean> {
-    if (!(await this.repromptCipher([c]))) {
+    if (!c.isDeleted) {
       return;
     }
 
-    if (!c.isDeleted) {
+    if (!c.edit) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
+    if (!(await this.repromptCipher([c]))) {
       return;
     }
 
@@ -768,6 +773,11 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async bulkRestore(ciphers: CipherView[]) {
+    if (ciphers.some((c) => !c.edit)) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
     if (!(await this.repromptCipher(ciphers))) {
       return;
     }

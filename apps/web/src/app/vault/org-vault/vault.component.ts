@@ -971,11 +971,16 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async restore(c: CipherView): Promise<boolean> {
-    if (!(await this.repromptCipher([c]))) {
+    if (!c.isDeleted) {
       return;
     }
 
-    if (!c.isDeleted) {
+    if (!c.edit && !this.organization.allowAdminAccessToAllCollectionItems) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
+    if (!(await this.repromptCipher([c]))) {
       return;
     }
 
@@ -990,6 +995,11 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async bulkRestore(ciphers: CipherView[]) {
+    if (ciphers.some((c) => !c.edit && !this.organization.allowAdminAccessToAllCollectionItems)) {
+      this.showMissingPermissionsError();
+      return;
+    }
+
     if (!(await this.repromptCipher(ciphers))) {
       return;
     }
@@ -1006,12 +1016,12 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async deleteCipher(c: CipherView): Promise<boolean> {
-    if (!(await this.repromptCipher([c]))) {
+    if (!c.edit && !this.organization.allowAdminAccessToAllCollectionItems) {
+      this.showMissingPermissionsError();
       return;
     }
 
-    if (!c.edit) {
-      this.showMissingPermissionsError();
+    if (!(await this.repromptCipher([c]))) {
       return;
     }
 
@@ -1091,7 +1101,10 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (collections?.some((c) => !c.canDelete(organization)) || ciphers?.some((c) => !c.edit)) {
+    if (
+      collections?.some((c) => !c.canDelete(organization)) ||
+      ciphers?.some((c) => !c.edit && !this.organization.allowAdminAccessToAllCollectionItems)
+    ) {
       this.showMissingPermissionsError();
       return;
     }
