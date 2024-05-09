@@ -43,9 +43,7 @@ export class IsPaidOrgGuard implements CanActivate {
           icon: "bwi-arrow-circle-up",
         });
         if (upgradeConfirmed) {
-          // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          this.router.navigate(["organizations", org.id, "billing", "subscription"]);
+          await this.router.navigate(["organizations", org.id, "billing", "subscription"]);
         }
       }
     }
