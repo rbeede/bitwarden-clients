@@ -1,3 +1,4 @@
+import { DialogRef } from "@angular/cdk/dialog";
 import {
   Component,
   NgZone,
@@ -113,6 +114,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private idleTimer: number = null;
   private isIdle = false;
   private activeUserId: UserId = null;
+  private activeSimpleDialog: DialogRef<boolean> = null;
 
   private destroy$ = new Subject<void>();
 
@@ -582,7 +584,13 @@ export class AppComponent implements OnInit, OnDestroy {
       // We don't expect these scenarios to be common, but we want the user to
       // understand why they are being logged out before a process reload.
       case "accessTokenUnableToBeDecrypted": {
-        await this.dialogService.openSimpleDialog({
+        // Don't create multiple dialogs if this fires multiple times
+        if (this.activeSimpleDialog) {
+          // Let the caller of this function listen for the dialog to close
+          return firstValueFrom(this.activeSimpleDialog.closed);
+        }
+
+        this.activeSimpleDialog = this.dialogService.openSimpleDialogRef({
           title: { key: "loggedOut" },
           content: { key: "accessTokenUnableToBeDecrypted" },
           acceptButtonText: { key: "ok" },
@@ -590,16 +598,28 @@ export class AppComponent implements OnInit, OnDestroy {
           type: "info",
         });
 
+        await firstValueFrom(this.activeSimpleDialog.closed);
+        this.activeSimpleDialog = null;
+
         break;
       }
       case "refreshTokenSecureStorageRetrievalFailure": {
-        await this.dialogService.openSimpleDialog({
+        // Don't create multiple dialogs if this fires multiple times
+        if (this.activeSimpleDialog) {
+          // Let the caller of this function listen for the dialog to close
+          return firstValueFrom(this.activeSimpleDialog.closed);
+        }
+
+        this.activeSimpleDialog = this.dialogService.openSimpleDialogRef({
           title: { key: "loggedOut" },
           content: { key: "refreshTokenSecureStorageRetrievalFailure" },
           acceptButtonText: { key: "ok" },
           cancelButtonText: null,
           type: "info",
         });
+
+        await firstValueFrom(this.activeSimpleDialog.closed);
+        this.activeSimpleDialog = null;
 
         break;
       }
