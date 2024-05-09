@@ -1,8 +1,13 @@
-import { Main } from "@bitwarden/cli/bw";
+import { Main } from "@bitwarden/cli/main";
+import { ossProgramDefinitions } from "@bitwarden/cli/oss-program-definitions";
 
-// register OSS commands here
+const programDefinitions = [
+  ...ossProgramDefinitions,
+  // Register BL programs here
+];
 
-export const main = new Main();
-// FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+const main = new Main();
+programDefinitions.forEach((p) => main.registerProgram(p));
+// Node does not support top-level await statements until ES2022, esnext, etc which we don't use yet
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 main.run();
