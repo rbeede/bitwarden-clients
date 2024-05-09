@@ -1,11 +1,12 @@
 import { program } from "commander";
-import { Constructor } from "type-fest";
 
 import { ServiceContainer } from "./service-container";
 
-export type ProgramDefinition = Constructor<{
-  register: (serviceContainer: ServiceContainer) => Promise<void>;
-}>;
+export interface ProgramDefinition {
+  new (serviceContainer: ServiceContainer): {
+    register: () => Promise<void>;
+  };
+}
 
 /**
  * The entrypoint of the BW CLI app
@@ -29,7 +30,7 @@ export class Main {
 
     for (const programDefinition of this.programs) {
       const program = new programDefinition(serviceContainer);
-      await program.register(serviceContainer);
+      await program.register();
     }
 
     program.parse(process.argv);
