@@ -99,6 +99,9 @@ export class ContextMenuClickedHandler {
       keyConnectorServiceOptions: {
         logoutCallback: NOT_IMPLEMENTED,
       },
+      tokenServiceOptions: {
+        logoutCallback: NOT_IMPLEMENTED,
+      },
       logServiceOptions: {
         isDev: false,
       },

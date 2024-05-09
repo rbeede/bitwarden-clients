@@ -288,6 +288,9 @@ export class UpdateBadge {
       keyConnectorServiceOptions: {
         logoutCallback: () => Promise.reject("not implemented"),
       },
+      tokenServiceOptions: {
+        logoutCallback: () => Promise.reject("not implemented"),
+      },
       i18nServiceOptions: {
         systemLanguage: BrowserApi.getUILanguage(),
       },

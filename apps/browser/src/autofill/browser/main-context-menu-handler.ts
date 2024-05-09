@@ -184,6 +184,9 @@ export class MainContextMenuHandler {
         logServiceOptions: {
           isDev: false,
         },
+        tokenServiceOptions: {
+          logoutCallback: () => Promise.resolve(),
+        },
         stateServiceOptions: {
           stateFactory: stateFactory,
         },

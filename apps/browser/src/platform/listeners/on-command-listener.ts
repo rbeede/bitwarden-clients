@@ -53,6 +53,9 @@ const doAutoFillLogin = async (tab: chrome.tabs.Tab): Promise<void> => {
     keyConnectorServiceOptions: {
       logoutCallback: () => Promise.resolve(),
     },
+    tokenServiceOptions: {
+      logoutCallback: () => Promise.resolve(),
+    },
     i18nServiceOptions: {
       systemLanguage: BrowserApi.getUILanguage(),
     },
@@ -90,6 +93,9 @@ const doGeneratePasswordToClipboard = async (tab: chrome.tabs.Tab): Promise<void
       biometricCallback: () => Promise.resolve(true),
       clipboardWriteCallback: () => Promise.resolve(),
       win: self,
+    },
+    tokenServiceOptions: {
+      logoutCallback: () => Promise.resolve(),
     },
     stateServiceOptions: {
       stateFactory: stateFactory,

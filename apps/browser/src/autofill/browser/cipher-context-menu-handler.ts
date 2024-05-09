@@ -47,6 +47,9 @@ export class CipherContextMenuHandler {
       apiServiceOptions: {
         logoutCallback: NOT_IMPLEMENTED,
       },
+      tokenServiceOptions: {
+        logoutCallback: NOT_IMPLEMENTED,
+      },
       cryptoFunctionServiceOptions: {
         win: self,
       },
