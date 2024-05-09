@@ -40,6 +40,7 @@ export class IsPaidOrgGuard implements CanActivate {
           content: { key: "upgradeOrganizationCloseSecurityGapsDesc" },
           acceptButtonText: { key: "upgradeOrganization" },
           type: "info",
+          icon: "bwi-arrow-circle-up",
         });
         if (upgradeConfirmed) {
           // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
